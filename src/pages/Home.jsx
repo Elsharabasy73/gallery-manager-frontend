@@ -4,7 +4,7 @@ import { products as mockProducts, galleries as mockGalleries } from '../data/mo
 import { getProducts, unwrapProducts } from '../api/products'
 import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getCategories, unwrapCategories } from '../api/categories'
-import { BASE_URL } from '../api/client'
+import { getProductImageUrl, getGalleryLogoUrl } from '../utils/image'
 
 const FALLBACK_CATEGORIES = [
   { id: 'sofas', name: 'Sofas', arabicName: 'صوفا', slug: 'sofas' },
@@ -27,54 +27,6 @@ function formatPrice(price) {
   const n = Number(price)
   if (Number.isNaN(n)) return price
   return n.toLocaleString()
-}
-
-const STORAGE_BASE = BASE_URL.replace(/\/api\/v1\/?$/, '')
-
-function getProductImageUrl(product) {
-  if (!product) return null
-  const raw = product.mainImageUrl || product.image || product.images?.[0]
-  if (!raw) return null
-  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
-  if (raw.startsWith('/storage/')) return `${STORAGE_BASE}${raw}`
-  if (raw.startsWith('storage/')) return `${STORAGE_BASE}/${raw}`
-  // raw like "folder/file.jpeg" (seed stores as "storageFolder/fileName") or "products/folder/file.jpeg"
-  if (raw.includes('/')) {
-    if (raw.startsWith('products/')) return `${STORAGE_BASE}/storage/uploads/${raw}`
-    return `${STORAGE_BASE}/storage/uploads/products/${raw}`
-  }
-  // bare filename + separate folder field (user described as product.folderName)
-  const folder = product.storageFolder || product.folderName || product.folder || product.storage_folder
-  if (folder) return `${STORAGE_BASE}/storage/uploads/products/${folder}/${raw}`
-  return `${STORAGE_BASE}/storage/uploads/products/${raw}`
-}
-
-/**
- * Gallery storage: served at /storage (app.js:20)
- * working URL: http://localhost:3000/storage/uploads/galleries/<storageFolder>/<file>
- * e.g. http://localhost:3000/storage/uploads/galleries/nordic-timber-and-living-11563464-6ba5-4a39-892d-daa9512e7377/banner-2026-08-31T14-39-48-220Z-1542f955-0d21-48e2-9c72-f3b3ff593a85.jpeg
- * DB: gallery.storageFolder + gallery.logo/banner/images[] (filenames only)
- */
-function getGalleryLogoUrl(gallery) {
-  if (!gallery?.logo || !gallery?.storageFolder) return null
-  const raw = gallery.logo
-  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
-  if (raw.startsWith('/storage/')) return `${STORAGE_BASE}${raw}`
-  return `${STORAGE_BASE}/storage/uploads/galleries/${gallery.storageFolder}/${raw}`
-}
-
-function getGalleryBannerUrl(gallery) {
-  if (!gallery?.banner || !gallery?.storageFolder) return null
-  const raw = gallery.banner
-  if (raw.startsWith('http://') || raw.startsWith('https://')) return raw
-  if (raw.startsWith('/storage/')) return `${STORAGE_BASE}${raw}`
-  return `${STORAGE_BASE}/storage/uploads/galleries/${gallery.storageFolder}/${raw}`
-}
-
-function getGalleryImageUrl(gallery, fileName) {
-  if (!fileName || !gallery?.storageFolder) return null
-  if (fileName.startsWith('http')) return fileName
-  return `${STORAGE_BASE}/storage/uploads/galleries/${gallery.storageFolder}/${fileName}`
 }
 
 export default function Home() {
@@ -120,10 +72,8 @@ export default function Home() {
         const res = await getProducts({
           limit: 4,
           page: 1,
-          fields: 'id,name,mainImageUrl,images,price,stock,gallery[id,name,slug,phone]',
+          fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,gallery[id,name,slug],category[id,name,slug]',
           sort: '-createdAt',
-          // optional UI filters: only active & featured could be added if backend supports e.g. status=active / isFeatured=true
-          // status: 'active',
         })
         if (cancelled) return
         const data = unwrapProducts(res)
@@ -246,9 +196,7 @@ export default function Home() {
                 )
               })}
         </div>
-        {errorCategories && !loadingCategories && (
-          <div className="text-[11px] text-amber-700 mt-1">Categories fallback — {errorCategories}</div>
-        )}
+
       </section>
 
       <section>
@@ -265,11 +213,7 @@ export default function Home() {
           </button>
         </div>
 
-        {errorProducts && !loadingProducts && (
-          <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3">
-            Showing cached products — live load failed: {errorProducts}
-          </div>
-        )}
+
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {loadingProducts
@@ -329,11 +273,7 @@ export default function Home() {
       <section className="bg-white rounded-xl border border-[#E7DFD3] p-8 text-center">
         <h3 className="font-serif text-xl mb-6">Represented Galleries</h3>
 
-        {errorGalleries && !loadingGalleries && (
-          <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4 inline-block">
-            Showing cached galleries — live load failed: {errorGalleries}
-          </div>
-        )}
+
 
         <div className="flex flex-wrap justify-center gap-10">
           {loadingGalleries
