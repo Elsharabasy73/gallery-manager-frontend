@@ -1,20 +1,23 @@
+import { useNavigate } from 'react-router-dom'
 import { useRole } from '../context/RoleContext'
 export default function Profile(){
-  const { role } = useRole()
+  const { role, user, logout } = useRole()
+  const navigate = useNavigate()
+  const handleLogout = ()=>{ logout(); navigate('/login', { replace: true }) }
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       <h2 className="font-serif text-2xl">Profile</h2>
       <div className="bg-white border border-[#E7DFD3] rounded-xl p-6 grid md:grid-cols-[140px_1fr] gap-6">
         <div className="flex flex-col items-center gap-2">
-          <div className="w-24 h-24 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xl">AH</div>
+          <div className="w-24 h-24 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xl">{user ? `${(user.firstName||'')[0]||''}${(user.lastName||'')[0]||''}`.toUpperCase() || 'U' : 'G'}</div>
           <button className="text-xs border px-3 py-1 rounded-full">Change avatar</button>
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 capitalize">{role.replace('_',' ')}</span>
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 capitalize">{(role||'guest').replace('_',' ')}</span>
         </div>
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">First name*</label><input defaultValue="Alexandra" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">Last name*</label><input defaultValue="Hayes" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
-          <div><label className="text-xs">Email</label><input defaultValue="alex@atelier.test" disabled className="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-[#FAF7F2]" /></div>
-          <div><label className="text-xs">Phone</label><input placeholder="Optional" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
-          <button className="bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm">Save changes</button>
+          <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">First name*</label><input defaultValue={user?.firstName || 'Alexandra'} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">Last name*</label><input defaultValue={user?.lastName || 'Hayes'} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
+          <div><label className="text-xs">Email</label><input defaultValue={user?.email || 'alex@atelier.test'} disabled className="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-[#FAF7F2]" /></div>
+          <div><label className="text-xs">Phone</label><input placeholder="Optional" defaultValue={user?.phone || ''} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
+          <div className="flex gap-2"><button className="bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm">Save changes</button><button onClick={handleLogout} className="border border-[#B3402E] text-[#B3402E] px-4 py-2 rounded-lg text-sm flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">logout</span>Log out</button></div>
         </div>
       </div>
 

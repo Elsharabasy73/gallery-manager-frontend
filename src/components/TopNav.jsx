@@ -2,11 +2,15 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useRole, NAV_CONFIG } from '../context/RoleContext'
 
 export default function TopNav(){
-  const { role } = useRole()
+  const { role, logout, isAuthenticated } = useRole()
   const navigate = useNavigate()
   const location = useLocation()
   const isCustomer = role==='customer'
   const isActive = (path)=> location.pathname===path
+  const handleLogout = ()=>{
+    logout()
+    navigate('/login', { replace: true })
+  }
   return (
     <header className="bg-[#FAF7F2] sticky top-[28px] z-40 border-b border-[#E7DFD3]">
       <div className="flex justify-between items-center w-full px-4 md:px-10 py-3 max-w-7xl mx-auto h-16">
@@ -49,16 +53,25 @@ export default function TopNav(){
             </button>
           )}
           <div className="w-px h-6 bg-[#E7DFD3] mx-1 hidden md:block"></div>
-          {!role ? (
+          {!isAuthenticated ? (
             <button onClick={()=>navigate('/login')} className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium bg-[#4B3621] text-white">
               Log in
             </button>
           ) : (
-            <button onClick={()=>navigate('/profile')} className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${isActive('/profile')?'bg-[#4B3621] text-white':'bg-white border text-[#4B3621]'}`}>
-              <span className="material-symbols-outlined text-[18px]">person</span> Profile
-            </button>
+            <>
+              <button onClick={()=>navigate('/profile')} className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${isActive('/profile')?'bg-[#4B3621] text-white':'bg-white border text-[#4B3621]'}`}>
+                <span className="material-symbols-outlined text-[18px]">person</span> Profile
+              </button>
+              <button onClick={handleLogout} className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border text-[#4B3621] hover:bg-[#FFF1F1] hover:text-[#B3402E] hover:border-[#ffdad6]">
+                <span className="material-symbols-outlined text-[18px]">logout</span> Log out
+              </button>
+            </>
           )}
-          <button onClick={()=>navigate('/login')} className="md:hidden p-2"><span className="material-symbols-outlined">menu</span></button>
+          {isAuthenticated ? (
+            <button onClick={handleLogout} className="md:hidden p-2 text-[#B3402E]" title="Log out"><span className="material-symbols-outlined">logout</span></button>
+          ) : (
+            <button onClick={()=>navigate('/login')} className="md:hidden p-2"><span className="material-symbols-outlined">menu</span></button>
+          )}
         </div>
       </div>
       <div className="md:hidden flex gap-4 px-4 pb-2 overflow-x-auto hide-scrollbar">

@@ -32,3 +32,15 @@ export function sendVerificationOtp(email) {
 export function verifyEmail({ email, otp }) {
   return apiFetch('/auth/verify-email', { method: 'POST', body: { email, otp } })
 }
+
+export function forgotPassword(email) {
+  return apiFetch('/auth/forgot-password', { method: 'POST', body: { email } })
+}
+
+export function verifyResetOtp({ email, otp }) {
+  return apiFetch('/auth/verify-reset-password-otp', { method: 'POST', body: { email, otp } })
+}
+
+export function resetPassword({ email, otp, password, passwordConfirm }) {
+  return apiFetch('/auth/reset-password', { method: 'POST', body: { email, otp, password, passwordConfirm } })
+}

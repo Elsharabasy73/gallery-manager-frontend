@@ -109,8 +109,30 @@ export const NAV_CONFIG = {
 const RoleContext = createContext(null)
 export const useRole = ()=> useContext(RoleContext)
 
+// backend role is 'user' | 'gallery_owner' | 'craftsman' | 'admin'
+// frontend role is 'customer' | 'gallery_owner' | 'employee' | 'admin'
+function mapApiRoleToFrontend(apiRole){
+  if(!apiRole) return null
+  if(apiRole === 'user') return 'customer'
+  if(apiRole === 'craftsman') return 'craftsman' // keep if you later add craftsman routes
+  return apiRole
+}
+function getStoredAuth(){
+  try{
+    const token = localStorage.getItem('token')
+    const rawUser = localStorage.getItem('user')
+    if(!token || !rawUser) return { role: null, user: null, token: null }
+    const user = JSON.parse(rawUser)
+    return { role: mapApiRoleToFrontend(user?.role) || null, user, token }
+  }catch{
+    return { role: null, user: null, token: null }
+  }
+}
+
 export function RoleProvider({ children, defaultRole=null }){
-  const [role, setRole] = useState(defaultRole)
+  const stored = defaultRole ? { role: defaultRole } : getStoredAuth()
+  const [role, setRole] = useState(stored.role)
+  const [user, setUser] = useState(stored.user || null)
 
   const isAllowed = (pageId) => {
     const allowed = PERMISSIONS[pageId]
@@ -126,13 +148,26 @@ export function RoleProvider({ children, defaultRole=null }){
   // legacy shim so old components calling setCurrentPage don't crash during migration
   const [currentPage, setCurrentPage] = useState('home')
 
+  const setAuth = (nextUser, nextToken) => {
+    if(nextToken) localStorage.setItem('token', nextToken)
+    if(nextUser) localStorage.setItem('user', JSON.stringify(nextUser))
+    setUser(nextUser || null)
+    setRole(mapApiRoleToFrontend(nextUser?.role) || null)
+  }
+  const logout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setUser(null)
+    setRole(null)
+  }
+
   const value = useMemo(()=>({
-    role, setRole,
+    role, setRole, user, setUser, setAuth, logout,
     currentPage, setCurrentPage,
     isAllowed,
     isAuthenticated: !!role,
-    roleMeta: ROLES[role] || { id:'guest', label:'Guest', badge:'Guest', color:'bg-stone-500/20 text-stone-300 border-stone-500/30', user:'Guest' }
-  }), [role, currentPage])
+    roleMeta: ROLES[role] || { id:'guest', label:'Guest', badge:'Guest', color:'bg-stone-500/20 text-stone-300 border-stone-500/30', user: user?.firstName ? `${user.firstName} ${user.lastName||''}`.trim() : 'Guest' }
+  }), [role, user, currentPage])
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>
 }

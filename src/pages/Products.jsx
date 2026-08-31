@@ -9,7 +9,9 @@ export default function Products(){
   const navigate = useNavigate()
   const { role } = useRole()
   const [activeCats, setActiveCats] = useState(['All'])
+  const [input, setInput] = useState('')
   const [q, setQ] = useState('')
+  const doSearch = () => setQ(input.trim())
   const toggle = (c)=>{
     if(c==='All') setActiveCats(['All'])
     else {
@@ -29,8 +31,9 @@ export default function Products(){
         <div className="flex flex-col md:flex-row gap-3 items-center">
           <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] border border-[#E7DFD3] rounded-full px-4 py-2 w-full">
             <span className="material-symbols-outlined text-[#8A8078]">search</span>
-            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search furniture..." className="bg-transparent outline-none flex-1 text-sm" />
+            <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter') doSearch() }} placeholder="Search furniture..." className="bg-transparent outline-none flex-1 text-sm" />
           </div>
+          <button onClick={doSearch} className="bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap">Search</button>
           <select className="border border-[#E7DFD3] rounded-full px-3 py-2 text-sm bg-white"><option>Newest</option><option>Price low→high</option><option>Price high→low</option></select>
         </div>
         <div className="flex gap-2 overflow-x-auto hide-scrollbar mt-3">
@@ -65,7 +68,7 @@ export default function Products(){
           </div>
         ))}
       </div>
-      {filtered.length===0 && <div className="text-center py-12 bg-white border border-dashed rounded-xl">No products — <button onClick={()=>{setActiveCats(['All']); setQ('')}} className="text-[#C19A6B] underline">Clear filters</button></div>}
+      {filtered.length===0 && <div className="text-center py-12 bg-white border border-dashed rounded-xl">No products — <button onClick={()=>{setActiveCats(['All']); setInput(''); setQ('')}} className="text-[#C19A6B] underline">Clear filters</button></div>}
     </div>
   )
 }
