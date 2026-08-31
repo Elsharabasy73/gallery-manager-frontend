@@ -28,7 +28,7 @@ export default function App(){
         <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/galleries" element={<BrowseGalleries />} />
-        <Route path="/galleries/:slug" element={<GalleryProfile />} />
+        <Route path="/galleries/:id" element={<GalleryProfile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/otp" element={<Otp />} />

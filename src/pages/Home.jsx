@@ -286,14 +286,13 @@ export default function Home() {
               ))
             : galleries.map((g) => {
                 const gid = g.id || g._id
-                const slug = g.slug || gid
                 const city = g.city ? `${g.city}${g.country ? `, ${g.country}` : ''}` : g.country || mockGalleries.find((m) => m.id === gid)?.city || ''
                 const logoSrc = getGalleryLogoUrl(g)
                 const initials = getInitials(g.name)
                 return (
                   <button
                     key={gid}
-                    onClick={() => navigate(`/galleries/${slug}`)}
+                    onClick={() => navigate(`/galleries/${gid}`)}
                     className="flex flex-col items-center gap-2 hover:opacity-80 transition"
                   >
                     <div className="w-20 h-20 rounded-full bg-[#FAF7F2] border flex items-center justify-center font-serif overflow-hidden">
