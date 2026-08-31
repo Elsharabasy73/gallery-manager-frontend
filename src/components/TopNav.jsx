@@ -34,12 +34,17 @@ export default function TopNav(){
             </>
           )}
           {role==='gallery_owner' && (
-            <button onClick={()=>navigate('/dashboard/orders')} className="hidden sm:flex items-center gap-1 text-xs bg-white border px-3 py-1.5 rounded-full">
-              <span className="material-symbols-outlined text-[16px]">orders</span> Orders
+            <button onClick={()=>navigate('/dashboard/overview')} className="hidden sm:flex items-center gap-1 text-xs bg-[#4B3621] text-white px-3 py-1.5 rounded-full">
+              <span className="material-symbols-outlined text-[16px]">dashboard</span> Dashboard
+            </button>
+          )}
+          {role==='employee' && (
+            <button onClick={()=>navigate('/dashboard/my-products')} className="hidden sm:flex items-center gap-1 text-xs bg-white border px-3 py-1.5 rounded-full">
+              <span className="material-symbols-outlined text-[16px]">inventory_2</span> My Products
             </button>
           )}
           {role==='admin' && (
-            <button onClick={()=>navigate('/admin/orders')} className="hidden sm:flex items-center gap-1 text-xs bg-[#4B3621] text-white px-3 py-1.5 rounded-full">
+            <button onClick={()=>navigate('/admin/overview')} className="hidden sm:flex items-center gap-1 text-xs bg-[#4B3621] text-white px-3 py-1.5 rounded-full">
               <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span> Admin
             </button>
           )}

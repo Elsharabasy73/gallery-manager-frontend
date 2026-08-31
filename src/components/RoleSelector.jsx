@@ -4,9 +4,16 @@ import { useRole, ROLES, ROLE_ORDER } from '../context/RoleContext'
 export default function RoleSelector(){
   const { role, setRole, roleMeta } = useRole()
   const navigate = useNavigate()
+  const ROLE_HOME = {
+    customer: '/',
+    gallery_owner: '/dashboard/overview',
+    employee: '/dashboard/my-products',
+    admin: '/admin/overview',
+  }
   const handleSwitch = (r)=>{
     setRole(r)
-    navigate('/', { replace: true })
+    if(r === null) navigate('/', { replace: true })
+    else navigate(ROLE_HOME[r] || '/', { replace: true })
   }
   return (
     <div className="bg-stone-950 text-stone-200 px-4 py-1.5 text-xs border-b border-stone-800 sticky top-0 z-[60]">
@@ -20,7 +27,7 @@ export default function RoleSelector(){
         <div className="flex items-center gap-1 sm:gap-2">
           <span className="text-[11px] text-stone-400 hidden md:inline mr-1">Switch Role:</span>
           <button
-            onClick={()=>setRole(null)}
+            onClick={()=>handleSwitch(null)}
             className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-all ${!role ? 'bg-amber-700 text-white font-bold shadow-xs' : 'text-stone-400 hover:text-white hover:bg-stone-800'}`}
           >
             Guest
