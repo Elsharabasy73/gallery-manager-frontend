@@ -12,13 +12,21 @@ const SORT_OPTIONS = [
   { value: '-price', label: 'Price high→low' },
 ]
 
+const FALLBACK_CATEGORIES = [
+  { id: 'sofas', name: 'Sofas', arabicName: 'صوفا', slug: 'sofas' },
+  { id: 'tables', name: 'Tables', arabicName: 'طاولات', slug: 'tables' },
+  { id: 'seating', name: 'Seating', arabicName: 'مقاعد', slug: 'seating' },
+  { id: 'lighting', name: 'Lighting', arabicName: 'إضاءة', slug: 'lighting' },
+  { id: 'decor', name: 'Decor', arabicName: 'ديكور', slug: 'decor' },
+]
+
 export default function Products() {
   const navigate = useNavigate()
   const { role } = useRole()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [apiCategories, setApiCategories] = useState([])
-  const categories = apiCategories.length ? ['All', ...apiCategories.map((c) => c.name)] : ['All', 'Sofas', 'Tables', 'Seating', 'Lighting', 'Decor']
+  const displayCategories = apiCategories.length ? apiCategories : FALLBACK_CATEGORIES
 
   const [activeCats, setActiveCats] = useState(['All'])
   const [input, setInput] = useState(searchParams.get('keyword') || '')
@@ -37,13 +45,42 @@ export default function Products() {
   const [loading, setLoading] = useState(false)
 
   const toggle = (c) => {
-    if (c === 'All') setActiveCats(['All'])
+    let next
+    if (c === 'All') next = ['All']
     else {
-      let next = activeCats.includes(c) ? activeCats.filter((x) => x !== c) : [...activeCats.filter((x) => x !== 'All'), c]
+      next = activeCats.includes(c) ? activeCats.filter((x) => x !== c) : [...activeCats.filter((x) => x !== 'All'), c]
       if (next.length === 0) next = ['All']
-      setActiveCats(next)
     }
+    setActiveCats(next)
+    // keep URL in sync so refresh / share preserves selected category
+    const newParams = new URLSearchParams(searchParams)
+    if (next.length === 1 && next[0] !== 'All') {
+      const catObj = displayCategories.find((cat) => cat.name === next[0])
+      if (catObj) {
+        const id = catObj.id || catObj._id
+        if (id) newParams.set('categoryId', String(id))
+        if (catObj.slug) newParams.set('category', catObj.slug)
+        else newParams.delete('category')
+      }
+    } else {
+      newParams.delete('categoryId')
+      newParams.delete('category')
+    }
+    setSearchParams(newParams, { replace: true })
   }
+
+  // sync category from URL (homepage navigation: /products?categoryId=...&category=slug) -> select pill
+  useEffect(() => {
+    const categoryId = searchParams.get('categoryId')
+    const categorySlug = searchParams.get('category')
+    if (!categoryId && !categorySlug) return
+    if (!(activeCats.length === 1 && activeCats[0] === 'All')) return
+    const cats = apiCategories.length ? apiCategories : FALLBACK_CATEGORIES
+    let found = null
+    if (categoryId) found = cats.find((c) => String(c.id) === String(categoryId) || String(c._id) === String(categoryId))
+    if (!found && categorySlug) found = cats.find((c) => c.slug === categorySlug || c.name === categorySlug || c.name?.toLowerCase() === categorySlug?.toLowerCase())
+    if (found) setActiveCats([found.name])
+  }, [apiCategories, searchParams, activeCats])
 
   useEffect(() => {
     let cancelled = false
@@ -62,14 +99,24 @@ export default function Products() {
           limit: 12,
           page: 1,
           sort,
-          fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,gallery[id,name,slug],category[id,name,slug]',
+          fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,gallery[id,name,slug],category[id,name,slug,arabicName]',
         }
         if (q) params.keyword = q
         if (appliedMin) params['price[gte]'] = appliedMin
         if (appliedMax) params['price[lte]'] = appliedMax
         if (activeCats.length === 1 && activeCats[0] !== 'All') {
-          const cat = apiCategories.find((c) => c.name === activeCats[0])
-          if (cat?.id) params.categoryId = cat.id
+          const cat = apiCategories.find((c) => c.name === activeCats[0]) || displayCategories.find((c) => c.name === activeCats[0])
+          const cid = cat?.id || cat?._id
+          if (cid) params.categoryId = cid
+          else if (cat?.slug) params.category = cat.slug
+        } else {
+          // initial navigation before activeCats sync: use URL directly so request is filtered even before categories load
+          const urlCatId = searchParams.get('categoryId')
+          if (urlCatId) params.categoryId = urlCatId
+          else {
+            const urlCat = searchParams.get('category')
+            if (urlCat) params.category = urlCat
+          }
         }
         const res = await getProducts(params)
         if (cancelled) return
@@ -84,11 +131,15 @@ export default function Products() {
     }
     run()
     return () => { cancelled = true }
-  }, [q, sort, appliedMin, appliedMax, activeCats, apiCategories])
+  }, [q, sort, appliedMin, appliedMax, activeCats, apiCategories, displayCategories, searchParams])
 
   const filtered = items.filter((p) => {
-    const catName = p.category?.name || p.category || ''
-    const catOk = activeCats.includes('All') || activeCats.includes(catName) || activeCats.includes(p.category)
+    const catName = p.category?.name || (typeof p.category === 'string' ? p.category : '') || ''
+    const catSlug = p.category?.slug || ''
+    const catOk =
+      activeCats.includes('All') ||
+      activeCats.includes(catName) ||
+      activeCats.some((a) => a.toLowerCase() === String(catName).toLowerCase() || a.toLowerCase() === String(catSlug).toLowerCase())
     const qOk = !q || p.name.toLowerCase().includes(q.toLowerCase())
     return catOk && qOk
   })
@@ -109,10 +160,25 @@ export default function Products() {
           </div>
         </div>
         <div className="flex gap-2 overflow-x-auto hide-scrollbar mt-3 pb-1">
-          {categories.map((c) => {
-            const active = activeCats.includes(c)
+          <button
+            key="All"
+            onClick={() => toggle('All')}
+            className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${activeCats.includes('All') ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
+          >
+            All
+          </button>
+          {displayCategories.map((c) => {
+            const label = c.arabicName ? `${c.name} • ${c.arabicName}` : c.name
+            const active = activeCats.includes(c.name)
             return (
-              <button key={c} onClick={() => toggle(c)} className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${active ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}>{c} {c !== 'All' && <span className="text-[11px] opacity-60">· {c === 'Sofas' ? 'صوفا' : c === 'Tables' ? 'طاولات' : ''}</span>}</button>
+              <button
+                key={c.id || c._id || c.slug || c.name}
+                onClick={() => toggle(c.name)}
+                className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${active ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
+                title={c.slug}
+              >
+                {label}
+              </button>
             )
           })}
         </div>
@@ -123,7 +189,7 @@ export default function Products() {
           </div>
           <div className="flex gap-2 shrink-0">
             <button onClick={applyPrice} className="px-4 py-1.5 rounded-full border text-sm bg-white whitespace-nowrap">Apply</button>
-            <button onClick={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt') }} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">Clear</button>
+            <button onClick={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt'); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('keyword'); setSearchParams(np, { replace: true }) }} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">Clear</button>
           </div>
         </div>
       </div>
@@ -157,7 +223,7 @@ export default function Products() {
           )
         })}
       </div>
-      {filtered.length === 0 && !loading && <div className="text-center py-12 bg-white border border-dashed rounded-xl">No products — <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax('') }} className="text-[#C19A6B] underline">Clear filters</button></div>}
+      {filtered.length === 0 && !loading && <div className="text-center py-12 bg-white border border-dashed rounded-xl">No products — <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">Clear filters</button></div>}
     </div>
   )
 }

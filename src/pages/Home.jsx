@@ -183,6 +183,7 @@ export default function Home() {
                 <div key={i} className="shrink-0 w-28 h-9 rounded-full bg-[#E7DFD3]/60 animate-pulse" />
               ))
             : categories.map((c) => {
+              console.log(c);
                 const label = c.arabicName ? `${c.name} • ${c.arabicName}` : c.name
                 return (
                   <button
