@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { signup as signupApi } from '../api/auth'
 
 function SplitLayout({ children }){
   return (
@@ -29,6 +30,50 @@ export function Login(){
 export function Signup(){
   const navigate = useNavigate()
   const [role,setRole]=useState('customer')
+  const [firstName,setFirstName]=useState('')
+  const [lastName,setLastName]=useState('')
+  const [email,setEmail]=useState('')
+  const [password,setPassword]=useState('')
+  const [passwordConfirm,setPasswordConfirm]=useState('')
+  const [loading,setLoading]=useState(false)
+  const [error,setError]=useState('')
+  const [fieldErrors,setFieldErrors]=useState({})
+
+  const handleSubmit = async ()=>{
+    setError('')
+    setFieldErrors({})
+    if(!firstName.trim() || !lastName.trim() || !email.trim() || !password || !passwordConfirm){
+      setError('Please fill all required fields.')
+      return
+    }
+    if(password !== passwordConfirm){
+      setError('Passwords do not match.')
+      return
+    }
+    if(password.length < 6){
+      setError('Password must be at least 6 characters.')
+      return
+    }
+    setLoading(true)
+    try{
+      const res = await signupApi({ firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), password, passwordConfirm, role })
+      // backend returns 201 {status, data: user} and sets isActive=true (no OTP required)
+      // redirect to login with email prefilled
+      navigate('/login', { state: { email: res.data?.email || email, justSignedUp: true } })
+    }catch(e){
+      if(e.details){
+        const fe = {}
+        e.details.forEach(d=>{ if(d.path) fe[d.path]=d.msg })
+        setFieldErrors(fe)
+        setError(e.message || 'Validation failed')
+      } else {
+        setError(e.message || 'Signup failed')
+      }
+    }finally{ setLoading(false) }
+  }
+
+  const errFor = (f)=> fieldErrors[f] ? <div className="text-[11px] text-red-600 mt-1">{fieldErrors[f]}</div> : null
+
   return <SplitLayout>
     <h2 className="font-serif text-2xl mb-1">Create account</h2><p className="text-xs text-[#8A8078] mb-4">Choose your role to get started</p>
     <div className="grid grid-cols-3 gap-2 mb-4">
@@ -42,14 +87,15 @@ export function Signup(){
         </button>
       ))}
     </div>
+    {error && <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">{error}</div>}
     <div className="grid grid-cols-2 gap-3">
-      <div><label className="text-xs">First name*</label><input className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" /></div>
-      <div><label className="text-xs">Last name*</label><input className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" /></div>
-      <div className="col-span-2"><label className="text-xs">Email*</label><input className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" /></div>
-      <div className="col-span-2"><label className="text-xs">Password* (min 6)</label><input type="password" className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" /></div>
-      <div className="col-span-2"><label className="text-xs">Confirm password*</label><input type="password" className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" /></div>
+      <div><label className="text-xs">First name*</label><input value={firstName} onChange={e=>setFirstName(e.target.value)} className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" />{errFor('firstName')}</div>
+      <div><label className="text-xs">Last name*</label><input value={lastName} onChange={e=>setLastName(e.target.value)} className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" />{errFor('lastName')}</div>
+      <div className="col-span-2"><label className="text-xs">Email*</label><input value={email} onChange={e=>setEmail(e.target.value)} className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" placeholder="you@example.com" />{errFor('email')}</div>
+      <div className="col-span-2"><label className="text-xs">Password* (min 6)</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" />{errFor('password')}</div>
+      <div className="col-span-2"><label className="text-xs">Confirm password*</label><input type="password" value={passwordConfirm} onChange={e=>setPasswordConfirm(e.target.value)} className="w-full border rounded-lg px-3 py-2 mt-1 text-sm" />{errFor('passwordConfirm')}{errFor('role')}</div>
     </div>
-    <button onClick={()=>navigate('/otp')} className="w-full bg-[#4B3621] text-white py-2.5 rounded-lg text-sm font-medium mt-4">Create account</button>
+    <button onClick={handleSubmit} disabled={loading} className="w-full bg-[#4B3621] text-white py-2.5 rounded-lg text-sm font-medium mt-4 disabled:opacity-50 disabled:cursor-not-allowed">{loading ? 'Creating...' : 'Create account'}</button>
     <div className="text-xs text-center mt-3">Already have account? <button onClick={()=>navigate('/login')} className="text-[#C19A6B]">Log in</button></div>
   </SplitLayout>
 }
