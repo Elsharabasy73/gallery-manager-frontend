@@ -7,7 +7,7 @@ import { RoleProvider } from './context/RoleContext.jsx'
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <RoleProvider defaultRole="admin">
+      <RoleProvider defaultRole={null}>
         <App />
       </RoleProvider>
     </BrowserRouter>

@@ -44,9 +44,15 @@ export default function TopNav(){
             </button>
           )}
           <div className="w-px h-6 bg-[#E7DFD3] mx-1 hidden md:block"></div>
-          <button onClick={()=>navigate('/profile')} className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${isActive('/profile')?'bg-[#4B3621] text-white':'bg-white border text-[#4B3621]'}`}>
-            <span className="material-symbols-outlined text-[18px]">person</span> Profile
-          </button>
+          {!role ? (
+            <button onClick={()=>navigate('/login')} className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium bg-[#4B3621] text-white">
+              Log in
+            </button>
+          ) : (
+            <button onClick={()=>navigate('/profile')} className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${isActive('/profile')?'bg-[#4B3621] text-white':'bg-white border text-[#4B3621]'}`}>
+              <span className="material-symbols-outlined text-[18px]">person</span> Profile
+            </button>
+          )}
           <button onClick={()=>navigate('/login')} className="md:hidden p-2"><span className="material-symbols-outlined">menu</span></button>
         </div>
       </div>

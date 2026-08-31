@@ -11,7 +11,7 @@ export default function Layout(){
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF7F2] text-[#201a17]">
-      <RoleSelector />
+      {import.meta.env.DEV && <RoleSelector />}
       <TopNav />
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-6 py-6">
         {needsSidebar ? (

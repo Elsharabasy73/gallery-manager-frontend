@@ -3,7 +3,7 @@ import { useRole, NAV_CONFIG } from '../context/RoleContext'
 
 export default function Sidebar(){
   const { role } = useRole()
-  if(role==='customer') return null
+  if(!role || role==='customer') return null
   const galleryLinks = NAV_CONFIG.gallery.filter(l=> !l.roles || l.roles.includes(role))
   const adminLinks = NAV_CONFIG.admin.filter(l=> l.roles.includes(role))
 
@@ -25,7 +25,7 @@ export default function Sidebar(){
         <div className="w-8 h-8 rounded-full bg-[#4B3621] text-white flex items-center justify-center text-xs font-bold">AG</div>
         <div>
           <div className="text-sm font-semibold">Dashboard</div>
-          <div className="text-[11px] text-[#8A8078] capitalize">{role.replace('_',' ')}</div>
+          <div className="text-[11px] text-[#8A8078] capitalize">{role ? role.replace('_',' ') : 'guest'}</div>
         </div>
       </div>
       {showGallery && (

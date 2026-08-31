@@ -19,6 +19,12 @@ export default function RoleSelector(){
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
           <span className="text-[11px] text-stone-400 hidden md:inline mr-1">Switch Role:</span>
+          <button
+            onClick={()=>setRole(null)}
+            className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-all ${!role ? 'bg-amber-700 text-white font-bold shadow-xs' : 'text-stone-400 hover:text-white hover:bg-stone-800'}`}
+          >
+            Guest
+          </button>
           {ROLE_ORDER.map(r=>{
             const isActive = role===r
             return (

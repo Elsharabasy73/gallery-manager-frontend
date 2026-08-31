@@ -109,12 +109,17 @@ export const NAV_CONFIG = {
 const RoleContext = createContext(null)
 export const useRole = ()=> useContext(RoleContext)
 
-export function RoleProvider({ children, defaultRole='admin' }){
+export function RoleProvider({ children, defaultRole=null }){
   const [role, setRole] = useState(defaultRole)
 
   const isAllowed = (pageId) => {
     const allowed = PERMISSIONS[pageId]
     if(!allowed) return true
+    // guest (unauthenticated, role === null) can access public + auth routes only
+    if(!role){
+      const guestAllowed = ['home','about','products','product-detail','galleries','gallery-profile','login','signup','otp','forgot-password','reset-password']
+      return guestAllowed.includes(pageId)
+    }
     return allowed.includes(role)
   }
 
@@ -125,7 +130,8 @@ export function RoleProvider({ children, defaultRole='admin' }){
     role, setRole,
     currentPage, setCurrentPage,
     isAllowed,
-    roleMeta: ROLES[role]
+    isAuthenticated: !!role,
+    roleMeta: ROLES[role] || { id:'guest', label:'Guest', badge:'Guest', color:'bg-stone-500/20 text-stone-300 border-stone-500/30', user:'Guest' }
   }), [role, currentPage])
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>
