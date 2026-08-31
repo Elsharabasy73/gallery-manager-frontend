@@ -1,7 +1,7 @@
+import { useNavigate } from 'react-router-dom'
 import { products, galleries } from '../data/mockData'
-import { useRole } from '../context/RoleContext'
 export default function Home(){
-  const { setCurrentPage } = useRole()
+  const navigate = useNavigate()
   return (
     <div className="space-y-12">
       <section className="relative w-full h-[58vh] min-h-[420px] rounded-xl overflow-hidden shadow-sm">
@@ -11,7 +11,7 @@ export default function Home(){
           <div className="w-full max-w-2xl bg-white/95 backdrop-blur rounded-lg p-2 flex items-center gap-2">
             <span className="material-symbols-outlined text-[#8A8078] ml-2">search</span>
             <input className="w-full bg-transparent outline-none text-sm placeholder:text-[#8A8078]" placeholder="Search products, styles, or galleries..." />
-            <button onClick={()=>setCurrentPage('products')} className="bg-[#4B3621] text-white px-6 py-2.5 rounded text-sm font-medium whitespace-nowrap">Browse Products</button>
+            <button onClick={()=>navigate('/products')} className="bg-[#4B3621] text-white px-6 py-2.5 rounded text-sm font-medium whitespace-nowrap">Browse Products</button>
           </div>
         </div>
       </section>
@@ -30,11 +30,11 @@ export default function Home(){
             <h2 className="font-serif text-2xl text-[#4B3621]">Curated Selections</h2>
             <p className="text-sm text-[#8A8078]">Handpicked pieces from premium galleries</p>
           </div>
-          <button onClick={()=>setCurrentPage('products')} className="hidden md:flex items-center gap-1 text-sm text-[#78582f]">View all <span className="material-symbols-outlined text-[18px]">arrow_forward</span></button>
+          <button onClick={()=>navigate('/products')} className="hidden md:flex items-center gap-1 text-sm text-[#78582f]">View all <span className="material-symbols-outlined text-[18px]">arrow_forward</span></button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.slice(0,4).map(p=>(
-            <div key={p.id} className="group cursor-pointer" onClick={()=>setCurrentPage('product-detail')}>
+            <div key={p.id} className="group cursor-pointer" onClick={()=>navigate('/products/1')}>
               <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-white mb-3">
                 <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
                 <button className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[18px]">favorite</span></button>
@@ -50,7 +50,7 @@ export default function Home(){
         <h3 className="font-serif text-xl mb-6">Represented Galleries</h3>
         <div className="flex flex-wrap justify-center gap-10">
           {galleries.map(g=>(
-            <button key={g.id} onClick={()=>setCurrentPage('gallery-profile')} className="flex flex-col items-center gap-2">
+            <button key={g.id} onClick={()=>navigate('/galleries/1')} className="flex flex-col items-center gap-2">
               <div className="w-20 h-20 rounded-full bg-[#FAF7F2] border flex items-center justify-center font-serif">{g.logo}</div>
               <span className="text-sm font-medium">{g.name}</span>
               <span className="text-xs text-[#8A8078]">{g.city}</span>

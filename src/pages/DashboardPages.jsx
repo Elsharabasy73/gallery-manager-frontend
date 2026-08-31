@@ -1,5 +1,6 @@
 import { products, orders } from '../data/mockData'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export function Overview(){
   return (
@@ -55,11 +56,12 @@ export function MyGallery(){
 }
 export function MyProducts(){
   const [filter,setFilter]=useState('All')
+  const navigate = useNavigate()
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="font-serif text-xl">My Products</h2>
-        <button className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-sm">+ Add Product</button>
+        <button onClick={()=>navigate('/dashboard/add-product')} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-sm">+ Add Product</button>
       </div>
       <div className="flex gap-2">
         {['All','Active','Draft','Archived'].map(f=>(
@@ -79,7 +81,7 @@ export function MyProducts(){
                   <td className="text-center">{p.price.toLocaleString()} EGP</td>
                   <td className={`text-center ${p.stock<=3?'text-amber-600':''}`}>{p.stock}</td>
                   <td className="text-center"><span className={`px-2 py-0.5 rounded-full text-[11px] ${p.status==='active'?'bg-green-100 text-green-800': p.status==='draft'?'bg-amber-100 text-amber-800':'bg-zinc-100'}`}>{p.status}</span></td>
-                  <td className="text-center"><button className="text-xs border px-2 py-1 rounded mr-1">Edit</button><button className="text-xs text-[#B3402E]">Delete</button></td>
+                  <td className="text-center"><button onClick={()=>navigate('/dashboard/add-product')} className="text-xs border px-2 py-1 rounded mr-1">Edit</button><button className="text-xs text-[#B3402E]">Delete</button></td>
                 </tr>
               ))}
             </tbody>
@@ -115,6 +117,7 @@ export function AddEditProduct(){
   )
 }
 export function GalleryOrders(){
+  const navigate = useNavigate()
   return (
     <div className="space-y-4">
       <h2 className="font-serif text-2xl">Gallery Orders</h2>
@@ -124,7 +127,7 @@ export function GalleryOrders(){
           <thead className="bg-[#FAF7F2] text-xs text-[#8A8078]"><tr><th className="p-3 text-left">Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
           <tbody>
             {orders.map(o=>(
-              <tr key={o.id} className="border-t"><td className="p-3 font-mono text-xs">{o.id}<div className="text-[11px] text-[#8A8078]">{o.date}</div></td><td className="text-xs">{o.customer}<div className="text-[11px] text-[#8A8078]">{o.gallery}</div></td><td className="text-center">{o.items}</td><td className="text-center">{o.total.toLocaleString()} EGP</td><td><span className="px-2 py-0.5 rounded-full text-[11px] bg-amber-100">{o.status}</span></td><td><button className="text-xs border px-2 py-1 rounded">View</button></td></tr>
+              <tr key={o.id} className="border-t"><td className="p-3 font-mono text-xs">{o.id}<div className="text-[11px] text-[#8A8078]">{o.date}</div></td><td className="text-xs">{o.customer}<div className="text-[11px] text-[#8A8078]">{o.gallery}</div></td><td className="text-center">{o.items}</td><td className="text-center">{o.total.toLocaleString()} EGP</td><td><span className="px-2 py-0.5 rounded-full text-[11px] bg-amber-100">{o.status}</span></td><td><button onClick={()=>navigate(`/dashboard/orders/${o.id}`)} className="text-xs border px-2 py-1 rounded">View</button></td></tr>
             ))}
           </tbody>
         </table>
@@ -151,9 +154,10 @@ export function OrderDetails(){
   )
 }
 export function Employees(){
+  const navigate = useNavigate()
   return (
     <div className="space-y-4">
-      <div className="flex justify-between"><h2 className="font-serif text-xl">Employees</h2><button className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-sm">+ Add Employee</button></div>
+      <div className="flex justify-between"><h2 className="font-serif text-xl">Employees</h2><button onClick={()=>navigate('/dashboard/employees/add')} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-sm">+ Add Employee</button></div>
       <input placeholder="Search by name/email" className="w-full border rounded-full px-4 py-2 text-sm" />
       <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
         <table className="w-full text-sm">

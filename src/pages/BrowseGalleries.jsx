@@ -1,7 +1,9 @@
-import { galleries, products } from '../data/mockData'
+import { useNavigate } from 'react-router-dom'
+import { galleries } from '../data/mockData'
 import { useRole } from '../context/RoleContext'
 export default function BrowseGalleries(){
-  const { role, setCurrentPage } = useRole()
+  const { role } = useRole()
+  const navigate = useNavigate()
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -25,7 +27,7 @@ export default function BrowseGalleries(){
               </div>
               <p className="text-xs text-[#8A8078] mt-3 line-clamp-2">Curated showroom featuring handcrafted furniture and timeless design pieces.</p>
               <div className="flex gap-2 mt-3">
-                <button onClick={()=>setCurrentPage('gallery-profile')} className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">View Showroom</button>
+                <button onClick={()=>navigate(`/galleries/${g.id}`)} className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">View Showroom</button>
                 {role==='admin' && <><button className="px-3 border rounded-lg text-xs">Edit</button><button className="px-3 bg-[#B3402E] text-white rounded-lg text-xs">Delete</button></>}
               </div>
             </div>

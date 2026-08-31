@@ -1,8 +1,8 @@
-import { useRole, NAV_CONFIG, PERMISSIONS } from '../context/RoleContext'
+import { NavLink } from 'react-router-dom'
+import { useRole, NAV_CONFIG } from '../context/RoleContext'
 
 export default function Sidebar(){
-  const { role, currentPage, setCurrentPage } = useRole()
-  // Only show for gallery_owner, employee, admin
+  const { role } = useRole()
   if(role==='customer') return null
   const galleryLinks = NAV_CONFIG.gallery.filter(l=> !l.roles || l.roles.includes(role))
   const adminLinks = NAV_CONFIG.admin.filter(l=> l.roles.includes(role))
@@ -12,11 +12,11 @@ export default function Sidebar(){
   if(!showGallery && !showAdmin) return null
 
   const Item = ({item})=>(
-    <button onClick={()=>setCurrentPage(item.path)}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-left transition-colors ${currentPage===item.path?'bg-[#4B3621] text-white':'text-[#8A8078] hover:bg-white hover:text-[#4B3621]'}`}>
+    <NavLink to={item.path}
+      className={({isActive})=>`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-left transition-colors ${isActive?'bg-[#4B3621] text-white':'text-[#8A8078] hover:bg-white hover:text-[#4B3621]'}`}>
       <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
       {item.label}
-    </button>
+    </NavLink>
   )
 
   return (
@@ -42,7 +42,7 @@ export default function Sidebar(){
       )}
       <div className="mt-6 p-3 bg-[#FAF7F2] rounded-lg border border-[#E7DFD3]">
         <div className="text-xs font-medium">Need help?</div>
-        <div className="text-[11px] text-[#8A8078]">Conditional rendering active — only pages your role can access are shown here.</div>
+        <div className="text-[11px] text-[#8A8078]">Conditional rendering active — only pages your role can access are shown here. URL now reflects navigation.</div>
       </div>
     </aside>
   )

@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { products } from '../data/mockData'
 import { useRole } from '../context/RoleContext'
 
 const categories = ['All','Sofas','Tables','Seating','Lighting','Decor']
 
 export default function Products(){
-  const { setCurrentPage, role } = useRole()
+  const navigate = useNavigate()
+  const { role } = useRole()
   const [activeCats, setActiveCats] = useState(['All'])
   const [q, setQ] = useState('')
   const toggle = (c)=>{
@@ -44,7 +46,7 @@ export default function Products(){
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map(p=>(
           <div key={p.id} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden group">
-            <div className="relative aspect-[4/3] overflow-hidden cursor-pointer" onClick={()=>setCurrentPage('product-detail')}>
+            <div className="relative aspect-[4/3] overflow-hidden cursor-pointer" onClick={()=>navigate(`/products/${p.id}`)}>
               <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
               {p.stock===0 && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><span className="bg-[#4B3621] text-white text-xs px-3 py-1 rounded-full">Out of stock</span></div>}
               {role==='admin' && <div className="absolute top-2 left-2 flex gap-1"><span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full">Admin</span></div>}
@@ -56,7 +58,7 @@ export default function Products(){
               </div>
               <div className="text-xs text-[#8A8078]">{p.gallery} • {p.category}</div>
               <div className="flex gap-2 mt-3">
-                <button onClick={()=>setCurrentPage('product-detail')} className="flex-1 border py-1.5 rounded-lg text-xs">View</button>
+                <button onClick={()=>navigate(`/products/${p.id}`)} className="flex-1 border py-1.5 rounded-lg text-xs">View</button>
                 {role==='admin' && <><button className="px-3 py-1.5 rounded-lg bg-white border text-xs">Edit</button><button className="px-3 py-1.5 rounded-lg bg-[#B3402E] text-white text-xs">Delete</button></>}
               </div>
             </div>

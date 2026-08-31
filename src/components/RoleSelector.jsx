@@ -1,7 +1,13 @@
+import { useNavigate } from 'react-router-dom'
 import { useRole, ROLES, ROLE_ORDER } from '../context/RoleContext'
 
 export default function RoleSelector(){
   const { role, setRole, roleMeta } = useRole()
+  const navigate = useNavigate()
+  const handleSwitch = (r)=>{
+    setRole(r)
+    navigate('/', { replace: true })
+  }
   return (
     <div className="bg-stone-950 text-stone-200 px-4 py-1.5 text-xs border-b border-stone-800 sticky top-0 z-[60]">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -18,7 +24,7 @@ export default function RoleSelector(){
             return (
               <button
                 key={r}
-                onClick={()=>setRole(r)}
+                onClick={()=>handleSwitch(r)}
                 className={`px-2.5 py-0.5 rounded text-[11px] font-medium transition-all ${isActive ? 'bg-amber-700 text-white font-bold shadow-xs' : 'text-stone-400 hover:text-white hover:bg-stone-800'}`}
               >
                 {ROLES[r].label}
