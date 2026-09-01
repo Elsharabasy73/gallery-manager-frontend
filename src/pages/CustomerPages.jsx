@@ -1,26 +1,95 @@
 import { products, orders } from '../data/mockData'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useWishlist } from '../context/WishlistContext'
+import { useRole } from '../context/RoleContext'
+import { getProductImageUrl } from '../utils/image'
 
 export function Wishlist(){
-  const [items,setItems]=useState(products.slice(0,3))
+  const navigate = useNavigate()
+  const { role, isAuthenticated } = useRole()
+  const { items, loading, error, remove, refresh, count } = useWishlist()
+  const [removingId, setRemovingId] = useState(null)
+  const [localError, setLocalError] = useState(null)
+
+  const handleRemove = async (product) => {
+    const pid = product._id || product.id
+    setLocalError(null)
+    setRemovingId(pid)
+    try {
+      await remove(pid)
+    } catch (e) {
+      setLocalError(e.message || 'Failed to remove item')
+    } finally {
+      setRemovingId(null)
+    }
+  }
+
+  if (!isAuthenticated || role !== 'customer') {
+    return (
+      <div className="text-center py-12 bg-white border border-[#E7DFD3] rounded-xl">
+        <p className="text-sm text-[#8A8078]">Wishlist is available for customers only. Please log in as a customer.</p>
+        <button onClick={()=>navigate('/login')} className="mt-3 bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm">Go to login</button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="font-serif text-2xl">Wishlist <span className="text-sm text-[#8A8078]">({items.length} saved)</span></h2>
-        <button className="border px-4 py-1.5 rounded-full text-xs">Add all to cart</button>
+        <h2 className="font-serif text-2xl">Wishlist <span className="text-sm text-[#8A8078]">({count} saved)</span></h2>
+        <div className="flex gap-2">
+          <button onClick={refresh} className="border px-4 py-1.5 rounded-full text-xs bg-white hover:bg-[#FAF7F2]">Refresh</button>
+          <button onClick={()=>navigate('/products')} className="border px-4 py-1.5 rounded-full text-xs bg-white hover:bg-[#FAF7F2]">Discover products</button>
+        </div>
       </div>
-      {items.length===0? <div className="text-center py-12 bg-white border border-dashed rounded-xl">No saved items — Discover products</div> :
+
+      {localError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{localError}</div>}
+      {error && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{error}</div>}
+
+      {loading ? (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({length:3}).map((_,i)=>(
+            <div key={i} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden animate-pulse">
+              <div className="aspect-[4/3] bg-[#E7DFD3]/60" />
+              <div className="p-3 space-y-2"><div className="h-4 bg-[#E7DFD3]/60 rounded w-3/4" /><div className="h-3 bg-[#E7DFD3]/40 rounded w-1/2" /></div>
+            </div>
+          ))}
+        </div>
+      ) : items.length===0 ? (
+        <div className="text-center py-12 bg-white border border-dashed rounded-xl">
+          <p className="text-sm text-[#8A8078]">No saved items — Discover products</p>
+          <button onClick={()=>navigate('/products')} className="mt-3 text-[#C19A6B] text-sm underline">Browse products</button>
+        </div>
+      ) : (
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map(p=>(
-          <div key={p.id} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
-            <img src={p.image} alt={p.name} className="aspect-[4/3] object-cover w-full" />
+        {items.map(p=>{
+          const pid = p._id || p.id
+          const img = getProductImageUrl(p) || p.image || p.mainImageUrl || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80'
+          const price = p.price
+          return (
+          <div key={pid} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden group">
+            <div className="cursor-pointer" onClick={()=>navigate(`/products/${pid}`)}>
+              <img src={img} alt={p.name} className="aspect-[4/3] object-cover w-full group-hover:scale-[1.02] transition" loading="lazy" />
+            </div>
             <div className="p-3">
-              <div className="flex justify-between"><span className="text-sm font-medium">{p.name}</span><span className="text-sm">{p.price.toLocaleString()} EGP</span></div>
-              <div className="flex gap-2 mt-3"><button onClick={()=>setItems(items.filter(x=>x.id!==p.id))} className="flex-1 border py-1.5 rounded-lg text-xs flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px] icon-fill text-[#C19A6B]">favorite</span> Remove</button><button className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">Move to Cart</button></div>
+              <div className="flex justify-between gap-2"><span className="text-sm font-medium truncate">{p.name}</span><span className="text-sm font-semibold whitespace-nowrap">{Number(price).toLocaleString()} EGP</span></div>
+              <div className="text-xs text-[#8A8078] truncate">{p.gallery?.name || p.gallery || ''}</div>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={()=>handleRemove(p)}
+                  disabled={removingId===pid}
+                  className="flex-1 border py-1.5 rounded-lg text-xs flex items-center justify-center gap-1 bg-white hover:bg-[#FAF7F2] disabled:opacity-60"
+                >
+                  <span className="material-symbols-outlined text-[16px] icon-fill text-[#C19A6B]">favorite</span> {removingId===pid?'Removing...':'Remove'}
+                </button>
+                <button onClick={()=>navigate(`/products/${pid}`)} className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">View product</button>
+              </div>
             </div>
           </div>
-        ))}
-      </div>}
+        )})}
+      </div>
+      )}
     </div>
   )
 }

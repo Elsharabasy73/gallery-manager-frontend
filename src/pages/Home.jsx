@@ -5,6 +5,8 @@ import { getProducts, unwrapProducts } from '../api/products'
 import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getCategories, unwrapCategories } from '../api/categories'
 import { getProductImageUrl, getGalleryLogoUrl } from '../utils/image'
+import { useWishlist } from '../context/WishlistContext'
+import { useRole } from '../context/RoleContext'
 
 const FALLBACK_CATEGORIES = [
   { id: 'sofas', name: 'Sofas', arabicName: 'صوفا', slug: 'sofas' },
@@ -31,6 +33,10 @@ function formatPrice(price) {
 
 export default function Home() {
   const navigate = useNavigate()
+  const { isAuthenticated, role } = useRole()
+  const { isWishlisted, toggle } = useWishlist()
+  const [wishError, setWishError] = useState('')
+  const [togglingId, setTogglingId] = useState(null)
   const [search, setSearch] = useState('')
 
   const [products, setProducts] = useState([])
@@ -214,7 +220,7 @@ export default function Home() {
           </button>
         </div>
 
-
+        {wishError && <div className="mb-3 bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {loadingProducts
@@ -242,14 +248,28 @@ export default function Home() {
                         loading="lazy"
                       />
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation()
-                          // todo: wishlist
+                          if (!isAuthenticated || role !== 'customer') {
+                            navigate('/login')
+                            return
+                          }
+                          const pid = String(pid)
+                          setWishError('')
+                          setTogglingId(pid)
+                          try {
+                            await toggle(pid)
+                          } catch (err) {
+                            setWishError(err.message || 'Wishlist failed')
+                          } finally {
+                            setTogglingId(null)
+                          }
                         }}
-                        className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition"
+                        className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition ${isWishlisted(pid) ? 'bg-[#C19A6B] text-white' : 'bg-white/90 hover:bg-white'}`}
                         aria-label="favorite"
+                        disabled={togglingId === String(pid)}
                       >
-                        <span className="material-symbols-outlined text-[18px]">favorite</span>
+                        <span className={`material-symbols-outlined text-[18px] ${isWishlisted(pid) ? 'icon-fill' : ''}`}>favorite</span>
                       </button>
                       {Number(p.stock) === 0 && (
                         <div className="absolute inset-0 bg-white/60 flex items-center justify-center">

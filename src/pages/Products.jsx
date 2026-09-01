@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { products as mockProducts } from '../data/mockData'
 import { useRole } from '../context/RoleContext'
+import { useWishlist } from '../context/WishlistContext'
 import { getProducts, unwrapProducts } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
 import { getProductImageUrl } from '../utils/image'
@@ -22,7 +23,10 @@ const FALLBACK_CATEGORIES = [
 
 export default function Products() {
   const navigate = useNavigate()
-  const { role } = useRole()
+  const { role, isAuthenticated } = useRole()
+  const { isWishlisted, toggle: toggleWishlist } = useWishlist()
+  const [wishError, setWishError] = useState('')
+  const [togglingId, setTogglingId] = useState(null)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [apiCategories, setApiCategories] = useState([])
@@ -194,19 +198,38 @@ export default function Products() {
         </div>
       </div>
 
+      {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
       {loading && <div className="text-center py-4 text-sm text-[#8A8078]">Loading…</div>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((p) => {
+          const pid = String(p._id || p.id)
           const img = getProductImageUrl(p) || p.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80'
           const galleryName = p.gallery?.name || p.gallery || ''
           const catName = p.category?.name || p.category || ''
+          const wished = isWishlisted(pid)
           return (
-            <div key={p.id} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden group">
-              <div className="relative aspect-[4/3] overflow-hidden cursor-pointer" onClick={() => navigate(`/products/${p.id}`)}>
+            <div key={pid} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden group">
+              <div className="relative aspect-[4/3] overflow-hidden cursor-pointer" onClick={() => navigate(`/products/${pid}`)}>
                 <img src={img} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" />
                 {Number(p.stock) === 0 && <div className="absolute inset-0 bg-white/60 flex items-center justify-center"><span className="bg-[#4B3621] text-white text-xs px-3 py-1 rounded-full">Out of stock</span></div>}
                 {role === 'admin' && <div className="absolute top-2 left-2 flex gap-1"><span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full">Admin</span></div>}
+                {role === 'customer' && (
+                  <button
+                    onClick={async (e)=>{
+                      e.stopPropagation()
+                      if (!isAuthenticated) { navigate('/login'); return }
+                      setWishError('')
+                      setTogglingId(pid)
+                      try { await toggleWishlist(pid) } catch(err){ setWishError(err.message || 'Wishlist failed') } finally { setTogglingId(null) }
+                    }}
+                    disabled={togglingId===pid}
+                    className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition ${wished ? 'bg-[#C19A6B] text-white' : 'bg-white/90 hover:bg-white'}`}
+                    aria-label="favorite"
+                  >
+                    <span className={`material-symbols-outlined text-[18px] ${wished?'icon-fill':''}`}>favorite</span>
+                  </button>
+                )}
               </div>
               <div className="p-4">
                 <div className="flex justify-between gap-2">
@@ -215,7 +238,21 @@ export default function Products() {
                 </div>
                 <div className="text-xs text-[#8A8078] truncate">{galleryName}{galleryName && catName ? ' • ' : ''}{catName}</div>
                 <div className="flex gap-2 mt-3">
-                  <button onClick={() => navigate(`/products/${p.id}`)} className="flex-1 border py-1.5 rounded-lg text-xs">View</button>
+                  <button onClick={() => navigate(`/products/${pid}`)} className="flex-1 border py-1.5 rounded-lg text-xs">View</button>
+                  {role === 'customer' && (
+                    <button
+                      onClick={async ()=>{
+                        if (!isAuthenticated) { navigate('/login'); return }
+                        setWishError('')
+                        setTogglingId(pid)
+                        try { await toggleWishlist(pid) } catch(err){ setWishError(err.message || 'Wishlist failed') } finally { setTogglingId(null) }
+                      }}
+                      disabled={togglingId===pid}
+                      className={`px-3 py-1.5 rounded-lg border text-xs flex items-center gap-1 ${wished ? 'bg-[#C19A6B] text-white border-[#C19A6B]' : 'bg-white'}`}
+                    >
+                      <span className={`material-symbols-outlined text-[14px] ${wished?'icon-fill':''}`}>favorite</span> {wished?'Saved':'Save'}
+                    </button>
+                  )}
                   {role === 'admin' && <><button className="px-3 py-1.5 rounded-lg bg-white border text-xs">Edit</button><button className="px-3 py-1.5 rounded-lg bg-[#B3402E] text-white text-xs">Delete</button></>}
                 </div>
               </div>

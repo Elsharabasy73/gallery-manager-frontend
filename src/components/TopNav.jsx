@@ -1,8 +1,10 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useRole, NAV_CONFIG } from '../context/RoleContext'
+import { useWishlist } from '../context/WishlistContext'
 
 export default function TopNav(){
   const { role, logout, isAuthenticated } = useRole()
+  const { count: wishlistCount } = useWishlist()
   const navigate = useNavigate()
   const location = useLocation()
   const isCustomer = role==='customer'
@@ -29,7 +31,7 @@ export default function TopNav(){
             <>
               <button onClick={()=>navigate('/wishlist')} className={`relative p-2 rounded-full hover:bg-white transition-colors ${isActive('/wishlist')?'bg-white':''}`}>
                 <span className={`material-symbols-outlined ${isActive('/wishlist')?'icon-fill text-[#C19A6B]':''}`}>favorite</span>
-                <span className="absolute -top-0.5 -right-0.5 bg-[#C19A6B] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">2</span>
+                {wishlistCount > 0 && <span className="absolute -top-0.5 -right-0.5 bg-[#C19A6B] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{wishlistCount > 99 ? '99+' : wishlistCount}</span>}
               </button>
               <button onClick={()=>navigate('/cart')} className={`relative p-2 rounded-full hover:bg-white transition-colors ${isActive('/cart')?'bg-white':''}`}>
                 <span className="material-symbols-outlined">shopping_cart</span>
