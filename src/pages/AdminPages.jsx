@@ -1,5 +1,6 @@
 import { users, products, galleries, orders } from '../data/mockData'
 import { useState } from 'react'
+import ProductCard from '../components/ProductCard'
 
 export function AdminUsers(){
   return (
@@ -24,11 +25,8 @@ export function AdminProducts(){
     <div className="space-y-4">
       <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Products</h2><span className="text-xs bg-white border px-2 py-1 rounded-full">Same as products with delete/edit</span></div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {products.map(p=>(
-          <div key={p.id} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
-            <img src={p.image} alt={p.name} className="aspect-[4/3] object-cover w-full" />
-            <div className="p-3"><div className="flex justify-between"><span className="text-sm font-medium">{p.name}</span><span className="text-sm">{p.price.toLocaleString()} EGP</span></div><div className="text-xs text-[#8A8078]">Gallery: {p.gallery}</div><div className="flex gap-2 mt-2"><button className="flex-1 border py-1 rounded text-xs">Edit</button><button className="flex-1 bg-[#B3402E] text-white py-1 rounded text-xs">Delete</button></div></div>
-          </div>
+        {products.map((p) => (
+          <ProductCard key={p.id} product={p} />
         ))}
       </div>
     </div>

@@ -3,27 +3,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useWishlist } from '../context/WishlistContext'
 import { useRole } from '../context/RoleContext'
-import { getProductImageUrl } from '../utils/image'
+import ProductCard from '../components/ProductCard'
 
 export function Wishlist(){
   const navigate = useNavigate()
   const { role, isAuthenticated } = useRole()
-  const { items, loading, error, remove, refresh, count } = useWishlist()
-  const [removingId, setRemovingId] = useState(null)
+  const { items, loading, error, refresh, count } = useWishlist()
   const [localError, setLocalError] = useState(null)
-
-  const handleRemove = async (product) => {
-    const pid = product._id || product.id
-    setLocalError(null)
-    setRemovingId(pid)
-    try {
-      await remove(pid)
-    } catch (e) {
-      setLocalError(e.message || 'Failed to remove item')
-    } finally {
-      setRemovingId(null)
-    }
-  }
 
   if (!isAuthenticated || role !== 'customer') {
     return (
@@ -63,31 +49,9 @@ export function Wishlist(){
         </div>
       ) : (
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map(p=>{
-          const pid = p._id || p.id
-          const img = getProductImageUrl(p) || p.image || p.mainImageUrl || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80'
-          const price = p.price
-          return (
-          <div key={pid} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden group">
-            <div className="cursor-pointer" onClick={()=>navigate(`/products/${pid}`)}>
-              <img src={img} alt={p.name} className="aspect-[4/3] object-cover w-full group-hover:scale-[1.02] transition" loading="lazy" />
-            </div>
-            <div className="p-3">
-              <div className="flex justify-between gap-2"><span className="text-sm font-medium truncate">{p.name}</span><span className="text-sm font-semibold whitespace-nowrap">{Number(price).toLocaleString()} EGP</span></div>
-              <div className="text-xs text-[#8A8078] truncate">{p.gallery?.name || p.gallery || ''}</div>
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={()=>handleRemove(p)}
-                  disabled={removingId===pid}
-                  className="flex-1 border py-1.5 rounded-lg text-xs flex items-center justify-center gap-1 bg-white hover:bg-[#FAF7F2] disabled:opacity-60"
-                >
-                  <span className="material-symbols-outlined text-[16px] icon-fill text-[#C19A6B]">favorite</span> {removingId===pid?'Removing...':'Remove'}
-                </button>
-                <button onClick={()=>navigate(`/products/${pid}`)} className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">View product</button>
-              </div>
-            </div>
-          </div>
-        )})}
+        {items.map((p) => (
+          <ProductCard key={p._id || p.id} product={p} variant="wishlist" onWishlistError={setLocalError} />
+        ))}
       </div>
       )}
     </div>

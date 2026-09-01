@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getGallery, unwrapGallery } from '../api/galleries'
 import { apiFetch } from '../api/client'
 import { unwrapProducts } from '../api/products'
-import { getGalleryLogoUrl, getGalleryBannerUrl, getProductImageUrl, STORAGE_BASE } from '../utils/image'
+import { getGalleryLogoUrl, getGalleryBannerUrl, STORAGE_BASE } from '../utils/image'
+import ProductCard from '../components/ProductCard'
 
 function getInitials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'GA'
@@ -39,6 +40,7 @@ export default function GalleryProfile() {
 
   const [page, setPage] = useState(1)
   const [view, setView] = useState('grid')
+  const [wishError, setWishError] = useState('')
 
   // fetch gallery via router .route("/:id").get(getGalleryValidator, getGallery) — id only
   useEffect(() => {
@@ -160,6 +162,7 @@ export default function GalleryProfile() {
       </div>
 
       {productsError && <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{productsError}</div>}
+      {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
 
       {loadingProducts ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -169,15 +172,14 @@ export default function GalleryProfile() {
         <div className="text-center py-12 bg-white border border-dashed rounded-xl">No products in this gallery — {keyword ? <button onClick={() => { setInput(''); setKeyword('') }} className="text-[#C19A6B] underline">Clear search</button> : 'check back later'}</div>
       ) : (
         <div className={view === 'grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'grid grid-cols-1 gap-4'}>
-          {products.map((p) => {
-            const img = getProductImageUrl(p) || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80'
-            return (
-              <div key={p.id} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden cursor-pointer" onClick={() => navigate(`/products/${p.id}`)}>
-                <img src={img} alt={p.name} className={`${view === 'grid' ? 'aspect-[4/3]' : 'aspect-[16/9]'} object-cover w-full`} loading="lazy" />
-                <div className="p-3 flex justify-between gap-2"><span className="text-sm font-medium truncate">{p.name}</span><span className="text-sm whitespace-nowrap">{Number(p.price).toLocaleString()} EGP</span></div>
-              </div>
-            )
-          })}
+          {products.map((p) => (
+            <ProductCard
+              key={p.id || p._id}
+              product={p}
+              aspect={view === 'grid' ? 'aspect-[4/3]' : 'aspect-[16/9]'}
+              onWishlistError={setWishError}
+            />
+          ))}
         </div>
       )}
 
