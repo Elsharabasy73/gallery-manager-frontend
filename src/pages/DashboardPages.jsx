@@ -7,6 +7,7 @@ import { apiFetch } from '../api/client'
 import { unwrapProducts, getProduct, unwrapProduct, createProduct, updateProduct } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
 import { createEmployee } from '../api/employees'
+import { useGallery } from '../context/GalleryContext'
 
 export function Overview(){
   return (
@@ -396,6 +397,7 @@ export function MyProducts(){
 }
 export function AddEditProduct(){
   const navigate = useNavigate()
+  const { galleryId: ctxGalleryId } = useGallery()
   const [searchParams] = useState(()=> new URLSearchParams(window.location.search))
   const editId = searchParams.get('id') || new URLSearchParams(window.location.search).get('id')
   const isEdit = !!editId
@@ -529,8 +531,8 @@ export function AddEditProduct(){
       if(mainFile) fd.append('mainImageUrl', mainFile)
       imagesFiles.forEach(f=> fd.append('images', f))
       // also append galleryId auto-resolved; backend assigns from owner, no need to send
-      if(isEdit) await updateProduct(editId, fd)
-      else await createProduct(fd)
+      if(isEdit) await updateProduct(editId, fd, ctxGalleryId || null)
+      else await createProduct(fd, ctxGalleryId || null)
       setSuccess(isEdit?'Product updated':'Product created')
       setTimeout(()=> navigate('/dashboard/my-products'), 800)
     }catch(err){
@@ -636,14 +638,14 @@ export function Employees(){
 }
 export function AddEmployee(){
   const navigate=useNavigate()
-  const [form,setForm]=useState({firstName:'', lastName:'', email:'', password:'', passwordConfirm:'', jobTitle:'', phone:''})
+  const [form,setForm]=useState({firstName:'', lastName:'', email:'', password:'', passwordConfirm:'', title:'', phone:''})
   const [saving,setSaving]=useState(false)
   const [error,setError]=useState('')
   const [success,setSuccess]=useState('')
+  const { gallery: ctxGallery, galleryId: ctxGalleryId } = useGallery()
   const handleChange=(e)=>{
     const {name,value}=e.target
-    // map job_title etc to camelCase if needed
-    const key=name==='first_name'?'firstName': name==='last_name'?'lastName': name==='job_title'?'jobTitle': name
+    const key=name==='first_name'?'firstName': name==='last_name'?'lastName': name==='title'?'title': name
     setForm(s=>({...s, [key]:value}))
   }
   const handleSubmit=async(e)=>{
@@ -654,6 +656,10 @@ export function AddEmployee(){
     if(!form.email.trim()){ setError('Email is required'); return}
     if(!form.password || form.password.length<6){ setError('Password min 6'); return}
     if(form.password !== form.passwordConfirm){ setError('Passwords do not match'); return}
+    if (!ctxGalleryId && !ctxGallery) {
+      setError('No gallery found. Please create a gallery first.')
+      return
+    }
     setSaving(true)
     try{
       await createEmployee({
@@ -662,9 +668,9 @@ export function AddEmployee(){
         email: form.email.trim(),
         password: form.password,
         passwordConfirm: form.passwordConfirm,
-        jobTitle: form.jobTitle?.trim() || undefined,
+        title: form.title?.trim() || undefined,
         phone: form.phone?.trim() || undefined,
-      })
+      }, ctxGalleryId || ctxGallery?.id || ctxGallery?._id || null)
       setSuccess('Employee created')
       setTimeout(()=> navigate('/dashboard/employees'), 800)
     }catch(err){
@@ -683,7 +689,7 @@ export function AddEmployee(){
         <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">First name*</label><input name="firstName" value={form.firstName} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">Last name*</label><input name="lastName" value={form.lastName} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
         <div><label className="text-xs">Email* (unique)</label><input name="email" value={form.email} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="employee@gallery.test" type="email" /></div>
         <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">Temporary password* (min 6)</label><input name="password" value={form.password} onChange={handleChange} type="password" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">Confirm*</label><input name="passwordConfirm" value={form.passwordConfirm} onChange={handleChange} type="password" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
-        <div><label className="text-xs">Job title</label><input name="jobTitle" value={form.jobTitle} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="Sales, Inventory..." /></div>
+        <div><label className="text-xs">Title</label><input name="title" value={form.title} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="Sales, Inventory..." /></div>
         <div><label className="text-xs">Phone</label><input name="phone" value={form.phone} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
         <div className="flex gap-3"><button type="button" onClick={()=>navigate('/dashboard/employees')} className="flex-1 border py-2 rounded-lg text-sm">Cancel</button><button type="submit" disabled={saving} className="flex-1 bg-[#4B3621] text-white py-2 rounded-lg text-sm disabled:opacity-60">{saving?'Creating...':'Create Employee'}</button></div>
       </form>

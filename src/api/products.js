@@ -42,12 +42,20 @@ export function unwrapProduct(res) {
   return res
 }
 
-export function createProduct(formData) {
-  return apiFetch('/products', { method: 'POST', body: formData })
+export function createProduct(formData, galleryId = null) {
+  const isFD = formData instanceof FormData
+  if (galleryId) {
+    if (isFD && !formData.has('galleryId')) formData.append('galleryId', String(galleryId))
+    else if (formData && typeof formData === 'object' && !formData.galleryId) formData.galleryId = String(galleryId)
+    return apiFetch(`/galleries/${galleryId}/products`, { method: 'POST', body: formData, isFormData: isFD })
+  }
+  return apiFetch('/products', { method: 'POST', body: formData, isFormData: isFD })
 }
 
-export function updateProduct(id, formData) {
+export function updateProduct(id, formData, galleryId = null) {
   const isFD = formData instanceof FormData
+  if (galleryId && isFD && !formData.has('galleryId')) formData.append('galleryId', String(galleryId))
+  else if (galleryId && formData && typeof formData === 'object' && !formData.galleryId) formData.galleryId = String(galleryId)
   return apiFetch(`/products/${id}`, { method: 'PUT', body: formData, isFormData: isFD })
 }
 

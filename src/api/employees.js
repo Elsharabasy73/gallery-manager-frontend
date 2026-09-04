@@ -10,11 +10,21 @@ export function getEmployees(params = {}) {
   return apiFetch(`/employees${qs}`)
 }
 
-export function createEmployee(payload) {
-  // payload: { firstName, lastName, email, password, passwordConfirm, jobTitle, phone }
-  // Backend auto-assigns galleryId from gallery_owner's gallery (per design doc)
-  // Some backends use POST /employees, fallback is handled by caller if 404
-  return apiFetch('/employees', { method: 'POST', body: payload })
+export function createEmployee(payload, galleryId = null) {
+  // payload: { firstName, lastName, email, password, passwordConfirm, title, phone } - title not jobTitle per API
+  // Backend expects title (see employee.validation.js:79) and galleryId via params {{LURL}}/api/v1/galleries/{{GALLERY_ID}}/employees
+  // Controller sets req.body.galleryId = req.params.galleryId if present
+  let body = { ...payload }
+  // map legacy jobTitle -> title if needed
+  if (body.jobTitle && !body.title) {
+    body.title = body.jobTitle
+    delete body.jobTitle
+  }
+  if (galleryId) {
+    body.galleryId = String(galleryId)
+    return apiFetch(`/galleries/${galleryId}/employees`, { method: 'POST', body })
+  }
+  return apiFetch('/employees', { method: 'POST', body })
 }
 
 export function unwrapEmployees(res) {
