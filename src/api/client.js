@@ -1,4 +1,21 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
+const RAW_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
+// Auto-fix for LAN testing: if page is loaded via 192.168.x.x but env is localhost, rewrite to current hostname
+function resolveBaseUrl(raw) {
+  if (typeof window === 'undefined') return raw
+  try {
+    const host = window.location.hostname
+    // only rewrite when accessing via LAN IP (not localhost) and raw points to localhost
+    if (host && host !== 'localhost' && host !== '127.0.0.1' && raw.includes('localhost')) {
+      return raw.replace('localhost', host)
+    }
+    // also handle explicit 127.0.0.1 in raw
+    if (host && host !== '127.0.0.1' && raw.includes('127.0.0.1')) {
+      return raw.replace('127.0.0.1', host)
+    }
+  } catch {}
+  return raw
+}
+const BASE_URL = resolveBaseUrl(RAW_BASE_URL)
 
 export async function apiFetch(path, { method = 'GET', body, token, isFormData = false } = {}) {
   const headers = {}

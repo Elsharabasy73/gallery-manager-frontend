@@ -21,7 +21,7 @@ function formatPrice(price) {
  *  - aspect: tailwind aspect class, e.g. 'aspect-[4/3]'
  *  - onWishlistError: optional callback(msg) to bubble wishlist errors to parent banner
  */
-export default function ProductCard({ product: p, variant = 'default', aspect = 'aspect-[4/3]', onWishlistError }) {
+export default function ProductCard({ product: p, variant = 'default', aspect = 'aspect-[4/3]', onWishlistError, onEdit, onDelete, deleting }) {
   const navigate = useNavigate()
   const { role, isAuthenticated } = useRole()
   const { isWishlisted, toggle } = useWishlist()
@@ -196,8 +196,8 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
           )}
           {showAdminBadge && (
             <>
-              <button className="px-3 py-1.5 rounded-lg bg-white border text-xs">Edit</button>
-              <button className="px-3 py-1.5 rounded-lg bg-[#B3402E] text-white text-xs">Delete</button>
+              <button onClick={(e)=>{e.stopPropagation(); onEdit?.(p)}} className="px-3 py-1.5 rounded-lg bg-white border text-xs hover:bg-[#FAF7F2]">Edit</button>
+              <button onClick={(e)=>{e.stopPropagation(); onDelete?.(p)}} disabled={!!deleting} className="px-3 py-1.5 rounded-lg bg-[#B3402E] text-white text-xs disabled:opacity-60">{deleting?'Deleting...':'Delete'}</button>
             </>
           )}
         </div>

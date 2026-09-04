@@ -54,11 +54,15 @@ export function createGallery(formData) {
 }
 
 export function updateMyGallery(formData) {
-  return apiFetch('/galleries/my-gallery', { method: 'PATCH', body: formData })
+  return apiFetch('/galleries/my-gallery', { method: 'PUT', body: formData, isFormData: formData instanceof FormData })
 }
 
 export function updateGallery(id, formData) {
   const body = formData instanceof FormData ? formData : formData
   const isFD = formData instanceof FormData
   return apiFetch(`/galleries/${id}`, { method: 'PUT', body, isFormData: isFD })
+}
+
+export function deleteGallery(id) {
+  return apiFetch(`/galleries/${id}`, { method: 'DELETE' })
 }

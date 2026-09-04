@@ -29,7 +29,7 @@ export default function Products() {
   const [activeCats, setActiveCats] = useState(['All'])
   const [input, setInput] = useState(searchParams.get('keyword') || '')
   const [q, setQ] = useState(searchParams.get('keyword') || '')
-  const doSearch = () => setQ(input.trim())
+  const doSearch = () => { setQ(input.trim()); setPage(1) }
 
   const [sort, setSort] = useState(searchParams.get('sort') || '-createdAt')
 
@@ -37,10 +37,12 @@ export default function Products() {
   const [priceMax, setPriceMax] = useState('')
   const [appliedMin, setAppliedMin] = useState('')
   const [appliedMax, setAppliedMax] = useState('')
-  const applyPrice = () => { setAppliedMin(priceMin.trim()); setAppliedMax(priceMax.trim()) }
+  const applyPrice = () => { setAppliedMin(priceMin.trim()); setAppliedMax(priceMax.trim()); setPage(1) }
 
   const [items, setItems] = useState(mockProducts)
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(() => parseInt(searchParams.get('page') || '1', 10))
+  const [pagination, setPagination] = useState(null)
 
   const toggle = (c) => {
     let next
@@ -50,8 +52,9 @@ export default function Products() {
       if (next.length === 0) next = ['All']
     }
     setActiveCats(next)
-    // keep URL in sync so refresh / share preserves selected category
+    setPage(1)
     const newParams = new URLSearchParams(searchParams)
+    newParams.delete('page')
     if (next.length === 1 && next[0] !== 'All') {
       const catObj = displayCategories.find((cat) => cat.name === next[0])
       if (catObj) {
@@ -66,6 +69,20 @@ export default function Products() {
     }
     setSearchParams(newParams, { replace: true })
   }
+
+  useEffect(() => {
+    const urlPage = parseInt(searchParams.get('page') || '1', 10)
+    if (urlPage !== page) setPage(urlPage)
+  }, [searchParams])
+
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams)
+    if (page !== 1) newParams.set('page', String(page))
+    else newParams.delete('page')
+    if (newParams.toString() !== searchParams.toString()) {
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [page])
 
   // sync category from URL (homepage navigation: /products?categoryId=...&category=slug) -> select pill
   useEffect(() => {
@@ -95,9 +112,9 @@ export default function Products() {
       try {
         const params = {
           limit: 12,
-          page: 1,
+          page,
           sort,
-          fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,gallery[id,name,slug],category[id,name,slug,arabicName]',
+          fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,galleryId,gallery[id,name,slug],category[id,name,slug,arabicName]',
         }
         if (q) params.keyword = q
         if (appliedMin) params['price[gte]'] = appliedMin
@@ -108,7 +125,6 @@ export default function Products() {
           if (cid) params.categoryId = cid
           else if (cat?.slug) params.category = cat.slug
         } else {
-          // initial navigation before activeCats sync: use URL directly so request is filtered even before categories load
           const urlCatId = searchParams.get('categoryId')
           if (urlCatId) params.categoryId = urlCatId
           else {
@@ -121,15 +137,19 @@ export default function Products() {
         const data = unwrapProducts(res)
         if (data.length) setItems(data)
         else if (res?.results === 0) setItems([])
+        setPagination(res?.paginationResult || res?.pagination || null)
       } catch {
-        if (!cancelled) setItems(mockProducts)
+        if (!cancelled) {
+          setItems(mockProducts)
+          setPagination(null)
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
     run()
     return () => { cancelled = true }
-  }, [q, sort, appliedMin, appliedMax, activeCats, apiCategories, displayCategories, searchParams])
+  }, [q, sort, appliedMin, appliedMax, activeCats, apiCategories, displayCategories, searchParams, page])
 
   const filtered = items.filter((p) => {
     const catName = p.category?.name || (typeof p.category === 'string' ? p.category : '') || ''
@@ -152,7 +172,7 @@ export default function Products() {
           </div>
           <div className="flex gap-2 w-full md:w-auto shrink-0">
             <button onClick={doSearch} className="flex-1 md:flex-none bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap">Search</button>
-            <select value={sort} onChange={(e) => setSort(e.target.value)} className="flex-1 md:flex-none border border-[#E7DFD3] rounded-full px-3 py-2 text-sm bg-white min-w-[140px]">
+            <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1) }} className="flex-1 md:flex-none border border-[#E7DFD3] rounded-full px-3 py-2 text-sm bg-white min-w-[140px]">
               {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
@@ -187,7 +207,7 @@ export default function Products() {
           </div>
           <div className="flex gap-2 shrink-0">
             <button onClick={applyPrice} className="px-4 py-1.5 rounded-full border text-sm bg-white whitespace-nowrap">Apply</button>
-            <button onClick={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt'); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('keyword'); setSearchParams(np, { replace: true }) }} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">Clear</button>
+            <button onClick={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt'); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('keyword'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">Clear</button>
           </div>
         </div>
       </div>
@@ -195,12 +215,27 @@ export default function Products() {
       {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
       {loading && <div className="text-center py-4 text-sm text-[#8A8078]">Loading…</div>}
 
+      <div className="flex items-center justify-between text-xs text-[#8A8078]">
+        <span>{loading ? 'Loading…' : `${filtered.length} products${pagination ? ` • page ${pagination.currentPage || page}/${pagination.numberOfPages || 1}` : ''}`}</span>
+        {(q || appliedMin || appliedMax || activeCats[0] !== 'All' || page !== 1) && (
+          <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPriceMin(''); setPriceMax(''); setPage(1); const np = new URLSearchParams(); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">Clear filters</button>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {filtered.map((p) => (
           <ProductCard key={String(p._id || p.id)} product={p} onWishlistError={setWishError} />
         ))}
       </div>
-      {filtered.length === 0 && !loading && <div className="text-center py-12 bg-white border border-dashed rounded-xl">No products — <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">Clear filters</button></div>}
+      {filtered.length === 0 && !loading && <div className="text-center py-12 bg-white border border-dashed rounded-xl">No products — <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">Clear filters</button></div>}
+
+      {pagination && (
+        <div className="flex justify-center items-center gap-2 pt-2">
+          <button disabled={!pagination.prev} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">Prev</button>
+          <span className="text-sm text-[#8A8078]">Page {pagination.currentPage} / {pagination.numberOfPages || 1}</span>
+          <button disabled={!pagination.next} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">Next</button>
+        </div>
+      )}
     </div>
   )
 }
