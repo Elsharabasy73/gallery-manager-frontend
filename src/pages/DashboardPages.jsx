@@ -6,21 +6,25 @@ import { getGalleryLogoUrl, getGalleryBannerUrl, STORAGE_BASE, getProductImageUr
 import { apiFetch } from '../api/client'
 import { unwrapProducts, getProduct, unwrapProduct, createProduct, updateProduct } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
-import { createEmployee } from '../api/employees'
+import { createEmployee, getEmployees, getEmployee, updateEmployee, unwrapEmployees, unwrapEmployee } from '../api/employees'
 import { useGallery } from '../context/GalleryContext'
 
 export function Overview(){
+  const { gallery, loading, error } = useGallery()
+  const productCount = gallery?.productCount
+  const employeeCount = gallery?.employeeCount
   return (
     <div className="space-y-6">
       <h2 className="font-serif text-2xl">Dashboard Overview</h2>
+      {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          {k:'Total Products', v:'24', c:'bg-white'},
-          {k:'Pending Orders', v:'7', c:'bg-amber-50'},
-          {k:'Employees', v:'4', c:'bg-white'},
-          {k:'Revenue (Aug)', v:'48,200 EGP', c:'bg-green-50'},
+          {k:'Total Products', v: loading ? '…' : (productCount ?? '—'), c:'bg-white', sub: gallery ? `${gallery.name}` : 'From my-gallery'},
+          {k:'Pending Orders', v:'7', c:'bg-amber-50', sub: 'Mock'},
+          {k:'Employees', v: loading ? '…' : (employeeCount ?? '—'), c:'bg-white', sub: gallery ? 'In your gallery' : 'From my-gallery'},
+          {k:'Revenue (Aug)', v:'48,200 EGP', c:'bg-green-50', sub: 'Mock'},
         ].map(s=>(
-          <div key={s.k} className={`border border-[#E7DFD3] rounded-xl p-4 ${s.c}`}><div className="text-xs text-[#8A8078]">{s.k}</div><div className="text-xl font-semibold">{s.v}</div></div>
+          <div key={s.k} className={`border border-[#E7DFD3] rounded-xl p-4 ${s.c}`}><div className="text-xs text-[#8A8078]">{s.k}</div><div className="text-xl font-semibold">{s.v}</div>{s.sub && <div className="text-[11px] text-[#8A8078]">{s.sub}</div>}</div>
         ))}
       </div>
       <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
@@ -616,33 +620,117 @@ export function OrderDetails(){
 }
 export function Employees(){
   const navigate = useNavigate()
+  const { galleryId: ctxGalleryId } = useGallery()
+  const [search, setSearch] = useState('')
+  const [employees, setEmployees] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!ctxGalleryId) {
+      setLoading(false)
+      return
+    }
+    let cancelled = false
+    async function fetchEmployees(){
+      setLoading(true)
+      setError('')
+      try {
+        const res = await getEmployees({ galleryId: ctxGalleryId })
+        if (cancelled) return
+        const data = unwrapEmployees(res)
+        setEmployees(data)
+      } catch (err) {
+        if (cancelled) return
+        setError(err.message || 'Failed to load employees')
+        setEmployees([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchEmployees()
+    return () => { cancelled = true }
+  }, [ctxGalleryId])
+
+  const filtered = employees.filter(e => {
+    if (!search.trim()) return true
+    const q = search.toLowerCase()
+    const name = `${e.firstName || ''} ${e.lastName || ''}`.toLowerCase() || (e.name||'').toLowerCase()
+    const email = (e.email || e.user?.email || '').toLowerCase()
+    const title = (e.title || e.jobTitle || '').toLowerCase()
+    return name.includes(q) || email.includes(q) || title.includes(q)
+  })
+
+  if (!ctxGalleryId && !loading) return <div className="text-center py-16 bg-white border rounded-xl"><p className="text-sm text-[#8A8078]">No gallery found. Please create a gallery first.</p><button onClick={()=>navigate('/dashboard/create-gallery')} className="mt-3 bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm">Create Gallery</button></div>
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between"><h2 className="font-serif text-xl">Employees</h2><button onClick={()=>navigate('/dashboard/employees/add')} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-sm">+ Add Employee</button></div>
-      <input placeholder="Search by name/email" className="w-full border rounded-full px-4 py-2 text-sm" />
+      {ctxGalleryId && <p className="text-xs text-[#8A8078]">Gallery: <span className="font-mono">{ctxGalleryId}</span> • GET <span className="font-mono">/galleries/{ctxGalleryId}/employees</span></p>}
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name/email" className="w-full border rounded-full px-4 py-2 text-sm" />
+      {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
+      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">Loading employees...</div> : filtered.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">No employees found {search?`for "${search}"`:''} — <button onClick={()=>navigate('/dashboard/employees/add')} className="text-[#C19A6B] underline">Add first employee</button></div> : (
       <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-[#FAF7F2] text-xs text-[#8A8078]"><tr><th className="p-3 text-left">Employee</th><th>Job title</th><th>Email</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody>
-            {[
-              {name:'Sara Ahmed', title:'Sales', email:'sara@walnut.test', active:true, date:'Jan 12, 2024'},
-              {name:'Khaled N.', title:'Inventory', email:'khaled@walnut.test', active:true, date:'Mar 3, 2024'},
-            ].map(e=>(
-              <tr key={e.email} className="border-t"><td className="p-3 flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xs">{e.name.split(' ').map(s=>s[0]).join('')}</div>{e.name}</td><td className="text-center text-xs">{e.title}</td><td className="text-xs">{e.email}</td><td className="text-center"><span className={`px-2 py-0.5 rounded-full text-[11px] ${e.active?'bg-green-100 text-green-800':'bg-zinc-100'}`}>{e.active?'Active':'Inactive'}</span></td><td className="text-xs">{e.date}</td><td className="text-center"><button className="text-xs border px-2 py-1 rounded">Edit</button></td></tr>
-            ))}
+            {filtered.map(e=>{
+              const name = e.name || `${e.firstName||''} ${e.lastName||''}`.trim() || e.user?.firstName ? `${e.user.firstName} ${e.user.lastName||''}`.trim() : 'Employee'
+              const email = e.email || e.user?.email || ''
+              const title = e.title || e.jobTitle || ''
+              const active = e.isActive ?? e.active ?? true
+              const date = e.createdAt ? new Date(e.createdAt).toLocaleDateString() : e.date || ''
+              const initials = name.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()
+              return (
+              <tr key={e.id || email} className="border-t"><td className="p-3 flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xs">{initials}</div>{name}</td><td className="text-center text-xs">{title || '—'}</td><td className="text-xs">{email}</td><td className="text-center"><span className={`px-2 py-0.5 rounded-full text-[11px] ${active?'bg-green-100 text-green-800':'bg-zinc-100'}`}>{active?'Active':'Inactive'}</span></td><td className="text-xs">{date}</td><td className="text-center"><button onClick={()=>navigate(`/dashboard/employees/add?id=${e.id}`)} className="text-xs border px-2 py-1 rounded hover:bg-[#FAF7F2]">Edit</button></td></tr>
+            )})}
           </tbody>
         </table>
       </div>
+      )}
     </div>
   )
 }
 export function AddEmployee(){
   const navigate=useNavigate()
+  const editId = new URLSearchParams(window.location.search).get('id')
+  const isEdit = !!editId
   const [form,setForm]=useState({firstName:'', lastName:'', email:'', password:'', passwordConfirm:'', title:'', phone:''})
   const [saving,setSaving]=useState(false)
+  const [loadingEdit,setLoadingEdit]=useState(isEdit)
   const [error,setError]=useState('')
   const [success,setSuccess]=useState('')
   const { gallery: ctxGallery, galleryId: ctxGalleryId } = useGallery()
+
+  useEffect(()=>{
+    if(!isEdit) return
+    let cancelled=false
+    async function fetchEmployee(){
+      setLoadingEdit(true)
+      setError('')
+      try{
+        const res = await getEmployee(editId, { galleryId: ctxGalleryId || undefined })
+        if(cancelled) return
+        const emp = unwrapEmployee(res)
+        if(!emp) throw new Error('Employee not found')
+        const user = emp.user || {}
+        setForm({
+          firstName: emp.firstName || user.firstName || '',
+          lastName: emp.lastName || user.lastName || '',
+          email: emp.email || user.email || '',
+          password: '',
+          passwordConfirm: '',
+          title: emp.title || '',
+          phone: emp.phone || user.phone || '',
+        })
+      }catch(err){
+        if(!cancelled) setError(err.message || 'Failed to load employee')
+      }finally{ if(!cancelled) setLoadingEdit(false)}
+    }
+    fetchEmployee()
+    return ()=>{cancelled=true}
+  },[isEdit, editId, ctxGalleryId])
+
   const handleChange=(e)=>{
     const {name,value}=e.target
     const key=name==='first_name'?'firstName': name==='last_name'?'lastName': name==='title'?'title': name
@@ -654,44 +742,62 @@ export function AddEmployee(){
     if(!form.firstName.trim() || form.firstName.trim().length<2){ setError('First name min 2 chars'); return}
     if(!form.lastName.trim() || form.lastName.trim().length<2){ setError('Last name min 2 chars'); return}
     if(!form.email.trim()){ setError('Email is required'); return}
-    if(!form.password || form.password.length<6){ setError('Password min 6'); return}
-    if(form.password !== form.passwordConfirm){ setError('Passwords do not match'); return}
+    if(!isEdit){
+      if(!form.password || form.password.length<6){ setError('Password min 6'); return}
+      if(form.password !== form.passwordConfirm){ setError('Passwords do not match'); return}
+    } else {
+      if(form.password && form.password.length<6){ setError('Password min 6'); return}
+      if(form.password && form.password !== form.passwordConfirm){ setError('Passwords do not match'); return}
+    }
     if (!ctxGalleryId && !ctxGallery) {
       setError('No gallery found. Please create a gallery first.')
       return
     }
     setSaving(true)
     try{
-      await createEmployee({
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        email: form.email.trim(),
-        password: form.password,
-        passwordConfirm: form.passwordConfirm,
-        title: form.title?.trim() || undefined,
-        phone: form.phone?.trim() || undefined,
-      }, ctxGalleryId || ctxGallery?.id || ctxGallery?._id || null)
-      setSuccess('Employee created')
+      if(isEdit){
+        await updateEmployee(editId, {
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          email: form.email.trim(),
+          ...(form.password ? { password: form.password, passwordConfirm: form.passwordConfirm } : {}),
+          title: form.title?.trim() || undefined,
+          phone: form.phone?.trim() || undefined,
+        }, ctxGalleryId || ctxGallery?.id || ctxGallery?._id || null)
+        setSuccess('Employee updated')
+      } else {
+        await createEmployee({
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          passwordConfirm: form.passwordConfirm,
+          title: form.title?.trim() || undefined,
+          phone: form.phone?.trim() || undefined,
+        }, ctxGalleryId || ctxGallery?.id || ctxGallery?._id || null)
+        setSuccess('Employee created')
+      }
       setTimeout(()=> navigate('/dashboard/employees'), 800)
     }catch(err){
-      const msg=err.message || 'Failed to create employee'
+      const msg=err.message || (isEdit ? 'Failed to update employee' : 'Failed to create employee')
       setError(msg)
       if(err.details) setError(typeof err.details==='string'?err.details: JSON.stringify(err.details))
     }finally{ setSaving(false)}
   }
+  if (isEdit && loadingEdit) return <div className="text-center py-16 text-sm text-[#8A8078]">Loading employee...</div>
   return (
     <div className="max-w-xl mx-auto bg-white border border-[#E7DFD3] rounded-xl p-6 space-y-4">
-      <h2 className="font-serif text-xl">Add Employee</h2>
-      <p className="text-xs text-[#8A8078] bg-amber-50 border border-amber-200 rounded p-2">This employee will automatically belong to your gallery.</p>
+      <h2 className="font-serif text-xl">{isEdit ? 'Edit Employee' : 'Add Employee'}</h2>
+      <p className="text-xs text-[#8A8078] bg-amber-50 border border-amber-200 rounded p-2">{isEdit ? 'Update employee details. Leave password blank to keep current.' : 'This employee will automatically belong to your gallery.'} {ctxGalleryId && <span className="font-mono">/galleries/{ctxGalleryId}/employees{isEdit ? `/${editId}` : ''}</span>}</p>
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
       {success && <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-2 rounded-lg">{success}</div>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">First name*</label><input name="firstName" value={form.firstName} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">Last name*</label><input name="lastName" value={form.lastName} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
         <div><label className="text-xs">Email* (unique)</label><input name="email" value={form.email} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="employee@gallery.test" type="email" /></div>
-        <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">Temporary password* (min 6)</label><input name="password" value={form.password} onChange={handleChange} type="password" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">Confirm*</label><input name="passwordConfirm" value={form.passwordConfirm} onChange={handleChange} type="password" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
+        <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">{isEdit ? 'New password (leave blank to keep)' : 'Temporary password* (min 6)'}</label><input name="password" value={form.password} onChange={handleChange} type="password" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">{isEdit ? 'Confirm new' : 'Confirm*'}</label><input name="passwordConfirm" value={form.passwordConfirm} onChange={handleChange} type="password" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
         <div><label className="text-xs">Title</label><input name="title" value={form.title} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="Sales, Inventory..." /></div>
         <div><label className="text-xs">Phone</label><input name="phone" value={form.phone} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
-        <div className="flex gap-3"><button type="button" onClick={()=>navigate('/dashboard/employees')} className="flex-1 border py-2 rounded-lg text-sm">Cancel</button><button type="submit" disabled={saving} className="flex-1 bg-[#4B3621] text-white py-2 rounded-lg text-sm disabled:opacity-60">{saving?'Creating...':'Create Employee'}</button></div>
+        <div className="flex gap-3"><button type="button" onClick={()=>navigate('/dashboard/employees')} className="flex-1 border py-2 rounded-lg text-sm">Cancel</button><button type="submit" disabled={saving} className="flex-1 bg-[#4B3621] text-white py-2 rounded-lg text-sm disabled:opacity-60">{saving?(isEdit?'Updating...':'Creating...'):(isEdit?'Update Employee':'Create Employee')}</button></div>
       </form>
     </div>
   )
