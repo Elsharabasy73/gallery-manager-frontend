@@ -41,3 +41,16 @@ export function unwrapProduct(res) {
   if (res?.data?.data) return res.data.data
   return res
 }
+
+export function createProduct(formData) {
+  return apiFetch('/products', { method: 'POST', body: formData })
+}
+
+export function updateProduct(id, formData) {
+  const isFD = formData instanceof FormData
+  return apiFetch(`/products/${id}`, { method: 'PUT', body: formData, isFormData: isFD })
+}
+
+export function deleteProduct(id) {
+  return apiFetch(`/products/${id}`, { method: 'DELETE' })
+}
