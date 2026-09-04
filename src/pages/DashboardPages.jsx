@@ -406,7 +406,7 @@ export function AddEditProduct(){
   const [error,setError]=useState('')
   const [success,setSuccess]=useState('')
   const [form,setForm]=useState({
-    name:'', categoryId:'', price:'', compareAtPrice:'', stock:'5', status:'active', dimensions:'', description:'', isFeatured:false
+    name:'', categoryId:'', price:'', compareAtPrice:'', stock:'5', status:'active', dimensions:'', description:''
   })
   const [materials,setMaterials]=useState([])
   const [materialInput,setMaterialInput]=useState('')
@@ -451,7 +451,6 @@ export function AddEditProduct(){
           status: p.status || 'active',
           dimensions: typeof p.dimensions==='string'?p.dimensions : p.dimensions ? `${p.dimensions.width||''}` : '',
           description: p.description||'',
-          isFeatured: !!p.isFeatured
         })
         let mats=[]
         try{ mats= Array.isArray(p.materials)?p.materials: JSON.parse(p.materials||'[]') }catch{ mats= p.materials||[] }
@@ -472,8 +471,8 @@ export function AddEditProduct(){
   },[editId, isEdit])
 
   const handleChange=(e)=>{
-    const {name,value,type,checked}=e.target
-    setForm(s=>({...s, [name]: type==='checkbox'?checked:value}))
+    const {name,value}=e.target
+    setForm(s=>({...s, [name]: value}))
   }
   const handleMain=(e)=>{
     const f=e.target.files?.[0]
@@ -516,19 +515,17 @@ export function AddEditProduct(){
     setSaving(true)
     try{
       const fd=new FormData()
+      // only schema fields: categoryId (not category), name, price, compareAtPrice, stock, status, dimensions, description, materials, mainImageUrl, images
+      // galleryId/createdById/slug/isFeatured removed per request - isFeatured defaults false
       fd.append('name', form.name.trim())
       fd.append('categoryId', form.categoryId)
-      fd.append('category', form.categoryId)
       fd.append('price', String(Number(form.price)))
       if(form.compareAtPrice) fd.append('compareAtPrice', String(Number(form.compareAtPrice)))
       fd.append('stock', String(Number(form.stock||0)))
       fd.append('status', form.status)
       if(form.dimensions) fd.append('dimensions', form.dimensions)
       if(form.description) fd.append('description', form.description)
-      fd.append('isFeatured', String(!!form.isFeatured))
-      if(materials.length) fd.append('materials', JSON.stringify(materials))
-      // images: mainImage as 'mainImage' and also as 'mainImageUrl' for compatibility, plus 'images'
-      if(mainFile) fd.append('mainImage', mainFile)
+      if(materials.length) materials.forEach(m => fd.append('materials', m))
       if(mainFile) fd.append('mainImageUrl', mainFile)
       imagesFiles.forEach(f=> fd.append('images', f))
       // also append galleryId auto-resolved; backend assigns from owner, no need to send
@@ -560,7 +557,6 @@ export function AddEditProduct(){
           <div><label className="text-xs">Dimensions</label><input name="dimensions" value={form.dimensions} onChange={handleChange} placeholder="W 200 × D 90 × H 75 cm" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
           <div><label className="text-xs">Materials (type + Enter)</label><div className="flex flex-wrap gap-2 mt-1 items-center">{materials.map((m,i)=><span key={i} className="border px-2 py-1 rounded-full text-xs flex items-center gap-1">{m} <button type="button" onClick={()=>removeMaterial(i)} className="text-[#B3402E]">✕</button></span>)}<input value={materialInput} onChange={e=>setMaterialInput(e.target.value)} onKeyDown={addMaterial} className="flex-1 min-w-[120px] border rounded-full px-3 py-1 text-xs" placeholder="Add material" /></div></div>
           <div><label className="text-xs">Description (1000)</label><textarea name="description" value={form.description} onChange={handleChange} maxLength={1000} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="Describe the piece..." /><div className="text-xs text-right text-[#8A8078]">{form.description.length}/1000</div></div>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isFeatured" checked={form.isFeatured} onChange={handleChange} /> Featured — show on homepage</label>
           <div className="flex gap-3"><button type="button" onClick={()=>navigate('/dashboard/my-products')} className="border px-4 py-2 rounded-lg text-sm">Cancel</button><button type="submit" disabled={saving} className="bg-[#4B3621] text-white px-6 py-2 rounded-lg text-sm disabled:opacity-60">{saving?(isEdit?'Updating...':'Creating...'):(isEdit?'Update Product':'Save Product')}</button></div>
         </div>
         <div className="bg-white border border-[#E7DFD3] rounded-xl p-4 space-y-3 h-fit">
