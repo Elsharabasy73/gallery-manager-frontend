@@ -98,9 +98,28 @@ export function CartProvider({ children }) {
     setError(null)
     try {
       await removeFromCart(productId)
-      // Update local cart state
+      // Update local cart state - handle both old flat format and new grouped format
       setCart(prev => {
         if (!prev || !prev.items) return prev
+        
+        // New grouped format: items = [{ gallery, items: [{ id, product, quantity }] }]
+        if (prev.items[0]?.gallery && prev.items[0]?.items) {
+          const newGroups = prev.items.map(group => ({
+            ...group,
+            items: group.items.filter(item => item.productId !== productId && item.id !== productId)
+          })).filter(group => group.items.length > 0)
+          
+          const totalPrice = newGroups.reduce((sum, group) => {
+            return sum + group.items.reduce((gSum, item) => {
+              const price = Number(item.product?.price || 0)
+              return gSum + (price * item.quantity)
+            }, 0)
+          }, 0)
+          
+          return { ...prev, items: newGroups, totalPrice }
+        }
+        
+        // Old flat format fallback
         const newItems = prev.items.filter(item => item.productId !== productId)
         const totalPrice = newItems.reduce((sum, item) => {
           const price = Number(item.product?.price || 0)
@@ -155,9 +174,30 @@ export function CartProvider({ children }) {
   }, [canAccessCart])
 
   // Group items by gallery for checkout
+  // API now returns items grouped by gallery
   const groupedByGallery = useMemo(() => {
     if (!cart?.items) return []
-
+    
+    // New grouped format: items = [{ gallery, items: [{ id, product, quantity }] }]
+    if (cart.items[0]?.gallery && cart.items[0]?.items) {
+      return cart.items.map(group => {
+        const subtotal = group.items.reduce((sum, item) => {
+          const price = Number(item.product?.price || 0)
+          return sum + (price * item.quantity)
+        }, 0)
+        
+        return {
+          galleryId: group.gallery.id,
+          galleryName: group.gallery.name,
+          gallerySlug: group.gallery.slug || '',
+          gallery: group.gallery,
+          items: group.items,
+          subtotal
+        }
+      })
+    }
+    
+    // Fallback: Old flat format - group manually
     const groups = {}
     cart.items.forEach(item => {
       const galleryId = item.product?.galleryId || item.product?.gallery?.id || 'unknown'
@@ -182,15 +222,38 @@ export function CartProvider({ children }) {
     return Object.values(groups)
   }, [cart])
 
-  // Total items count
+  // Total items count - handle both formats
   const itemCount = useMemo(() => {
     if (!cart?.items) return 0
+    
+    // New grouped format
+    if (cart.items[0]?.gallery && cart.items[0]?.items) {
+      return cart.items.reduce((sum, group) => {
+        return sum + group.items.reduce((gSum, item) => gSum + item.quantity, 0)
+      }, 0)
+    }
+    
+    // Old flat format
     return cart.items.reduce((sum, item) => sum + item.quantity, 0)
+  }, [cart])
+
+  // Flatten items for backward compatibility
+  // Returns all items regardless of gallery grouping
+  const flatItems = useMemo(() => {
+    if (!cart?.items) return []
+    
+    // New grouped format: flatten
+    if (cart.items[0]?.gallery && cart.items[0]?.items) {
+      return cart.items.flatMap(group => group.items)
+    }
+    
+    // Old flat format
+    return cart.items
   }, [cart])
 
   const value = useMemo(() => ({
     cart,
-    items: cart?.items || [],
+    items: flatItems,
     itemCount,
     totalPrice: cart?.totalPrice || 0,
     groupedByGallery,
@@ -202,7 +265,7 @@ export function CartProvider({ children }) {
     removeItem,
     clear,
     refresh
-  }), [cart, itemCount, loading, error, canAccessCart, addItem, updateItem, removeItem, clear, refresh, groupedByGallery])
+  }), [cart, flatItems, itemCount, loading, error, canAccessCart, addItem, updateItem, removeItem, clear, refresh, groupedByGallery])
 
   return (
     <CartContext.Provider value={value}>

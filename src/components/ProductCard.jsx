@@ -74,9 +74,10 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
     setAddingToCart(true)
     try {
       await addToCart(pid, 1)
-      // Optional: Show success feedback
+      // Success - cart context will update automatically
     } catch (err) {
-      alert(err.message || 'Failed to add to cart')
+      // Error silently handled - cart context will show error if needed
+      console.error('Add to cart failed:', err.message)
     } finally {
       setAddingToCart(false)
     }

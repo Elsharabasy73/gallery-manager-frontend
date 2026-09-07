@@ -593,6 +593,8 @@ export function GalleryOrders(){
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [confirmingId, setConfirmingId] = useState(null)
+  const [success, setSuccess] = useState('')
+  const [localError, setLocalError] = useState('')
 
   useEffect(() => {
     if (!ctxGalleryId) {
@@ -624,11 +626,15 @@ export function GalleryOrders(){
   const handleConfirmOrder = async (orderId) => {
     if (!window.confirm('Confirm this order? This will change status to accepted.')) return
     setConfirmingId(orderId)
+    setSuccess('')
+    setLocalError('')
     try {
       await confirmOrder(orderId)
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'accepted' } : o))
+      setSuccess('Order confirmed')
+      setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      alert(err.message || 'Failed to confirm order')
+      setLocalError(err.message || 'Failed to confirm order')
     } finally {
       setConfirmingId(null)
     }
@@ -683,6 +689,8 @@ export function GalleryOrders(){
         </select>
       </div>
 
+      {success && <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg">{success}</div>}
+      {localError && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{localError}</div>}
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
 
       {loading ? (
@@ -772,6 +780,8 @@ export function OrderDetails(){
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [success, setSuccess] = useState('')
+  const [localError, setLocalError] = useState('')
 
   useEffect(() => {
     if (!orderId) return
@@ -799,11 +809,15 @@ export function OrderDetails(){
   const handleConfirm = async () => {
     if (!window.confirm('Confirm this order?')) return
     setConfirming(true)
+    setSuccess('')
+    setLocalError('')
     try {
       await confirmOrder(orderId)
       setOrder(prev => ({ ...prev, status: 'accepted' }))
+      setSuccess('Order confirmed')
+      setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      alert(err.message || 'Failed to confirm order')
+      setLocalError(err.message || 'Failed to confirm order')
     } finally {
       setConfirming(false)
     }
@@ -856,6 +870,9 @@ export function OrderDetails(){
           </button>
         )}
       </div>
+
+      {success && <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg">{success}</div>}
+      {localError && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-3 rounded-lg">{localError}</div>}
 
       <div className="bg-white border border-[#E7DFD3] rounded-xl p-6 space-y-4">
         <div className="flex justify-between items-start">

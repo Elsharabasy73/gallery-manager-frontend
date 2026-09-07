@@ -9,7 +9,9 @@ import ProductDetail from './pages/ProductDetail'
 import BrowseGalleries from './pages/BrowseGalleries'
 import GalleryProfile from './pages/GalleryProfile'
 import { Login, Signup, Otp, ForgotPassword } from './pages/AuthPages'
-import { Wishlist, Cart, MyOrders } from './pages/CustomerPages'
+import WishlistPage from './pages/WishlistPage'
+import CartPage from './pages/CartPage'
+import MyOrdersPage from './pages/MyOrdersPage'
 import { Overview, MyGallery, MyProducts, AddEditProduct, GalleryOrders, OrderDetails, Employees, AddEmployee, CreateGallery } from './pages/DashboardPages'
 import { AdminUsers, AdminProducts, AdminGalleries, AdminOrders, AdminOverview } from './pages/AdminPages'
 import Profile from './pages/Profile'
@@ -37,9 +39,9 @@ export default function App(){
         <Route path="/profile" element={<Profile />} />
 
         {/* customer only — redirect to home if not allowed */}
-        <Route path="/wishlist" element={<Protected allow={['customer']} pageId="wishlist" redirectToHome><Wishlist /></Protected>} />
-        <Route path="/cart" element={<Protected allow={['customer']} pageId="cart" redirectToHome><Cart /></Protected>} />
-        <Route path="/my-orders" element={<Protected allow={['customer']} pageId="my-orders" redirectToHome><MyOrders /></Protected>} />
+        <Route path="/wishlist" element={<Protected allow={['customer']} pageId="wishlist" redirectToHome><WishlistPage /></Protected>} />
+        <Route path="/cart" element={<Protected allow={['customer']} pageId="cart" redirectToHome><CartPage /></Protected>} />
+        <Route path="/my-orders" element={<Protected allow={['customer']} pageId="my-orders" redirectToHome><MyOrdersPage /></Protected>} />
 
         {/* gallery owner / employee */}
         <Route path="/dashboard/overview" element={<Protected allow={['gallery_owner']} pageId="dashboard-overview" redirectToHome><Overview /></Protected>} />
