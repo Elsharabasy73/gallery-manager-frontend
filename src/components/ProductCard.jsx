@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRole } from '../context/RoleContext'
 import { useWishlist } from '../context/WishlistContext'
+import { useCart } from '../context/CartContext'
 import { getProductImageUrl } from '../utils/image'
 
 function formatPrice(price) {
@@ -25,7 +26,9 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
   const navigate = useNavigate()
   const { role, isAuthenticated } = useRole()
   const { isWishlisted, toggle } = useWishlist()
+  const { addItem: addToCart, canAccessCart } = useCart()
   const [toggling, setToggling] = useState(false)
+  const [addingToCart, setAddingToCart] = useState(false)
 
   const pid = String(p?.id ?? p?._id ?? '')
   const img =
@@ -41,6 +44,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
   // Strict rule: only customers may see wishlist. Covers gallery_owner, employee, admin, and guest (role === null).
   const showWishlist = role === 'customer'
   const showAdminBadge = role === 'admin'
+  const showAddToCart = role === 'customer' && Number(stock) > 0 && p?.status === 'active'
 
   const handleWishlist = async (e) => {
     e.stopPropagation()
@@ -57,6 +61,24 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
       if (onWishlistError) onWishlistError(msg)
     } finally {
       setToggling(false)
+    }
+  }
+
+  const handleAddToCart = async (e) => {
+    e?.stopPropagation()
+    if (!canAccessCart) {
+      navigate('/login')
+      return
+    }
+    if (!pid) return
+    setAddingToCart(true)
+    try {
+      await addToCart(pid, 1)
+      // Optional: Show success feedback
+    } catch (err) {
+      alert(err.message || 'Failed to add to cart')
+    } finally {
+      setAddingToCart(false)
     }
   }
 
@@ -182,7 +204,17 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
           <button onClick={handleNavigate} className="flex-1 border py-1.5 rounded-lg text-xs">
             View
           </button>
-          {showWishlist && (
+          {showAddToCart && (
+            <button
+              onClick={handleAddToCart}
+              disabled={addingToCart}
+              className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs disabled:opacity-60 flex items-center justify-center gap-1"
+            >
+              <span className="material-symbols-outlined text-[14px]">shopping_cart</span>
+              {addingToCart ? 'Adding...' : 'Add to Cart'}
+            </button>
+          )}
+          {showWishlist && !showAddToCart && (
             <button
               onClick={handleWishlist}
               disabled={toggling}

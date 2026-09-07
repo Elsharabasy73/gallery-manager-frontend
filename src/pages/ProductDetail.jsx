@@ -4,6 +4,7 @@ import { products as mockProducts } from '../data/mockData'
 import { getProduct, unwrapProduct } from '../api/products'
 import { getProductImageUrl, getGalleryLogoUrl } from '../utils/image'
 import { useWishlist } from '../context/WishlistContext'
+import { useCart } from '../context/CartContext'
 import { useRole } from '../context/RoleContext'
 
 export default function ProductDetail(){
@@ -11,11 +12,14 @@ export default function ProductDetail(){
   const navigate = useNavigate()
   const { isAuthenticated, role } = useRole()
   const { isWishlisted, toggle } = useWishlist()
+  const { addItem: addToCart, canAccessCart } = useCart()
   const [p, setP] = useState(null)
   const [loading, setLoading] = useState(true)
   const [qty,setQty]=useState(1)
   const [wishLoading, setWishLoading]=useState(false)
   const [wishError, setWishError]=useState(null)
+  const [cartLoading, setCartLoading] = useState(false)
+  const [cartSuccess, setCartSuccess] = useState(null)
 
   // image gallery + magnifier state — hooks must be before any early return
   const [activeSrc, setActiveSrc] = useState(null)
@@ -68,6 +72,25 @@ export default function ProductDetail(){
       setWishError(e.message || 'Wishlist failed')
     } finally {
       setWishLoading(false)
+    }
+  }
+
+  const handleAddToCart = async () => {
+    setCartSuccess(null)
+    if (!canAccessCart) {
+      navigate('/login')
+      return
+    }
+    const pid = p?._id || p?.id || id
+    if (!pid) return
+    setCartLoading(true)
+    try {
+      await addToCart(String(pid), qty)
+      setCartSuccess(`Added ${qty} item${qty > 1 ? 's' : ''} to cart`)
+    } catch (e) {
+      alert(e.message || 'Failed to add to cart')
+    } finally {
+      setCartLoading(false)
     }
   }
 
@@ -210,23 +233,36 @@ export default function ProductDetail(){
           {p.dimensions && <span className="px-2 py-0.5 bg-[#E7DFD3] rounded-full">{typeof p.dimensions === 'string' ? p.dimensions : 'W 200 × D 90 × H 75 cm'}</span>}
         </div>
         {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
+        {cartSuccess && <div className="bg-green-50 border border-green-200 text-green-800 text-xs px-3 py-2 rounded-lg flex items-center justify-between">{cartSuccess}<button onClick={()=>navigate('/cart')} className="text-[#4B3621] underline font-medium">View Cart</button></div>}
         <p className="text-sm text-[#8A8078]">{desc} Dimensions and materials are customizable per gallery.</p>
         <div className="flex gap-2">
           {(p.materials || ['Oak','Bouclé','Brass']).slice?.(0,4).map?.(m=>(
             <span key={m} className="text-xs border px-2 py-1 rounded-full">{typeof m === 'string' ? m : m.name || m}</span>
           )) || <><span className="text-xs border px-2 py-1 rounded-full">Oak</span><span className="text-xs border px-2 py-1 rounded-full">Bouclé</span><span className="text-xs border px-2 py-1 rounded-full">Brass</span></>}
         </div>
-        <div className="flex items-center gap-3 pt-2">
-          <div className="flex items-center border rounded-lg">
-            <button onClick={()=>setQty(Math.max(1,qty-1))} className="px-3 py-1.5">−</button>
-            <span className="px-3 text-sm">{qty}</span>
-            <button onClick={()=>setQty(qty+1)} className="px-3 py-1.5">+</button>
+        {role === 'customer' && Number(stock) > 0 && p?.status === 'active' && (
+          <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center border rounded-lg">
+              <button onClick={()=>setQty(Math.max(1,qty-1))} className="px-3 py-1.5">−</button>
+              <span className="px-3 text-sm">{qty}</span>
+              <button onClick={()=>setQty(Math.min(Number(stock) || 99, qty+1))} className="px-3 py-1.5">+</button>
+            </div>
+            <button
+              onClick={handleAddToCart}
+              disabled={cartLoading || Number(stock) === 0}
+              className="flex-1 bg-[#4B3621] text-white py-2.5 rounded-lg text-sm font-medium disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
+              {cartLoading ? 'Adding...' : 'Add to Cart'}
+            </button>
+            <button onClick={handleWishlist} disabled={wishLoading} className={`w-10 h-10 rounded-lg border flex items-center justify-center disabled:opacity-60 ${wish?'bg-[#C19A6B] text-white border-[#C19A6B]': 'bg-white hover:bg-[#FAF7F2]'}`} title={wish ? 'Remove from wishlist' : 'Add to wishlist'}>
+              <span className={`material-symbols-outlined ${wish?'icon-fill':''}`}>favorite</span>
+            </button>
           </div>
-          <button className="flex-1 bg-[#4B3621] text-white py-2.5 rounded-lg text-sm font-medium">Add to Cart</button>
-          <button onClick={handleWishlist} disabled={wishLoading} className={`w-10 h-10 rounded-lg border flex items-center justify-center disabled:opacity-60 ${wish?'bg-[#C19A6B] text-white border-[#C19A6B]': 'bg-white hover:bg-[#FAF7F2]'}`} title={wish ? 'Remove from wishlist' : 'Add to wishlist'}>
-            <span className={`material-symbols-outlined ${wish?'icon-fill':''}`}>favorite</span>
-          </button>
-        </div>
+        )}
+        {role === 'customer' && (Number(stock) === 0 || p?.status !== 'active') && (
+          <div className="text-sm text-[#B3402E]">This product is currently unavailable</div>
+        )}
         <div className="bg-white border border-[#E7DFD3] rounded-xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#FAF7F2] border flex items-center justify-center overflow-hidden text-xs font-medium">

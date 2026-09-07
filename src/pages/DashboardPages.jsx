@@ -1,13 +1,15 @@
 import { products, orders } from '../data/mockData'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { getMyGallery, updateGallery } from '../api/galleries'
 import { getGalleryLogoUrl, getGalleryBannerUrl, STORAGE_BASE, getProductImageUrl } from '../utils/image'
 import { apiFetch } from '../api/client'
 import { unwrapProducts, getProduct, unwrapProduct, createProduct, updateProduct } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
 import { createEmployee, getEmployees, getEmployee, updateEmployee, unwrapEmployees, unwrapEmployee } from '../api/employees'
+import { getGalleryOrders, getOrder, confirmOrder, unwrapOrders, unwrapOrder } from '../api/orders'
 import { useGallery } from '../context/GalleryContext'
+import { useRole } from '../context/RoleContext'
 
 export function Overview(){
   const { gallery, loading, error } = useGallery()
@@ -583,37 +585,348 @@ export function AddEditProduct(){
 }
 export function GalleryOrders(){
   const navigate = useNavigate()
+  const { galleryId: ctxGalleryId, gallery: ctxGallery } = useGallery()
+  const { role, user } = useRole()
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [confirmingId, setConfirmingId] = useState(null)
+
+  useEffect(() => {
+    if (!ctxGalleryId) {
+      setLoading(false)
+      return
+    }
+
+    let cancelled = false
+    async function fetchOrders() {
+      setLoading(true)
+      setError('')
+      try {
+        const res = await getGalleryOrders(ctxGalleryId)
+        if (cancelled) return
+        const data = unwrapOrders(res)
+        setOrders(data)
+      } catch (err) {
+        if (cancelled) return
+        setError(err.message || 'Failed to load orders')
+        setOrders([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchOrders()
+    return () => { cancelled = true }
+  }, [ctxGalleryId])
+
+  const handleConfirmOrder = async (orderId) => {
+    if (!window.confirm('Confirm this order? This will change status to accepted.')) return
+    setConfirmingId(orderId)
+    try {
+      await confirmOrder(orderId)
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'accepted' } : o))
+    } catch (err) {
+      alert(err.message || 'Failed to confirm order')
+    } finally {
+      setConfirmingId(null)
+    }
+  }
+
+  const filteredOrders = orders.filter(o => {
+    if (statusFilter !== 'all' && o.status !== statusFilter) return false
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      const orderId = o.id?.toLowerCase() || ''
+      const customerName = `${o.user?.firstName || ''} ${o.user?.lastName || ''}`.toLowerCase()
+      const customerEmail = o.user?.email?.toLowerCase() || ''
+      return orderId.includes(q) || customerName.includes(q) || customerEmail.includes(q)
+    }
+    return true
+  })
+
+  const statusCounts = orders.reduce((acc, o) => {
+    acc[o.status] = (acc[o.status] || 0) + 1
+    return acc
+  }, { all: orders.length })
+
+  if (!ctxGalleryId && !loading) {
+    return (
+      <div className="text-center py-16 bg-white border rounded-xl">
+        <p className="text-sm text-[#8A8078]">No gallery found. Please create a gallery first.</p>
+        <button onClick={()=>navigate('/dashboard/create-gallery')} className="mt-3 bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm">Create Gallery</button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       <h2 className="font-serif text-2xl">Gallery Orders</h2>
-      <div className="flex gap-2"><input placeholder="Search order / customer" className="border rounded-full px-3 py-1.5 text-sm flex-1" /><select className="border rounded-full px-3 py-1.5 text-sm bg-white"><option>All Status</option><option>pending</option><option>accepted</option></select></div>
-      <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-[#FAF7F2] text-xs text-[#8A8078]"><tr><th className="p-3 text-left">Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody>
-            {orders.map(o=>(
-              <tr key={o.id} className="border-t"><td className="p-3 font-mono text-xs">{o.id}<div className="text-[11px] text-[#8A8078]">{o.date}</div></td><td className="text-xs">{o.customer}<div className="text-[11px] text-[#8A8078]">{o.gallery}</div></td><td className="text-center">{o.items}</td><td className="text-center">{o.total.toLocaleString()} EGP</td><td><span className="px-2 py-0.5 rounded-full text-[11px] bg-amber-100">{o.status}</span></td><td><button onClick={()=>navigate(`/dashboard/orders/${o.id}`)} className="text-xs border px-2 py-1 rounded">View</button></td></tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex gap-2">
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search order / customer"
+          className="border rounded-full px-3 py-1.5 text-sm flex-1"
+        />
+        <select
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)}
+          className="border rounded-full px-3 py-1.5 text-sm bg-white"
+        >
+          <option value="all">All ({statusCounts.all || 0})</option>
+          <option value="pending">Pending ({statusCounts.pending || 0})</option>
+          <option value="accepted">Accepted ({statusCounts.accepted || 0})</option>
+          <option value="rejected">Rejected ({statusCounts.rejected || 0})</option>
+          <option value="cancelled">Cancelled ({statusCounts.cancelled || 0})</option>
+        </select>
       </div>
+
+      {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
+
+      {loading ? (
+        <div className="text-center py-12 text-sm text-[#8A8078]">Loading orders...</div>
+      ) : filteredOrders.length === 0 ? (
+        <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">
+          No orders found {search ? `for "${search}"` : ''}
+        </div>
+      ) : (
+        <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-[#FAF7F2] text-xs text-[#8A8078]">
+                <tr>
+                  <th className="p-3 text-left">Order</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.map(o => {
+                  const totalItems = o.items?.reduce((sum, i) => sum + i.quantity, 0) || 0
+                  const totalPrice = Number(o.totalPrice || 0)
+                  const customerName = `${o.user?.firstName || 'Unknown'} ${o.user?.lastName || ''}`.trim()
+                  const orderDate = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : ''
+
+                  return (
+                    <tr key={o.id} className="border-t">
+                      <td className="p-3 font-mono text-xs">
+                        {o.id?.substring(0, 8)}...
+                        <div className="text-[11px] text-[#8A8078]">{orderDate}</div>
+                      </td>
+                      <td className="text-xs">
+                        {customerName}
+                        <div className="text-[11px] text-[#8A8078]">{o.user?.email || ''}</div>
+                      </td>
+                      <td className="text-center">{totalItems}</td>
+                      <td className="text-center">{totalPrice.toLocaleString()} EGP</td>
+                      <td>
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] ${
+                          o.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                          o.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                          o.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                          'bg-zinc-100'
+                        }`}>
+                          {o.status}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          onClick={() => navigate(`/dashboard/orders/${o.id}`)}
+                          className="text-xs border px-2 py-1 rounded mr-1 hover:bg-[#FAF7F2]"
+                        >
+                          View
+                        </button>
+                        {o.status === 'pending' && (role === 'gallery_owner' || role === 'employee' || role === 'admin') && (
+                          <button
+                            onClick={() => handleConfirmOrder(o.id)}
+                            disabled={confirmingId === o.id}
+                            className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 disabled:opacity-60"
+                          >
+                            {confirmingId === o.id ? 'Confirming...' : 'Confirm'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
 export function OrderDetails(){
-  const o = orders[0]
+  const navigate = useNavigate()
+  const { id: orderId } = useParams()
+  const { role, user } = useRole()
+  const { galleryId: ctxGalleryId, gallery: ctxGallery } = useGallery()
+  const [order, setOrder] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [confirming, setConfirming] = useState(false)
+
+  useEffect(() => {
+    if (!orderId) return
+
+    let cancelled = false
+    async function fetchOrder() {
+      setLoading(true)
+      setError('')
+      try {
+        const res = await getOrder(orderId)
+        if (cancelled) return
+        const data = unwrapOrder(res)
+        setOrder(data)
+      } catch (err) {
+        if (cancelled) return
+        setError(err.message || 'Failed to load order')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchOrder()
+    return () => { cancelled = true }
+  }, [orderId])
+
+  const handleConfirm = async () => {
+    if (!window.confirm('Confirm this order?')) return
+    setConfirming(true)
+    try {
+      await confirmOrder(orderId)
+      setOrder(prev => ({ ...prev, status: 'accepted' }))
+    } catch (err) {
+      alert(err.message || 'Failed to confirm order')
+    } finally {
+      setConfirming(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="text-center py-16 text-sm text-[#8A8078]">Loading order...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-16 bg-white border rounded-xl">
+        <p className="text-sm text-[#B3402E]">{error}</p>
+        <button onClick={() => navigate(-1)} className="mt-3 text-sm underline text-[#78582f]">Go back</button>
+      </div>
+    )
+  }
+
+  if (!order) {
+    return (
+      <div className="text-center py-16 bg-white border rounded-xl">
+        <p className="text-sm text-[#8A8078]">Order not found</p>
+        <button onClick={() => navigate(-1)} className="mt-3 text-sm underline text-[#78582f]">Go back</button>
+      </div>
+    )
+  }
+
+  const galleryName = order.gallery?.name || 'Unknown Gallery'
+  const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'
+  const totalPrice = Number(order.totalPrice || 0)
+  const canConfirm = order.status === 'pending' && (role === 'gallery_owner' || role === 'employee' || role === 'admin')
+
   return (
     <div className="space-y-4 max-w-3xl">
-      <h2 className="font-serif text-2xl">Order {o.id}</h2>
+      <div className="flex items-center gap-2 text-xs text-[#8A8078]">
+        <button onClick={() => navigate(-1)} className="hover:text-[#4B3621]">Orders</button>
+        <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+        <span className="text-[#4B3621] font-medium">Order {orderId?.substring(0, 8)}...</span>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <h2 className="font-serif text-2xl">Order Details</h2>
+        {canConfirm && (
+          <button
+            onClick={handleConfirm}
+            disabled={confirming}
+            className="bg-green-600 text-white px-4 py-1.5 rounded-full text-xs hover:bg-green-700 disabled:opacity-60"
+          >
+            {confirming ? 'Confirming...' : 'Confirm Order'}
+          </button>
+        )}
+      </div>
+
       <div className="bg-white border border-[#E7DFD3] rounded-xl p-6 space-y-4">
-        <div className="flex justify-between"><span className="text-sm">{o.date} • {o.gallery}</span><span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs">{o.status}</span></div>
-        <div className="space-y-2">
-          {[{name:'Oak Dining Table', price:1250, qty:2, img:products[5].image},{name:'Walnut Bench', price:480, qty:1, img:products[3].image}].map(it=>(
-            <div key={it.name} className="flex gap-3 border-t py-3"><img src={it.img} className="w-16 h-16 rounded object-cover" alt="" /><div className="flex-1"><div className="text-sm font-medium">{it.name}</div><div className="text-xs text-[#8A8078]">{it.price.toLocaleString()} EGP × {it.qty}</div></div><div className="text-sm">{(it.price*it.qty).toLocaleString()} EGP</div></div>
-          ))}
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="text-sm font-medium">{orderDate}</div>
+            <div className="text-xs text-[#8A8078]">{galleryName}</div>
+            {order.user && (
+              <div className="text-xs text-[#8A8078] mt-1">
+                Customer: {order.user.firstName} {order.user.lastName}
+                {order.user.email && <span className="ml-2">({order.user.email})</span>}
+              </div>
+            )}
+          </div>
+          <span className={`px-2 py-0.5 rounded-full text-xs ${
+            order.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+            order.status === 'accepted' ? 'bg-green-100 text-green-800' :
+            order.status === 'rejected' ? 'bg-red-100 text-red-800' :
+            'bg-zinc-100'
+          }`}>
+            {order.status}
+          </span>
         </div>
-        <div className="bg-[#FAF7F2] rounded-lg p-3 text-xs"><div className="font-medium">Shipping address</div><div className="text-[#8A8078]">12 El Hegaz St, Cairo, Egypt — Apt 4</div><div className="font-medium mt-2">Note</div><div className="text-[#8A8078]">Please deliver after 5pm</div></div>
-        <div className="flex justify-between font-semibold"><span>Grand total</span><span>{o.total.toLocaleString()} EGP</span></div>
+
+        {order.items && order.items.length > 0 && (
+          <div className="space-y-2">
+            {order.items.map((item, idx) => {
+              const itemPrice = Number(item.unitPrice || 0)
+              const itemTotal = itemPrice * item.quantity
+              const displayImg = item.imageUrl || 'https://via.placeholder.com/64'
+
+              return (
+                <div key={item.id || idx} className="flex gap-3 border-t py-3">
+                  <img src={displayImg} className="w-16 h-16 rounded object-cover bg-[#FAF7F2]" alt="" onError={e => e.target.src = 'https://via.placeholder.com/64'} />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{item.productName || 'Product'}</div>
+                    <div className="text-xs text-[#8A8078]">{itemPrice.toLocaleString()} EGP × {item.quantity}</div>
+                  </div>
+                  <div className="text-sm font-medium">{itemTotal.toLocaleString()} EGP</div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {(order.shippingAddress || order.note) && (
+          <div className="bg-[#FAF7F2] rounded-lg p-3 text-xs space-y-2">
+            {order.shippingAddress && (
+              <div>
+                <div className="font-medium">Shipping address</div>
+                <div className="text-[#8A8078]">
+                  {[
+                    order.shippingAddress.street,
+                    order.shippingAddress.city,
+                    order.shippingAddress.country
+                  ].filter(Boolean).join(', ')}
+                </div>
+              </div>
+            )}
+            {order.note && (
+              <div>
+                <div className="font-medium">Note</div>
+                <div className="text-[#8A8078]">{order.note}</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex justify-between font-semibold pt-3 border-t">
+          <span>Grand total</span>
+          <span>{totalPrice.toLocaleString()} EGP</span>
+        </div>
       </div>
     </div>
   )

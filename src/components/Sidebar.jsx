@@ -20,7 +20,7 @@ export default function Sidebar(){
   )
 
   return (
-    <aside className="w-full md:w-64 shrink-0 bg-white border border-[#E7DFD3] rounded-xl p-4 h-fit sticky top-[88px]">
+    <aside className="w-full bg-white border border-[#E7DFD3] rounded-xl p-4 h-fit md:sticky md:top-[88px]">
       <div className="flex items-center gap-2 mb-4">
         <div className="w-8 h-8 rounded-full bg-[#4B3621] text-white flex items-center justify-center text-xs font-bold">AG</div>
         <div>

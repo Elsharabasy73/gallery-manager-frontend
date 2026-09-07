@@ -5,6 +5,7 @@ import App from './App.jsx'
 import { RoleProvider } from './context/RoleContext.jsx'
 import { GalleryProvider } from './context/GalleryContext.jsx'
 import { WishlistProvider } from './context/WishlistContext.jsx'
+import { CartProvider } from './context/CartContext.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -12,7 +13,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <RoleProvider defaultRole={null}>
         <GalleryProvider>
           <WishlistProvider>
-            <App />
+            <CartProvider>
+              <App />
+            </CartProvider>
           </WishlistProvider>
         </GalleryProvider>
       </RoleProvider>
