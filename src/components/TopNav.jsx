@@ -67,6 +67,9 @@ export default function TopNav(){
                 <span className={`material-symbols-outlined ${isActive('/cart')?'icon-fill text-[#4B3621]':''}`}>shopping_cart</span>
                 {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 bg-[#4B3621] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{cartCount > 99 ? '99+' : cartCount}</span>}
               </button>
+              <button onClick={()=>navigate('/my-orders')} className={`hidden md:flex relative p-2 rounded-full hover:bg-white transition-colors ${isActive('/my-orders')?'bg-white':''}`}>
+                <span className={`material-symbols-outlined ${isActive('/my-orders')?'icon-fill text-[#4B3621]':''}`}>receipt_long</span>
+              </button>
             </>
           )}
           {role==='gallery_owner' && (
@@ -143,6 +146,7 @@ export default function TopNav(){
                   <div className="text-[10px] uppercase tracking-widest text-[#8A8078] px-1">My Shop</div>
                   <button onClick={()=>handleNav('/wishlist')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-white border border-[#E7DFD3]"> <span className="material-symbols-outlined text-[18px]">favorite</span> Wishlist {wishlistCount>0 && <span className="ml-auto bg-[#C19A6B] text-white text-[11px] px-1.5 py-0.5 rounded-full">{wishlistCount}</span>}</button>
                   <button onClick={()=>handleNav('/cart')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-white border border-[#E7DFD3]"> <span className="material-symbols-outlined text-[18px]">shopping_cart</span> Cart {cartCount>0 && <span className="ml-auto bg-[#4B3621] text-white text-[11px] px-1.5 py-0.5 rounded-full">{cartCount}</span>}</button>
+                  <button onClick={()=>handleNav('/my-orders')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-white border border-[#E7DFD3]"> <span className="material-symbols-outlined text-[18px]">receipt_long</span> My Orders</button>
                 </div>
               )}
 
