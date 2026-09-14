@@ -79,7 +79,7 @@ export default function TopNav(){
           )}
           {role==='employee' && (
             <button onClick={()=>navigate('/dashboard/my-products')} className="hidden md:flex items-center gap-1 text-xs bg-white border px-3 py-1.5 rounded-full">
-              <span className="material-symbols-outlined text-[16px]">inventory_2</span> My Products
+              <span className="material-symbols-outlined text-[16px]">inventory_2</span> Gallery Products
             </button>
           )}
           {role==='admin' && (
@@ -157,7 +157,7 @@ export default function TopNav(){
                   {role==='gallery_owner' ? (
                     <button onClick={()=>handleNav('/dashboard/overview')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-[#4B3621] text-white"><span className="material-symbols-outlined text-[18px]">dashboard</span> Dashboard</button>
                   ) : (
-                    <button onClick={()=>handleNav('/dashboard/my-products')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-white border border-[#E7DFD3]"><span className="material-symbols-outlined text-[18px]">inventory_2</span> My Products</button>
+                    <button onClick={()=>handleNav('/dashboard/my-products')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-white border border-[#E7DFD3]"><span className="material-symbols-outlined text-[18px]">inventory_2</span> Gallery Products</button>
                   )}
                   {/* show full gallery links in mobile */}
                   {galleryLinks.map(item=>(

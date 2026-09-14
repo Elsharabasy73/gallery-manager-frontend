@@ -91,7 +91,7 @@ export const NAV_CONFIG = {
   gallery: [
     { id:'dashboard-overview', label:'Overview', icon:'dashboard', path:'/dashboard/overview', roles:['gallery_owner'] },
     { id:'my-gallery', label:'My Gallery', icon:'storefront', path:'/dashboard/my-gallery', roles:['gallery_owner'] },
-    { id:'my-products', label:'My Products', icon:'inventory_2', path:'/dashboard/my-products', roles:['gallery_owner','employee'] },
+    { id:'my-products', label:'Gallery Products', icon:'inventory_2', path:'/dashboard/my-products', roles:['gallery_owner','employee'] },
     { id:'add-product', label:'Add Product', icon:'add_box', path:'/dashboard/add-product', roles:['gallery_owner','employee'] },
     { id:'gallery-orders', label:'Gallery Orders', icon:'orders', path:'/dashboard/orders', roles:['gallery_owner','employee'] },
     { id:'employees', label:'Employees', icon:'group', path:'/dashboard/employees', roles:['gallery_owner'] },

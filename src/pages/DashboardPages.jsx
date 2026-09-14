@@ -357,7 +357,7 @@ export function MyProducts(){
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="font-serif text-xl">My Products</h2>
+        <h2 className="font-serif text-xl">Gallery Products</h2>
         <button onClick={()=>navigate('/dashboard/add-product')} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-sm">+ Add Product</button>
       </div>
       <div className="flex gap-2">
