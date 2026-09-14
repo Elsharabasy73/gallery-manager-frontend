@@ -118,8 +118,13 @@ export default function ProductDetail(){
   const pid = p._id || p.id || id
   const wish = isWishlisted(String(pid))
   const img = getProductImageUrl(p) || p.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80'
-  const galleryName = p.gallery?.name || p.gallery || 'Gallery'
-  const galleryId = p.gallery?._id || p.gallery?.id
+  // Handle gallery data - could be object, string ID, or null
+  const galleryObj = p.gallery && typeof p.gallery === 'object' ? p.gallery : null
+  const galleryName = galleryObj?.name || (typeof p.gallery === 'string' ? '' : 'Gallery')
+  const galleryId = galleryObj?._id || galleryObj?.id || (typeof p.gallery === 'string' ? p.gallery : null)
+  const galleryCity = galleryObj?.city || ''
+  const galleryCountry = galleryObj?.country || ''
+  const galleryLogo = galleryObj?.logo || null
   const price = p.price
   const compare = p.compareAtPrice || p.compare
   const stock = p.stock ?? 0
@@ -266,9 +271,12 @@ export default function ProductDetail(){
         <div className="bg-white border border-[#E7DFD3] rounded-xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#FAF7F2] border flex items-center justify-center overflow-hidden text-xs font-medium">
-              {p.gallery?.logo ? <img src={getGalleryLogoUrl(p.gallery) || ''} alt={galleryName} className="w-full h-full object-cover" onError={e=>e.target.style.display='none'} /> : (galleryName.slice(0,2).toUpperCase())}
+              {galleryLogo ? <img src={getGalleryLogoUrl(galleryObj) || ''} alt={galleryName} className="w-full h-full object-cover" onError={e=>e.target.style.display='none'} /> : (galleryName.slice(0,2).toUpperCase())}
             </div>
-            <div><div className="text-sm font-medium">{galleryName}</div><div className="text-xs text-[#8A8078]">{p.gallery?.city || ''} {p.gallery?.country || ''}</div></div>
+            <div>
+              <div className="text-sm font-medium">{galleryName || 'Unknown Gallery'}</div>
+              <div className="text-xs text-[#8A8078]">{galleryCity}{galleryCity && galleryCountry ? ', ' : ''}{galleryCountry}</div>
+            </div>
           </div>
           <button onClick={()=> galleryId ? navigate(`/galleries/${galleryId}`) : navigate('/galleries')} className="text-xs border px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF7F2]">View Gallery</button>
         </div>

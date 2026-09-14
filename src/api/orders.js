@@ -21,14 +21,11 @@ export function getMyOrders() {
 
 /**
  * Get orders for a specific gallery (for gallery owners/employees)
- * Note: This might need a different endpoint depending on backend implementation
  * @param {string} galleryId - UUID of the gallery
  * @returns {Promise<{ results: number, data: Order[] }>}
  */
 export function getGalleryOrders(galleryId) {
-  // If backend has a specific endpoint for gallery orders, use it
-  // Otherwise, we'll filter from the user's orders or use a query param
-  return apiFetch(`/galleries/${galleryId}/orders`)
+  return apiFetch(`/orders?galleryId=${galleryId}`)
 }
 
 /**
