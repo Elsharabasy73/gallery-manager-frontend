@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useRole } from '../context/RoleContext'
-import { getMyOrders, unwrapOrders, cancelOrder } from '../api/orders'
+import { getMyOrders, unwrapOrders, cancelOrder, getStatusStyles, ORDER_STATUSES } from '../api/orders'
 
 /**
  * MyOrdersPage - Customer's order history
@@ -44,7 +44,7 @@ export default function MyOrdersPage() {
 
   // Cancel order handler
   const handleCancelOrder = async (orderId) => {
-    if (!window.confirm('Are you sure you want to cancel this order?')) return
+    if (!window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) return
     setCancellingId(orderId)
     setSuccess('')
     setLocalError('')
@@ -53,7 +53,7 @@ export default function MyOrdersPage() {
       setOrders(prev => prev.map(o => 
         o.id === orderId ? { ...o, status: 'cancelled' } : o
       ))
-      setSuccess('Order cancelled')
+      setSuccess('Order cancelled successfully')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
       setLocalError(err.message || 'Failed to cancel order')
@@ -71,12 +71,13 @@ export default function MyOrdersPage() {
 
   const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter)
 
+  // Build status filters dynamically based on available statuses
   const statusFilters = [
     { key: 'all', label: `All (${statusCounts.all || 0})` },
-    { key: 'pending', label: `Pending (${statusCounts.pending || 0})` },
-    { key: 'accepted', label: `Accepted (${statusCounts.accepted || 0})` },
-    { key: 'rejected', label: `Rejected (${statusCounts.rejected || 0})` },
-    { key: 'cancelled', label: `Cancelled (${statusCounts.cancelled || 0})` },
+    ...Object.keys(ORDER_STATUSES).map(status => ({
+      key: status,
+      label: `${ORDER_STATUSES[status].label} (${statusCounts[status] || 0})`
+    }))
   ]
 
   // Auth guard - only customers can access
@@ -99,7 +100,7 @@ export default function MyOrdersPage() {
       <h2 className="font-serif text-2xl">My Orders</h2>
 
       {/* Status Filters */}
-      <div className="flex gap-2 overflow-x-auto">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {statusFilters.map(f => (
           <button
             key={f.key}
@@ -117,13 +118,15 @@ export default function MyOrdersPage() {
 
       {/* Messages */}
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg">
+        <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg flex items-center justify-between">
           {success}
+          <button onClick={() => setSuccess('')} className="text-green-600 hover:text-green-800">×</button>
         </div>
       )}
       {localError && (
-        <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-sm px-4 py-3 rounded-lg">
+        <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-sm px-4 py-3 rounded-lg flex items-center justify-between">
           {localError}
+          <button onClick={() => setLocalError('')} className="text-[#B3402E] hover:text-[#93000a]">×</button>
         </div>
       )}
       {error && (
@@ -138,7 +141,7 @@ export default function MyOrdersPage() {
       ) : filteredOrders.length === 0 ? (
         <div className="text-center py-12 bg-white border border-dashed rounded-xl">
           <p className="text-sm text-[#8A8078]">
-            {filter === 'all' ? 'No orders yet' : `No ${filter} orders`}
+            {filter === 'all' ? 'No orders yet' : `No ${ORDER_STATUSES[filter]?.label || filter} orders`}
           </p>
           <button 
             onClick={() => navigate('/products')} 
@@ -155,7 +158,7 @@ export default function MyOrdersPage() {
               order={order}
               isCancelling={cancellingId === order.id}
               onCancel={handleCancelOrder}
-              onViewDetails={(id) => navigate(`/dashboard/orders/${id}`)}
+              onViewDetails={(id) => navigate(`/orders/${id}`)}
             />
           ))}
         </div>
@@ -173,50 +176,53 @@ function OrderCard({ order, isCancelling, onCancel, onViewDetails }) {
   const totalPrice = Number(order.totalPrice || 0)
   const galleryName = order.gallery?.name || 'Unknown Gallery'
   const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'
+  const statusConfig = ORDER_STATUSES[order.status] || ORDER_STATUSES.cancelled
 
-  const statusStyles = {
-    pending: 'bg-amber-100 text-amber-800',
-    accepted: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
-    cancelled: 'bg-zinc-100 text-zinc-800',
-  }
+  // Customer can cancel pending or accepted orders
+  const canCancel = ['pending', 'accepted'].includes(order.status)
 
   return (
     <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
       {/* Order Header */}
-      <div className="flex justify-between text-xs">
-        <span className="font-mono">{order.id?.substring(0, 8)}... • {orderDate}</span>
-        <span className={`px-2 py-0.5 rounded-full text-[11px] ${statusStyles[order.status] || statusStyles.cancelled}`}>
-          {order.status}
+      <div className="flex justify-between items-start text-xs">
+        <div>
+          <span className="font-mono">{order.id?.substring(0, 8)}...</span>
+          <span className="text-[#8A8078] ml-2">• {orderDate}</span>
+        </div>
+        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusStyles(order.status)}`}>
+          {statusConfig.label}
         </span>
       </div>
 
       {/* Order Details */}
-      <div className="flex items-center gap-2 mt-2 text-sm">
-        <div className="w-6 h-6 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-[10px]">
+      <div className="flex items-center gap-2 mt-3 text-sm">
+        <div className="w-8 h-8 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-[10px] font-medium">
           {galleryName.substring(0, 2).toUpperCase()}
         </div>
-        {galleryName} • {totalItems} items • {totalPrice.toLocaleString()} EGP
+        <div className="flex-1">
+          <div className="font-medium">{galleryName}</div>
+          <div className="text-xs text-[#8A8078]">{totalItems} items • {totalPrice.toLocaleString()} EGP</div>
+        </div>
       </div>
 
       {/* Actions */}
-      {order.status === 'pending' && (
-        <button
-          onClick={() => onCancel(order.id)}
-          disabled={isCancelling}
-          className="mt-3 text-xs border border-[#B3402E] text-[#B3402E] px-3 py-1 rounded-full hover:bg-red-50 disabled:opacity-60"
-        >
-          {isCancelling ? 'Cancelling...' : 'Cancel order'}
-        </button>
-      )}
-      {order.status === 'accepted' && (
+      <div className="flex gap-2 mt-3">
         <button
           onClick={() => onViewDetails(order.id)}
-          className="mt-3 text-xs border px-3 py-1 rounded-full hover:bg-[#FAF7F2]"
+          className="flex-1 text-xs border px-3 py-1.5 rounded-lg hover:bg-[#FAF7F2]"
         >
-          View details
+          View Details
         </button>
-      )}
+        {canCancel && (
+          <button
+            onClick={() => onCancel(order.id)}
+            disabled={isCancelling}
+            className="text-xs border border-[#B3402E] text-[#B3402E] px-3 py-1.5 rounded-lg hover:bg-red-50 disabled:opacity-60"
+          >
+            {isCancelling ? 'Cancelling...' : 'Cancel'}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

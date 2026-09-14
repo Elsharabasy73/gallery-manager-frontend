@@ -7,7 +7,7 @@ import { apiFetch } from '../api/client'
 import { unwrapProducts, getProduct, unwrapProduct, createProduct, updateProduct } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
 import { createEmployee, getEmployees, getEmployee, updateEmployee, unwrapEmployees, unwrapEmployee } from '../api/employees'
-import { getGalleryOrders, getOrder, confirmOrder, unwrapOrders, unwrapOrder } from '../api/orders'
+import { getGalleryOrders, getOrder, acceptOrder, updateOrderStatus, cancelOrder, unwrapOrders, unwrapOrder, getStatusStyles, ORDER_STATUSES, isValidTransition } from '../api/orders'
 import { useGallery } from '../context/GalleryContext'
 import { useRole } from '../context/RoleContext'
 
@@ -592,7 +592,7 @@ export function GalleryOrders(){
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [confirmingId, setConfirmingId] = useState(null)
+  const [actionId, setActionId] = useState(null)
   const [success, setSuccess] = useState('')
   const [localError, setLocalError] = useState('')
 
@@ -623,20 +623,33 @@ export function GalleryOrders(){
     return () => { cancelled = true }
   }, [ctxGalleryId])
 
-  const handleConfirmOrder = async (orderId) => {
-    if (!window.confirm('Confirm this order? This will change status to accepted.')) return
-    setConfirmingId(orderId)
+  // Refresh orders list
+  const refreshOrders = async () => {
+    if (!ctxGalleryId) return
+    try {
+      const res = await getGalleryOrders(ctxGalleryId)
+      const data = unwrapOrders(res)
+      setOrders(data)
+    } catch (err) {
+      console.error('Failed to refresh orders:', err)
+    }
+  }
+
+  // Accept a pending order
+  const handleAcceptOrder = async (orderId) => {
+    if (!window.confirm('Accept this order? This will change status from Pending to Accepted.')) return
+    setActionId(orderId)
     setSuccess('')
     setLocalError('')
     try {
-      await confirmOrder(orderId)
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'accepted' } : o))
-      setSuccess('Order confirmed')
+      await acceptOrder(orderId)
+      await refreshOrders()
+      setSuccess('Order accepted successfully')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      setLocalError(err.message || 'Failed to confirm order')
+      setLocalError(err.message || 'Failed to accept order')
     } finally {
-      setConfirmingId(null)
+      setActionId(null)
     }
   }
 
@@ -682,10 +695,11 @@ export function GalleryOrders(){
           className="border rounded-full px-3 py-1.5 text-sm bg-white"
         >
           <option value="all">All ({statusCounts.all || 0})</option>
-          <option value="pending">Pending ({statusCounts.pending || 0})</option>
-          <option value="accepted">Accepted ({statusCounts.accepted || 0})</option>
-          <option value="rejected">Rejected ({statusCounts.rejected || 0})</option>
-          <option value="cancelled">Cancelled ({statusCounts.cancelled || 0})</option>
+          {Object.keys(ORDER_STATUSES).map(status => (
+            <option key={status} value={status}>
+              {ORDER_STATUSES[status].label} ({statusCounts[status] || 0})
+            </option>
+          ))}
         </select>
       </div>
 
@@ -719,6 +733,7 @@ export function GalleryOrders(){
                   const totalPrice = Number(o.totalPrice || 0)
                   const customerName = `${o.user?.firstName || 'Unknown'} ${o.user?.lastName || ''}`.trim()
                   const orderDate = o.createdAt ? new Date(o.createdAt).toLocaleDateString() : ''
+                  const statusConfig = ORDER_STATUSES[o.status] || ORDER_STATUSES.cancelled
 
                   return (
                     <tr key={o.id} className="border-t">
@@ -733,13 +748,8 @@ export function GalleryOrders(){
                       <td className="text-center">{totalItems}</td>
                       <td className="text-center">{totalPrice.toLocaleString()} EGP</td>
                       <td>
-                        <span className={`px-2 py-0.5 rounded-full text-[11px] ${
-                          o.status === 'pending' ? 'bg-amber-100 text-amber-800' :
-                          o.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                          o.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-zinc-100'
-                        }`}>
-                          {o.status}
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusStyles(o.status)}`}>
+                          {statusConfig.label}
                         </span>
                       </td>
                       <td className="text-center">
@@ -751,11 +761,11 @@ export function GalleryOrders(){
                         </button>
                         {o.status === 'pending' && (role === 'gallery_owner' || role === 'employee' || role === 'admin') && (
                           <button
-                            onClick={() => handleConfirmOrder(o.id)}
-                            disabled={confirmingId === o.id}
+                            onClick={() => handleAcceptOrder(o.id)}
+                            disabled={actionId === o.id}
                             className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 disabled:opacity-60"
                           >
-                            {confirmingId === o.id ? 'Confirming...' : 'Confirm'}
+                            {actionId === o.id ? 'Accepting...' : 'Accept'}
                           </button>
                         )}
                       </td>
@@ -779,7 +789,7 @@ export function OrderDetails(){
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [confirming, setConfirming] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
   const [success, setSuccess] = useState('')
   const [localError, setLocalError] = useState('')
 
@@ -806,20 +816,69 @@ export function OrderDetails(){
     return () => { cancelled = true }
   }, [orderId])
 
-  const handleConfirm = async () => {
-    if (!window.confirm('Confirm this order?')) return
-    setConfirming(true)
+  // Refresh order data
+  const refreshOrder = async () => {
+    try {
+      const res = await getOrder(orderId)
+      const data = unwrapOrder(res)
+      setOrder(data)
+    } catch (err) {
+      console.error('Failed to refresh order:', err)
+    }
+  }
+
+  // Accept pending order
+  const handleAccept = async () => {
+    if (!window.confirm('Accept this order? This will change status from Pending to Accepted.')) return
+    setActionLoading(true)
     setSuccess('')
     setLocalError('')
     try {
-      await confirmOrder(orderId)
-      setOrder(prev => ({ ...prev, status: 'accepted' }))
-      setSuccess('Order confirmed')
+      await acceptOrder(orderId)
+      await refreshOrder()
+      setSuccess('Order accepted successfully')
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      setLocalError(err.message || 'Failed to confirm order')
+      setLocalError(err.message || 'Failed to accept order')
     } finally {
-      setConfirming(false)
+      setActionLoading(false)
+    }
+  }
+
+  // Update order status
+  const handleUpdateStatus = async (newStatus) => {
+    const statusLabel = ORDER_STATUSES[newStatus]?.label || newStatus
+    if (!window.confirm(`Change status to ${statusLabel}?`)) return
+    setActionLoading(true)
+    setSuccess('')
+    setLocalError('')
+    try {
+      await updateOrderStatus(orderId, newStatus)
+      await refreshOrder()
+      setSuccess(`Order status updated to ${statusLabel}`)
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (err) {
+      setLocalError(err.message || 'Failed to update order status')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Cancel order
+  const handleCancel = async () => {
+    if (!window.confirm('Cancel this order? This action cannot be undone. Product stock will be restored.')) return
+    setActionLoading(true)
+    setSuccess('')
+    setLocalError('')
+    try {
+      await cancelOrder(orderId)
+      await refreshOrder()
+      setSuccess('Order cancelled successfully')
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (err) {
+      setLocalError(err.message || 'Failed to cancel order')
+    } finally {
+      setActionLoading(false)
     }
   }
 
@@ -848,7 +907,24 @@ export function OrderDetails(){
   const galleryName = order.gallery?.name || 'Unknown Gallery'
   const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'
   const totalPrice = Number(order.totalPrice || 0)
-  const canConfirm = order.status === 'pending' && (role === 'gallery_owner' || role === 'employee' || role === 'admin')
+  const statusConfig = ORDER_STATUSES[order.status] || ORDER_STATUSES.cancelled
+
+  // Permission checks
+  const isGalleryOwner = role === 'gallery_owner'
+  const isEmployee = role === 'employee'
+  const isAdmin = role === 'admin'
+  const isCustomer = role === 'customer'
+  const isOrderOwner = isCustomer && user?.id === order.userId
+
+  // Action permissions based on role and status
+  const canAccept = order.status === 'pending' && (isGalleryOwner || isEmployee || isAdmin)
+  const canUpdateStatus = isGalleryOwner || isAdmin
+  const canCancel = !['completed', 'cancelled'].includes(order.status) && (isOrderOwner || isGalleryOwner || isAdmin)
+
+  // Get available status transitions for gallery_owner/admin
+  const availableTransitions = canUpdateStatus && order.status !== 'completed' && order.status !== 'cancelled'
+    ? ORDER_STATUSES[order.status]?.canTransitionTo?.filter(s => s !== 'cancelled') || []
+    : []
 
   return (
     <div className="space-y-4 max-w-3xl">
@@ -858,21 +934,83 @@ export function OrderDetails(){
         <span className="text-[#4B3621] font-medium">Order {orderId?.substring(0, 8)}...</span>
       </div>
 
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <h2 className="font-serif text-2xl">Order Details</h2>
-        {canConfirm && (
-          <button
-            onClick={handleConfirm}
-            disabled={confirming}
-            className="bg-green-600 text-white px-4 py-1.5 rounded-full text-xs hover:bg-green-700 disabled:opacity-60"
-          >
-            {confirming ? 'Confirming...' : 'Confirm Order'}
-          </button>
-        )}
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyles(order.status)}`}>
+          {statusConfig.label}
+        </span>
       </div>
 
       {success && <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg">{success}</div>}
       {localError && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-3 rounded-lg">{localError}</div>}
+
+      {/* Status Timeline */}
+      <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
+        <h3 className="text-sm font-medium mb-3">Order Timeline</h3>
+        <div className="flex items-center gap-1 overflow-x-auto pb-2">
+          {['pending', 'accepted', 'paid', 'delivered', 'completed'].map((s, idx) => {
+            const config = ORDER_STATUSES[s]
+            const statusOrder = ['pending', 'accepted', 'paid', 'delivered', 'completed']
+            const currentIndex = statusOrder.indexOf(order.status)
+            const thisIndex = statusOrder.indexOf(s)
+            const isActive = thisIndex <= currentIndex && currentIndex !== statusOrder.indexOf('cancelled')
+            const isCurrent = s === order.status
+
+            return (
+              <div key={s} className="flex items-center">
+                <div className={`flex flex-col items-center ${isActive ? 'opacity-100' : 'opacity-40'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                    isCurrent ? getStatusStyles(s) + ' ring-2 ring-offset-1' : isActive ? 'bg-[#E7DFD3]' : 'bg-zinc-100'
+                  }`}>
+                    {idx + 1}
+                  </div>
+                  <span className="text-[10px] mt-1 text-[#8A8078]">{config.label}</span>
+                </div>
+                {idx < 4 && (
+                  <div className={`w-8 h-0.5 mx-1 ${thisIndex < currentIndex ? 'bg-[#4B3621]' : 'bg-zinc-200'}`} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Actions */}
+      {(canAccept || availableTransitions.length > 0 || canCancel) && (
+        <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
+          <h3 className="text-sm font-medium mb-3">Actions</h3>
+          <div className="flex flex-wrap gap-2">
+            {canAccept && (
+              <button
+                onClick={handleAccept}
+                disabled={actionLoading}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 disabled:opacity-60"
+              >
+                {actionLoading ? 'Accepting...' : 'Accept Order'}
+              </button>
+            )}
+            {availableTransitions.map(s => (
+              <button
+                key={s}
+                onClick={() => handleUpdateStatus(s)}
+                disabled={actionLoading}
+                className="border px-4 py-2 rounded-lg text-sm hover:bg-[#FAF7F2] disabled:opacity-60"
+              >
+                Mark as {ORDER_STATUSES[s].label}
+              </button>
+            ))}
+            {canCancel && (
+              <button
+                onClick={handleCancel}
+                disabled={actionLoading}
+                className="border border-[#B3402E] text-[#B3402E] px-4 py-2 rounded-lg text-sm hover:bg-red-50 disabled:opacity-60"
+              >
+                {actionLoading ? 'Cancelling...' : 'Cancel Order'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="bg-white border border-[#E7DFD3] rounded-xl p-6 space-y-4">
         <div className="flex justify-between items-start">
@@ -886,18 +1024,11 @@ export function OrderDetails(){
               </div>
             )}
           </div>
-          <span className={`px-2 py-0.5 rounded-full text-xs ${
-            order.status === 'pending' ? 'bg-amber-100 text-amber-800' :
-            order.status === 'accepted' ? 'bg-green-100 text-green-800' :
-            order.status === 'rejected' ? 'bg-red-100 text-red-800' :
-            'bg-zinc-100'
-          }`}>
-            {order.status}
-          </span>
         </div>
 
         {order.items && order.items.length > 0 && (
           <div className="space-y-2">
+            <h3 className="text-sm font-medium">Order Items</h3>
             {order.items.map((item, idx) => {
               const itemPrice = Number(item.unitPrice || 0)
               const itemTotal = itemPrice * item.quantity

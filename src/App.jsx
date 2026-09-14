@@ -42,6 +42,7 @@ export default function App(){
         <Route path="/wishlist" element={<Protected allow={['customer']} pageId="wishlist" redirectToHome><WishlistPage /></Protected>} />
         <Route path="/cart" element={<Protected allow={['customer']} pageId="cart" redirectToHome><CartPage /></Protected>} />
         <Route path="/my-orders" element={<Protected allow={['customer']} pageId="my-orders" redirectToHome><MyOrdersPage /></Protected>} />
+        <Route path="/orders/:id" element={<Protected allow={['customer']} pageId="order-details"><OrderDetails /></Protected>} />
 
         {/* gallery owner / employee */}
         <Route path="/dashboard/overview" element={<Protected allow={['gallery_owner']} pageId="dashboard-overview" redirectToHome><Overview /></Protected>} />
@@ -61,6 +62,7 @@ export default function App(){
         <Route path="/admin/products" element={<Protected allow={['admin']} pageId="admin-products" redirectToHome><AdminProducts /></Protected>} />
         <Route path="/admin/galleries" element={<Protected allow={['admin']} pageId="admin-galleries" redirectToHome><AdminGalleries /></Protected>} />
         <Route path="/admin/orders" element={<Protected allow={['admin']} pageId="admin-orders" redirectToHome><AdminOrders /></Protected>} />
+        <Route path="/admin/orders/:id" element={<Protected allow={['admin']} pageId="order-details"><OrderDetails /></Protected>} />
 
         {/* legacy path redirects for old state keys */}
         <Route path="/home" element={<Navigate to="/" replace />} />
