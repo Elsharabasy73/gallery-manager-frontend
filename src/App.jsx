@@ -13,7 +13,7 @@ import WishlistPage from './pages/WishlistPage'
 import CartPage from './pages/CartPage'
 import MyOrdersPage from './pages/MyOrdersPage'
 import { Overview, MyGallery, MyProducts, AddEditProduct, GalleryOrders, OrderDetails, Employees, AddEmployee, CreateGallery } from './pages/DashboardPages'
-import { AdminUsers, AdminProducts, AdminGalleries, AdminOrders, AdminOverview } from './pages/AdminPages'
+import { AdminUsers, AdminProducts, AdminGalleries, AdminOrders, AdminOverview, AdminCategories } from './pages/AdminPages'
 import Profile from './pages/Profile'
 
 function NotFound(){
@@ -62,6 +62,7 @@ export default function App(){
         <Route path="/admin/products" element={<Protected allow={['admin']} pageId="admin-products" redirectToHome><AdminProducts /></Protected>} />
         <Route path="/admin/galleries" element={<Protected allow={['admin']} pageId="admin-galleries" redirectToHome><AdminGalleries /></Protected>} />
         <Route path="/admin/orders" element={<Protected allow={['admin']} pageId="admin-orders" redirectToHome><AdminOrders /></Protected>} />
+        <Route path="/admin/categories" element={<Protected allow={['admin']} pageId="admin-categories" redirectToHome><AdminCategories /></Protected>} />
         <Route path="/admin/orders/:id" element={<Protected allow={['admin']} pageId="order-details"><OrderDetails /></Protected>} />
 
         {/* legacy path redirects for old state keys */}

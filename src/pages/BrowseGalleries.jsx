@@ -4,6 +4,7 @@ import { galleries as mockGalleries } from '../data/mockData'
 import { useRole } from '../context/RoleContext'
 import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getGalleryLogoUrl, getGalleryBannerUrl } from '../utils/image'
+import useHideOnScroll from '../hooks/useHideOnScroll'
 
 function getInitials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'GA'
@@ -24,6 +25,7 @@ export default function BrowseGalleries() {
   const [galleries, setGalleries] = useState([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState(null)
+  const { visible: searchVisible } = useHideOnScroll({ threshold: 8, topBuffer: 160 })
 
   // sync url
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function BrowseGalleries() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sticky top-[72px] z-30 bg-[#FAF7F2]/95 backdrop-blur py-2 transition-all duration-300 motion-reduce:transition-none ${searchVisible ? 'translate-y-0 opacity-100' : '-translate-y-[120%] opacity-0 pointer-events-none'}`}>
         <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2.5 min-w-0">
           <span className="material-symbols-outlined text-[#8A8078]">search</span>
           <input

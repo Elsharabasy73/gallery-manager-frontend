@@ -40,12 +40,6 @@ export default function Layout(){
         )}
       </main>
       <Footer />
-      <div className="fixed bottom-3 right-3 bg-stone-900 text-white text-[11px] px-3 py-2 rounded-lg shadow-lg hidden md:block max-w-[260px]">
-        <div className="font-semibold">Permissions (from gallery manager.ods)</div>
-        <div className="text-stone-300 leading-tight mt-1">
-          Customer: wishlist/cart/orders • Owner: overview/gallery/products/employees/orders • Employee: products/orders • Admin: users/products/galleries/all-orders
-        </div>
-      </div>
     </div>
   )
 }

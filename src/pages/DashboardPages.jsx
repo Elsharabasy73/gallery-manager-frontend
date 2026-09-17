@@ -10,6 +10,7 @@ import { createEmployee, getEmployees, getEmployee, updateEmployee, unwrapEmploy
 import { getGalleryOrders, getOrder, acceptOrder, updateOrderStatus, cancelOrder, unwrapOrders, unwrapOrder, getStatusStyles, ORDER_STATUSES, isValidTransition } from '../api/orders'
 import { useGallery } from '../context/GalleryContext'
 import { useRole } from '../context/RoleContext'
+import { compressImage, prepareImages, IMAGE_PRESETS } from '../utils/compressImage'
 
 export function Overview(){
   const { gallery, loading, error } = useGallery()
@@ -59,6 +60,8 @@ export function MyGallery(){
   const [imagesFiles, setImagesFiles] = useState([])
   const [imagesPreviews, setImagesPreviews] = useState([])
   const [initialImagesPreviews, setInitialImagesPreviews] = useState([])
+  const [photoError, setPhotoError] = useState('')
+  const [optimizing, setOptimizing] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -119,24 +122,61 @@ export function MyGallery(){
     const { name, value } = e.target
     setForm(s => ({ ...s, [name]: value }))
   }
-  const handleLogo = (e) => {
+  const handleLogo = async (e) => {
     const f = e.target.files?.[0]
-    if (f){ setLogoFile(f); setLogoPreview(URL.createObjectURL(f)) }
+    e.target.value = ''
+    if (!f) return
+    setPhotoError('')
+    setOptimizing(true)
+    try {
+      const { file } = await compressImage(f, IMAGE_PRESETS.logo)
+      if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview)
+      setLogoFile(file)
+      setLogoPreview(URL.createObjectURL(file))
+    } catch (err) {
+      setPhotoError(err.message || 'Could not process logo image.')
+    } finally {
+      setOptimizing(false)
+    }
   }
-  const handleBanner = (e) => {
+  const handleBanner = async (e) => {
     const f = e.target.files?.[0]
-    if (f){ setBannerFile(f); setBannerPreview(URL.createObjectURL(f)) }
+    e.target.value = ''
+    if (!f) return
+    setPhotoError('')
+    setOptimizing(true)
+    try {
+      const { file } = await compressImage(f, IMAGE_PRESETS.banner)
+      if (bannerPreview?.startsWith('blob:')) URL.revokeObjectURL(bannerPreview)
+      setBannerFile(file); setBannerPreview(URL.createObjectURL(file))
+    } catch (err) {
+      setPhotoError(err.message || 'Could not process banner image.')
+    } finally {
+      setOptimizing(false)
+    }
   }
-  const handleImages = (e) => {
+  const handleImages = async (e) => {
     const files = Array.from(e.target.files || [])
+    e.target.value = ''
     if (!files.length) return
-    setImagesFiles(prev => [...prev, ...files].slice(0,8))
-    const previews = files.map(f => URL.createObjectURL(f))
-    setImagesPreviews(prev => [...prev, ...previews].slice(0,8))
+    setPhotoError('')
+    setOptimizing(true)
+    try {
+      const { files: ready, skipped } = await prepareImages(files, IMAGE_PRESETS.gallery)
+      if (skipped.length) setPhotoError(`${skipped.length} image(s) skipped — over 12MB each: ${skipped.join(', ')}`)
+      if (!ready.length) return
+      setImagesFiles(prev => [...prev, ...ready].slice(0,8))
+      const previews = ready.map(f => URL.createObjectURL(f))
+      setImagesPreviews(prev => [...prev, ...previews].slice(0,8))
+    } finally {
+      setOptimizing(false)
+    }
   }
   const removeNewImage = (idx) => {
     // only removes newly added? For simplicity remove from both arrays.
     // If idx corresponds to existing server images, we just hide preview — backend will not delete unless we send flag. Keep simple: remove preview.
+    const src = imagesPreviews[idx]
+    if (src?.startsWith('blob:')) URL.revokeObjectURL(src)
     setImagesPreviews(prev => prev.filter((_,i)=>i!==idx))
     setImagesFiles(prev => {
       // if there are more previews than files (existing images), adjust
@@ -224,6 +264,8 @@ export function MyGallery(){
             </label>
           </div>
         </div>
+        {optimizing && <p className="text-xs text-[#78582f] mt-4">Optimizing image…</p>}
+        {photoError && <p className="text-xs text-[#B3402E] mt-4">{photoError}</p>}
         <div className="space-y-4">
           <div><label className="text-sm font-medium">Gallery name*</label><input name="name" value={form.name} onChange={handleChange} className="w-full border border-[#d2c4ba] rounded-lg px-4 py-2.5 text-sm mt-1 focus:border-[#78582f] focus:ring-2 focus:ring-[#78582f]/20 outline-none" /></div>
           <div><label className="text-sm font-medium">Description* (500)</label><textarea name="description" value={form.description} onChange={handleChange} maxLength={500} rows={3} className="w-full border border-[#d2c4ba] rounded-lg px-4 py-2.5 text-sm mt-1 focus:border-[#78582f] focus:ring-2 focus:ring-[#78582f]/20 outline-none resize-y" /><div className="text-xs text-right text-[#8A8078]">{form.description.length}/500</div></div>
@@ -257,6 +299,7 @@ export function MyGallery(){
           <input accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" type="file" onChange={handleImages} />
           <span className="material-symbols-outlined text-[#78582f] text-3xl">add_a_photo</span>
           <span className="text-sm font-medium">Upload images (optional)</span>
+          <span className="text-xs text-[#8A8078]">PNG, JPG up to 12MB each • auto-optimized on upload</span>
         </label>
         {imagesPreviews.length>0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
@@ -268,17 +311,19 @@ export function MyGallery(){
             ))}
           </div>
         )}
+        {optimizing && <p className="text-xs text-[#78582f] mt-3">Optimizing image…</p>}
+        {photoError && <p className="text-xs text-[#B3402E] mt-3">{photoError}</p>}
       </section>
 
       <div className="flex justify-end gap-3">
         <button onClick={()=>navigate('/galleries/'+ (gallery.id || gallery._id))} className="border px-6 py-2.5 rounded-lg text-sm bg-white">View public profile</button>
         <button
           onClick={handleSave}
-          disabled={saving || !hasChanges}
+          disabled={saving || optimizing || !hasChanges}
           title={!hasChanges ? 'No changes to save' : ''}
-          className={`px-8 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition ${hasChanges && !saving ? 'bg-[#33210d] text-white hover:opacity-90' : 'bg-[#33210d]/40 text-white/80 cursor-not-allowed'}`}
+          className={`px-8 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition ${hasChanges && !saving && !optimizing ? 'bg-[#33210d] text-white hover:opacity-90' : 'bg-[#33210d]/40 text-white/80 cursor-not-allowed'}`}
         >
-          {saving?'Saving...':'Save Changes'} <span className="material-symbols-outlined text-[18px]">save</span>
+          {saving?'Saving...':optimizing?'Optimizing…':'Save Changes'} <span className="material-symbols-outlined text-[18px]">save</span>
         </button>
       </div>
     </div>
@@ -422,6 +467,8 @@ export function AddEditProduct(){
   const [mainPreview,setMainPreview]=useState(null)
   const [imagesFiles,setImagesFiles]=useState([])
   const [imagesPreviews,setImagesPreviews]=useState([])
+  const [photoError,setPhotoError]=useState('')
+  const [optimizing,setOptimizing]=useState(false)
 
   useEffect(()=>{
     let cancelled=false
@@ -482,18 +529,37 @@ export function AddEditProduct(){
     const {name,value}=e.target
     setForm(s=>({...s, [name]: value}))
   }
-  const handleMain=(e)=>{
+  const handleMain=async(e)=>{
     const f=e.target.files?.[0]
-    if(f){ setMainFile(f); setMainPreview(URL.createObjectURL(f)) }
+    e.target.value=''
+    if(!f) return
+    setPhotoError('')
+    setOptimizing(true)
+    try{
+      const { file }=await compressImage(f, IMAGE_PRESETS.product)
+      if(mainPreview?.startsWith('blob:')) URL.revokeObjectURL(mainPreview)
+      setMainFile(file); setMainPreview(URL.createObjectURL(file))
+    }catch(err){ setPhotoError(err.message||'Could not process image.') }
+    finally{ setOptimizing(false) }
   }
-  const handleImages=(e)=>{
+  const handleImages=async(e)=>{
     const files=Array.from(e.target.files||[])
+    e.target.value=''
     if(!files.length) return
-    setImagesFiles(prev=>[...prev, ...files].slice(0,8))
-    const previews=files.map(f=>URL.createObjectURL(f))
-    setImagesPreviews(prev=>[...prev, ...previews].slice(0,8))
+    setPhotoError('')
+    setOptimizing(true)
+    try{
+      const { files: ready, skipped }=await prepareImages(files, IMAGE_PRESETS.product)
+      if(skipped.length) setPhotoError(`${skipped.length} image(s) skipped — over 12MB each: ${skipped.join(', ')}`)
+      if(!ready.length) return
+      setImagesFiles(prev=>[...prev, ...ready].slice(0,8))
+      const previews=ready.map(f=>URL.createObjectURL(f))
+      setImagesPreviews(prev=>[...prev, ...previews].slice(0,8))
+    }finally{ setOptimizing(false) }
   }
   const removeImage=(idx)=>{
+    const src=imagesPreviews[idx]
+    if(src?.startsWith('blob:')) URL.revokeObjectURL(src)
     setImagesPreviews(p=>p.filter((_,i)=>i!==idx))
     setImagesFiles(prev=>{
       // if removing an existing server image (not in files), keep files as is but has visual removal
@@ -565,7 +631,7 @@ export function AddEditProduct(){
           <div><label className="text-xs">Dimensions</label><input name="dimensions" value={form.dimensions} onChange={handleChange} placeholder="W 200 × D 90 × H 75 cm" className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
           <div><label className="text-xs">Materials (type + Enter)</label><div className="flex flex-wrap gap-2 mt-1 items-center">{materials.map((m,i)=><span key={i} className="border px-2 py-1 rounded-full text-xs flex items-center gap-1">{m} <button type="button" onClick={()=>removeMaterial(i)} className="text-[#B3402E]">✕</button></span>)}<input value={materialInput} onChange={e=>setMaterialInput(e.target.value)} onKeyDown={addMaterial} className="flex-1 min-w-[120px] border rounded-full px-3 py-1 text-xs" placeholder="Add material" /></div></div>
           <div><label className="text-xs">Description (1000)</label><textarea name="description" value={form.description} onChange={handleChange} maxLength={1000} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" placeholder="Describe the piece..." /><div className="text-xs text-right text-[#8A8078]">{form.description.length}/1000</div></div>
-          <div className="flex gap-3"><button type="button" onClick={()=>navigate('/dashboard/my-products')} className="border px-4 py-2 rounded-lg text-sm">Cancel</button><button type="submit" disabled={saving} className="bg-[#4B3621] text-white px-6 py-2 rounded-lg text-sm disabled:opacity-60">{saving?(isEdit?'Updating...':'Creating...'):(isEdit?'Update Product':'Save Product')}</button></div>
+          <div className="flex gap-3"><button type="button" onClick={()=>navigate('/dashboard/my-products')} className="border px-4 py-2 rounded-lg text-sm">Cancel</button><button type="submit" disabled={saving || optimizing} className="bg-[#4B3621] text-white px-6 py-2 rounded-lg text-sm disabled:opacity-60">{saving?(isEdit?'Updating...':'Creating...'):optimizing?'Optimizing…':(isEdit?'Update Product':'Save Product')}</button></div>
         </div>
         <div className="bg-white border border-[#E7DFD3] rounded-xl p-4 space-y-3 h-fit">
           <h3 className="text-sm font-medium flex justify-between">Media <span className="text-xs text-[#8A8078]">Primary</span></h3>
@@ -577,7 +643,9 @@ export function AddEditProduct(){
             <label className="h-20 border-2 border-dashed rounded-lg flex items-center justify-center text-[10px] cursor-pointer hover:border-[#C19A6B]"><input type="file" accept="image/*" multiple className="hidden" onChange={handleImages} />+</label>
             {imagesPreviews.map((src,i)=><div key={i} className="h-20 rounded-lg overflow-hidden relative group border"><img src={src} alt="" className="w-full h-full object-cover" /><button type="button" onClick={()=>removeImage(i)} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs">Remove</button></div>)}
           </div>
-          <p className="text-[11px] text-[#8A8078]">Primary image will be used as mainImageUrl. Additional images up to 8.</p>
+          <p className="text-[11px] text-[#8A8078]">Primary image will be used as mainImageUrl. Additional images up to 8. PNG, JPG up to 12MB each • auto-optimized on upload.</p>
+          {optimizing && <p className="text-[11px] text-[#78582f]">Optimizing image…</p>}
+          {photoError && <p className="text-[11px] text-[#B3402E]">{photoError}</p>}
         </div>
       </form>
     </div>

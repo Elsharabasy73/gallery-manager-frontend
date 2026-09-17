@@ -4,6 +4,7 @@ import { products as mockProducts } from '../data/mockData'
 import { getProducts, unwrapProducts } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
 import ProductCard from '../components/ProductCard'
+import useHideOnScroll from '../hooks/useHideOnScroll'
 
 const SORT_OPTIONS = [
   { value: '-createdAt', label: 'Newest' },
@@ -43,6 +44,7 @@ export default function Products() {
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(() => parseInt(searchParams.get('page') || '1', 10))
   const [pagination, setPagination] = useState(null)
+  const { visible: filtersVisible } = useHideOnScroll({ threshold: 8, topBuffer: 160 })
 
   const toggle = (c) => {
     let next
@@ -164,7 +166,7 @@ export default function Products() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-[#E7DFD3] rounded-xl p-4 sticky top-[88px] z-30">
+      <div className={`bg-white border border-[#E7DFD3] rounded-xl p-4 sticky top-[72px] z-30 transition-all duration-300 motion-reduce:transition-none ${filtersVisible ? 'translate-y-0 opacity-100' : '-translate-y-[110%] opacity-0 pointer-events-none'}`}>
         <div className="flex flex-col md:flex-row gap-3 items-center">
           <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] border border-[#E7DFD3] rounded-full px-4 py-2 w-full min-w-0">
             <span className="material-symbols-outlined text-[#8A8078]">search</span>

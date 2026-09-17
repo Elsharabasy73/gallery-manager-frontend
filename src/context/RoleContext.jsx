@@ -38,6 +38,7 @@ export const PERMISSIONS = {
   'admin-products': ['admin'],
   'admin-galleries': ['admin'],
   'admin-orders': ['admin'],
+  'admin-categories': ['admin'],
   'admin-overview': ['admin'],
   profile: ['customer','gallery_owner','employee','admin'],
 }
@@ -73,6 +74,7 @@ export const PATH_TO_PAGE = {
   '/admin/products': 'admin-products',
   '/admin/galleries': 'admin-galleries',
   '/admin/orders': 'admin-orders',
+  '/admin/categories': 'admin-categories',
   '/profile': 'profile',
 }
 
@@ -103,6 +105,7 @@ export const NAV_CONFIG = {
     { id:'admin-products', label:'Products', icon:'category', path:'/admin/products', roles:['admin'] },
     { id:'admin-galleries', label:'Galleries', icon:'store', path:'/admin/galleries', roles:['admin'] },
     { id:'admin-orders', label:'All Orders', icon:'receipt_long', path:'/admin/orders', roles:['admin'] },
+    { id:'admin-categories', label:'Categories', icon:'sell', path:'/admin/categories', roles:['admin'] },
   ]
 }
 

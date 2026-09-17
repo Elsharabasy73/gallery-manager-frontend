@@ -6,6 +6,7 @@ import { getProducts, unwrapProducts, updateProduct, deleteProduct } from '../ap
 import { getGalleries, unwrapGalleries, updateGallery, deleteGallery } from '../api/galleries'
 import { getUsers, unwrapUsers, deleteUser, updateUser } from '../api/users'
 import { getMyOrders, unwrapOrders, updateOrderStatus, cancelOrder, acceptOrder, getStatusStyles, ORDER_STATUSES } from '../api/orders'
+import { getCategories, unwrapCategories, unwrapCategory, createCategory, updateCategory, deleteCategory } from '../api/categories'
 import { apiFetch } from '../api/client'
 import { getProductImageUrl, getGalleryLogoUrl, getGalleryBannerUrl } from '../utils/image'
 
@@ -117,7 +118,7 @@ export function AdminUsers(){
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Users</h2><span className="text-xs bg-[#4B3621] text-white px-2 py-1 rounded-full self-center">GET /users • DELETE /users/:id</span></div>
+      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Users</h2></div>
       <div className="flex gap-2">
         <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2">
           <span className="material-symbols-outlined text-[#8A8078] text-[18px]">search</span>
@@ -274,7 +275,7 @@ export function AdminProducts(){
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Products</h2><span className="text-xs bg-white border px-2 py-1 rounded-full">GET /products • PUT /products/:id • DELETE /products/:id</span></div>
+      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Products</h2></div>
       <div className="flex gap-2">
         <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2">
           <span className="material-symbols-outlined text-[#8A8078] text-[18px]">search</span>
@@ -396,7 +397,7 @@ export function AdminGalleries(){
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Galleries</h2><span className="text-xs bg-white border px-2 py-1 rounded-full">GET /galleries • PUT /galleries/:id • DELETE /galleries/:id</span></div>
+      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Galleries</h2></div>
       <div className="flex gap-2">
         <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2">
           <span className="material-symbols-outlined text-[#8A8078] text-[18px]">search</span>
@@ -712,6 +713,139 @@ export function AdminOrders(){
     </div>
   )
 }
+export function AdminCategories(){
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [actionMsg, setActionMsg] = useState('')
+  const [form, setForm] = useState({ name:'', arabicName:'' })
+  const [creating, setCreating] = useState(false)
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState({ name:'', arabicName:'' })
+  const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+
+  const fetchCategories = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await getCategories({ limit: 50, sort: 'name', fields: 'id,name,arabicName,slug' })
+      setCategories(unwrapCategories(res))
+    } catch (err) {
+      setError(err.message || 'Failed to load categories')
+      setCategories([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { fetchCategories() }, [])
+
+  const validName = (v) => v.trim().length >= 3 && v.trim().length <= 60
+
+  const handleCreate = async (e) => {
+    e.preventDefault()
+    if (!validName(form.name) || !validName(form.arabicName)) { setActionMsg('Name and Arabic name are required (3–60 characters each)'); return }
+    setCreating(true)
+    setActionMsg('')
+    try {
+      const res = await createCategory({ name: form.name.trim(), arabicName: form.arabicName.trim() })
+      const created = unwrapCategory(res)
+      if (created) setCategories(prev => [created, ...prev])
+      else fetchCategories()
+      setForm({ name:'', arabicName:'' })
+      setActionMsg('Category added')
+    } catch (err) {
+      setActionMsg(err.details ? (typeof err.details==='string'?err.details:JSON.stringify(err.details)) : (err.message || 'Create failed'))
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const startEdit = (c) => {
+    setEditingId(c.id || c._id)
+    setEditForm({ name: c.name || '', arabicName: c.arabicName || '' })
+    setActionMsg('')
+  }
+
+  const handleUpdate = async (e) => {
+    e.preventDefault()
+    if (!editingId) return
+    if (!validName(editForm.name) || !validName(editForm.arabicName)) { setActionMsg('Name and Arabic name are required (3–60 characters each)'); return }
+    setSaving(true)
+    try {
+      const payload = { name: editForm.name.trim(), arabicName: editForm.arabicName.trim() }
+      await updateCategory(editingId, payload)
+      setCategories(prev => prev.map(c => (c.id||c._id)===editingId ? { ...c, ...payload } : c))
+      setEditingId(null)
+      setActionMsg('Category updated')
+    } catch (err) {
+      setActionMsg(err.details ? (typeof err.details==='string'?err.details:JSON.stringify(err.details)) : (err.message || 'Update failed'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this category? Products using it will be affected.')) return
+    setDeletingId(id)
+    setActionMsg('')
+    try {
+      await deleteCategory(id)
+      setCategories(prev => prev.filter(c => (c.id||c._id) !== id))
+      setActionMsg('Category deleted')
+    } catch (err) {
+      setActionMsg(err.message || 'Delete failed')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Categories</h2></div>
+      <form onSubmit={handleCreate} className="bg-white border border-[#E7DFD3] rounded-xl p-4 flex flex-col sm:flex-row gap-2">
+        <input value={form.name} onChange={e=>setForm(s=>({...s, name:e.target.value}))} placeholder="Name (e.g. Sofas)" className="flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f]" />
+        <input value={form.arabicName} onChange={e=>setForm(s=>({...s, arabicName:e.target.value}))} placeholder="Arabic name (e.g. صوفا)" className="flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f]" />
+        <button type="submit" disabled={creating} className="bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium disabled:opacity-60 whitespace-nowrap">{creating?'Adding…':'+ Add Category'}</button>
+      </form>
+      {actionMsg && <div className="text-xs px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">{actionMsg}</div>}
+      {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
+      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">Loading categories...</div> : categories.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">No categories yet — add the first one above</div> : (
+        <div className="bg-white border border-[#E7DFD3] rounded-xl divide-y divide-[#E7DFD3]/70 overflow-hidden">
+          {categories.map((c) => {
+            const cid = c.id || c._id
+            const isEditing = editingId === cid
+            return (
+              <div key={cid} className="px-4 py-3 flex items-center gap-3">
+                {isEditing ? (
+                  <form onSubmit={handleUpdate} className="flex-1 flex flex-col sm:flex-row gap-2">
+                    <input value={editForm.name} onChange={e=>setEditForm(s=>({...s, name:e.target.value}))} className="flex-1 border border-[#E7DFD3] rounded-full px-3 py-1.5 text-sm outline-none focus:border-[#78582f]" />
+                    <input value={editForm.arabicName} onChange={e=>setEditForm(s=>({...s, arabicName:e.target.value}))} className="flex-1 border border-[#E7DFD3] rounded-full px-3 py-1.5 text-sm outline-none focus:border-[#78582f]" />
+                    <div className="flex gap-1.5 shrink-0">
+                      <button type="submit" disabled={saving} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-xs disabled:opacity-60">{saving?'Saving…':'Save'}</button>
+                      <button type="button" onClick={()=>setEditingId(null)} className="border px-3 py-1.5 rounded-full text-xs bg-white">Cancel</button>
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[#C19A6B] text-[20px]">sell</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium truncate">{c.name}{c.arabicName ? <span className="text-[#8A8078] font-normal"> • {c.arabicName}</span> : null}</div>
+                      {c.slug && <div className="text-[11px] text-[#8A8078] truncate">/{c.slug}</div>}
+                    </div>
+                    <button onClick={()=>startEdit(c)} className="px-3 py-1.5 border rounded-full text-xs bg-white hover:bg-[#FAF7F2]">Edit</button>
+                    <button onClick={()=>handleDelete(cid)} disabled={deletingId===cid} className="px-3 py-1.5 rounded-full text-xs bg-[#B3402E] text-white disabled:opacity-60">{deletingId===cid?'…':'Delete'}</button>
+                  </>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 export function AdminOverview(){
   const [counts, setCounts] = useState({ users: null, galleries: null, products: null })
   const [loading, setLoading] = useState(true)
@@ -740,9 +874,9 @@ export function AdminOverview(){
     return ()=>{cancelled=true}
   },[])
   const items = [
-    {k:'Users', v: counts.users, api:'/users/count'},
-    {k:'Galleries', v: counts.galleries, api:'/galleries/count'},
-    {k:'Products', v: counts.products, api:'/products/count'},
+    {k:'Users', v: counts.users},
+    {k:'Galleries', v: counts.galleries},
+    {k:'Products', v: counts.products},
   ]
   return (
     <div className="space-y-4">
@@ -753,13 +887,8 @@ export function AdminOverview(){
           <div key={s.k} className="bg-white border border-[#E7DFD3] rounded-xl p-4 text-center">
             <div className="text-xs text-[#8A8078]">{s.k}</div>
             <div className="text-xl font-semibold">{loading ? '…' : (s.v ?? '—')}</div>
-            <div className="text-[10px] text-[#8A8078] font-mono">{s.api}</div>
           </div>
         ))}
-      </div>
-      <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
-        <h3 className="text-sm font-medium mb-2">Platform Note</h3>
-        <p className="text-xs text-[#8A8078]">Admin sees platform-wide counts from <span className="font-mono">GET /users/count, /galleries/count, /products/count</span> (public for galleries, admin for users/products). Use Table/Board switcher and inline status dropdown. Terminal states (rejected/cancelled) are read-only.</p>
       </div>
     </div>
   )

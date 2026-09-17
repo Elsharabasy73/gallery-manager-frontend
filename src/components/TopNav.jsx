@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRole, NAV_CONFIG } from '../context/RoleContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
+import useHideOnScroll from '../hooks/useHideOnScroll'
 
 export default function TopNav(){
   const { role, logout, isAuthenticated } = useRole()
@@ -14,6 +15,11 @@ export default function TopNav(){
   const isActive = (path)=> location.pathname===path
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchInput, setSearchInput] = useState('')
+  const { visible: navVisible, scrolled } = useHideOnScroll({ threshold: 8, topBuffer: 96 })
+  // Keep the header pinned while the mobile drawer is open: a CSS transform
+  // on <header> would turn it into the containing block for the drawer's
+  // `fixed inset-0` positioning and break fullscreen coverage.
+  const showHeader = navVisible || menuOpen
 
   const handleLogout = ()=>{
     logout()
@@ -44,7 +50,7 @@ export default function TopNav(){
   const adminLinks = NAV_CONFIG.admin.filter(l=> l.roles.includes(role))
 
   return (
-    <header className="bg-[#FAF7F2] sticky top-0 md:top-[28px] z-40 border-b border-[#E7DFD3]">
+    <header className={`bg-[#FAF7F2] sticky top-0 z-40 border-b border-[#E7DFD3] transition-transform duration-300 motion-reduce:transition-none ${showHeader ? 'translate-y-0' : '-translate-y-full'} ${scrolled && showHeader ? 'shadow-sm' : ''}`}>
       <div className="flex justify-between items-center w-full px-4 md:px-10 py-3 max-w-7xl mx-auto h-16">
         <button onClick={()=>navigate('/')} className="font-serif text-2xl text-[#4B3621] tracking-tight">Atelier Gallery</button>
         <nav className="hidden md:flex items-center gap-6">

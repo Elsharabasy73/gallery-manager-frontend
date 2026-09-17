@@ -5,6 +5,8 @@ import { apiFetch } from '../api/client'
 import { unwrapProducts } from '../api/products'
 import { getGalleryLogoUrl, getGalleryBannerUrl, STORAGE_BASE } from '../utils/image'
 import ProductCard from '../components/ProductCard'
+import ShareGalleryModal from '../components/ShareGalleryModal'
+import useHideOnScroll from '../hooks/useHideOnScroll'
 
 function getInitials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'GA'
@@ -41,6 +43,8 @@ export default function GalleryProfile() {
   const [page, setPage] = useState(1)
   const [view, setView] = useState('grid')
   const [wishError, setWishError] = useState('')
+  const [shareOpen, setShareOpen] = useState(false)
+  const { visible: searchVisible } = useHideOnScroll({ threshold: 8, topBuffer: 320 })
 
   // fetch gallery via router .route("/:id").get(getGalleryValidator, getGallery) — id only
   useEffect(() => {
@@ -49,7 +53,7 @@ export default function GalleryProfile() {
       setLoadingGallery(true)
       setGalleryError('')
       try {
-        const res = await getGallery(id, { fields: 'id,name,slug,description,city,country,street,phone,banner,logo,images,storageFolder,isActive,createdAt,ownerId' })
+        const res = await getGallery(id, { fields: 'id,name,slug,description,city,country,street,mapAddressUrl,phone,banner,logo,images,storageFolder,isActive,createdAt,ownerId' })
         if (cancelled) return
         const g = unwrapGallery(res)
         if (!g) throw new Error('Gallery not found')
@@ -134,16 +138,21 @@ export default function GalleryProfile() {
               <p className="text-xs text-[#8A8078] mt-1 line-clamp-2">{gallery.description || 'Curated showroom featuring handcrafted furniture and timeless design pieces.'}</p>
               <div className="text-xs text-[#8A8078] mt-2">{pagination ? `${pagination.currentPage ? '' : ''}` : ''}{products.length} products{memberYear ? ` • member since ${memberYear}` : ''}</div>
             </div>
-            <div className="ml-auto hidden md:flex gap-2 pt-10 shrink-0">
-              {gallery.mapAddressUrl && <a href={gallery.mapAddressUrl} target="_blank" rel="noreferrer" className="border px-4 py-1.5 rounded-full text-xs">View on Map</a>}
+            <div className="ml-auto hidden md:flex gap-2 pt-10 shrink-0 items-center">
+              {gallery.mapAddressUrl && <a href={gallery.mapAddressUrl} target="_blank" rel="noreferrer" title="Open location in Google Maps" aria-label="Open gallery location in Google Maps" className="w-10 h-10 bg-[#4B3621] text-white hover:bg-[#33210d] rounded-full flex items-center justify-center transition-colors"><span className="material-symbols-outlined text-[20px]">location_on</span></a>}
               {gallery.phone && <a href={`tel:${gallery.phone}`} className="border px-4 py-1.5 rounded-full text-xs flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">call</span> Call</a>}
-              <button onClick={() => navigator.share ? navigator.share({ title: gallery.name, url: window.location.href }) : navigator.clipboard.writeText(window.location.href)} className="w-8 h-8 border rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[18px]">share</span></button>
+              <button onClick={() => setShareOpen(true)} aria-label="Share gallery" title="Share gallery" className="w-10 h-10 border rounded-full flex items-center justify-center hover:bg-[#FAF7F2]"><span className="material-symbols-outlined text-[20px]">share</span></button>
             </div>
+          </div>
+          <div className="md:hidden flex gap-2 mt-4 items-center">
+            {gallery.mapAddressUrl && <a href={gallery.mapAddressUrl} target="_blank" rel="noreferrer" title="Open location in Google Maps" aria-label="Open gallery location in Google Maps" className="w-11 h-11 bg-[#4B3621] text-white rounded-full flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[22px]">location_on</span></a>}
+            {gallery.phone && <a href={`tel:${gallery.phone}`} className="flex-1 border px-4 py-2 rounded-full text-xs flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]">call</span> Call</a>}
+            <button onClick={() => setShareOpen(true)} aria-label="Share gallery" className="w-11 h-11 border rounded-full flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[22px]">share</span></button>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border border-[#E7DFD3] rounded-full p-2 flex items-center gap-2">
+      <div className={`bg-white border border-[#E7DFD3] rounded-full p-2 flex items-center gap-2 sticky top-[72px] z-30 transition-all duration-300 motion-reduce:transition-none ${searchVisible ? 'translate-y-0 opacity-100' : '-translate-y-[120%] opacity-0 pointer-events-none'}`}>
         <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-full px-4 py-2 min-w-0">
           <span className="material-symbols-outlined text-[#8A8078]">search</span>
           <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { doSearch(); setPage(1) } }} placeholder="Search in this gallery..." className="bg-transparent outline-none flex-1 text-sm min-w-0" />
@@ -202,6 +211,13 @@ export default function GalleryProfile() {
           </div>
         </div>
       )}
+
+      <ShareGalleryModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        url={typeof window !== 'undefined' ? window.location.href : ''}
+        title={gallery.name}
+      />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createGallery } from '../api/galleries'
+import { compressImage, prepareImages, IMAGE_PRESETS } from '../utils/compressImage'
 
 export default function CreateGallery() {
   const navigate = useNavigate()
@@ -22,36 +23,72 @@ export default function CreateGallery() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
+  const [photoError, setPhotoError] = useState('')
+  const [optimizing, setOptimizing] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm((s) => ({ ...s, [name]: value }))
   }
 
-  const handleLogo = (e) => {
+  const handleLogo = async (e) => {
     const f = e.target.files?.[0]
-    if (f) {
-      setLogoFile(f)
-      setLogoPreview(URL.createObjectURL(f))
+    e.target.value = ''
+    if (!f) return
+    setPhotoError('')
+    setOptimizing(true)
+    try {
+      const { file } = await compressImage(f, IMAGE_PRESETS.logo)
+      if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview)
+      setLogoFile(file)
+      setLogoPreview(URL.createObjectURL(file))
+    } catch (err) {
+      setPhotoError(err.message || 'Could not process logo image.')
+    } finally {
+      setOptimizing(false)
     }
   }
-  const handleBanner = (e) => {
+  const handleBanner = async (e) => {
     const f = e.target.files?.[0]
-    if (f) {
-      setBannerFile(f)
-      setBannerPreview(URL.createObjectURL(f))
+    e.target.value = ''
+    if (!f) return
+    setPhotoError('')
+    setOptimizing(true)
+    try {
+      const { file } = await compressImage(f, IMAGE_PRESETS.banner)
+      if (bannerPreview?.startsWith('blob:')) URL.revokeObjectURL(bannerPreview)
+      setBannerFile(file)
+      setBannerPreview(URL.createObjectURL(file))
+    } catch (err) {
+      setPhotoError(err.message || 'Could not process banner image.')
+    } finally {
+      setOptimizing(false)
     }
   }
-  const handleImages = (e) => {
+  const handleImages = async (e) => {
     const files = Array.from(e.target.files || [])
+    e.target.value = ''
     if (!files.length) return
-    setImagesFiles((prev) => [...prev, ...files].slice(0, 8))
-    const previews = files.map((f) => URL.createObjectURL(f))
-    setImagesPreviews((prev) => [...prev, ...previews].slice(0, 8))
+    setPhotoError('')
+    setOptimizing(true)
+    try {
+      const { files: ready, skipped } = await prepareImages(files, IMAGE_PRESETS.gallery)
+      if (skipped.length) setPhotoError(`${skipped.length} image(s) skipped — over 12MB each: ${skipped.join(', ')}`)
+      if (!ready.length) return
+      setImagesFiles((prev) => [...prev, ...ready].slice(0, 8))
+      const previews = ready.map((f) => URL.createObjectURL(f))
+      setImagesPreviews((prev) => [...prev, ...previews].slice(0, 8))
+    } finally {
+      setOptimizing(false)
+    }
   }
   const removeImage = (idx) => {
     setImagesFiles((prev) => prev.filter((_, i) => i !== idx))
-    setImagesPreviews((prev) => prev.filter((_, i) => i !== idx))
+    setImagesPreviews((prev) => {
+      const src = prev[idx]
+      if (src?.startsWith('blob:')) URL.revokeObjectURL(src)
+      return prev.filter((_, i) => i !== idx)
+    })
   }
 
   const validate = () => {
@@ -153,6 +190,8 @@ export default function CreateGallery() {
                 <p className="text-xs text-[#8A8078]">High resolution, ideal 16:9 ratio.</p>
               </div>
             </div>
+            {optimizing && <p className="text-xs text-[#78582f] mt-4">Optimizing image…</p>}
+            {photoError && <p className="text-xs text-[#B3402E] mt-4">{photoError}</p>}
 
             <div className="space-y-6">
               <div>
@@ -294,7 +333,7 @@ export default function CreateGallery() {
               <input accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" type="file" onChange={handleImages} />
               <span className="material-symbols-outlined text-[#78582f] text-3xl mb-1">add_a_photo</span>
               <span className="text-sm font-medium text-[#33210d]">Upload gallery images</span>
-              <span className="text-xs text-[#8A8078]">PNG, JPG up to 5MB each • Optional</span>
+              <span className="text-xs text-[#8A8078]">PNG, JPG up to 12MB each • auto-optimized on upload</span>
             </label>
 
             {imagesPreviews.length > 0 && (
@@ -314,6 +353,8 @@ export default function CreateGallery() {
               </div>
             )}
             <p className="text-xs text-[#8A8078] mt-2">{imagesFiles.length}/8 images selected (optional)</p>
+            {optimizing && <p className="text-xs text-[#78582f] mt-1">Optimizing image…</p>}
+            {photoError && <p className="text-xs text-[#B3402E] mt-1">{photoError}</p>}
           </section>
         </form>
       </div>
@@ -323,11 +364,11 @@ export default function CreateGallery() {
         <div className="max-w-3xl w-full mx-auto flex justify-end">
           <button
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || optimizing}
             className="bg-[#33210d] text-white text-sm font-medium py-3 px-8 rounded-lg shadow-sm hover:opacity-90 disabled:opacity-60 transition-opacity active:scale-95 flex items-center gap-2"
             type="button"
           >
-            {loading ? 'Saving...' : 'Save and Continue'}
+            {loading ? 'Saving...' : optimizing ? 'Optimizing…' : 'Save and Continue'}
             <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
           </button>
         </div>
