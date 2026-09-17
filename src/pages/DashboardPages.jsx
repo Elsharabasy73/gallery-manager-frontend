@@ -1195,12 +1195,11 @@ export function Employees(){
   return (
     <div className="space-y-4">
       <div className="flex justify-between"><h2 className="font-serif text-xl">Employees</h2><button onClick={()=>navigate('/dashboard/employees/add')} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-sm">+ Add Employee</button></div>
-      {ctxGalleryId && <p className="text-xs text-[#8A8078]">Gallery: <span className="font-mono">{ctxGalleryId}</span> • GET <span className="font-mono">/galleries/{ctxGalleryId}/employees</span></p>}
       <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name/email" className="w-full border rounded-full px-4 py-2 text-sm" />
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
       {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">Loading employees...</div> : filtered.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">No employees found {search?`for "${search}"`:''} — <button onClick={()=>navigate('/dashboard/employees/add')} className="text-[#C19A6B] underline">Add first employee</button></div> : (
-      <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-[#FAF7F2] text-xs text-[#8A8078]"><tr><th className="p-3 text-left">Employee</th><th>Job title</th><th>Email</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody>
             {filtered.map(e=>{

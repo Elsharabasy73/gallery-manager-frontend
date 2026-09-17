@@ -1,5 +1,6 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRole, NAV_CONFIG } from '../context/RoleContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
@@ -16,10 +17,9 @@ export default function TopNav(){
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchInput, setSearchInput] = useState('')
   const { visible: navVisible, scrolled } = useHideOnScroll({ threshold: 8, topBuffer: 96 })
-  // Keep the header pinned while the mobile drawer is open: a CSS transform
-  // on <header> would turn it into the containing block for the drawer's
-  // `fixed inset-0` positioning and break fullscreen coverage.
-  const showHeader = navVisible || menuOpen
+  // The mobile drawer is portalled to document.body (see below), so it lives
+  // outside the transformed <header> and its `fixed inset-0` works again.
+  const showHeader = navVisible
 
   const handleLogout = ()=>{
     logout()
@@ -39,6 +39,13 @@ export default function TopNav(){
 
   // close menu on route change
   useEffect(()=>{ setMenuOpen(false) }, [location.pathname])
+  // close menu on Escape
+  useEffect(()=>{
+    if (!menuOpen) return
+    const onKey = (e)=>{ if (e.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return ()=>document.removeEventListener('keydown', onKey)
+  }, [menuOpen])
   // lock scroll when open
   useEffect(()=>{
     if(menuOpen) document.body.style.overflow='hidden'
@@ -115,8 +122,9 @@ export default function TopNav(){
         </div>
       </div>
 
-      {/* Mobile drawer */}
-      {menuOpen && (
+      {/* Mobile drawer — portalled to <body> so the header's scroll-hide
+          transform can't hijack its `fixed` positioning or stacking */}
+      {menuOpen && createPortal((
         <div className="md:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={()=>setMenuOpen(false)} />
           <div className="absolute right-0 top-0 h-full w-[86%] max-w-[320px] bg-[#FAF7F2] border-l border-[#E7DFD3] shadow-xl flex flex-col overflow-y-auto">
@@ -129,10 +137,10 @@ export default function TopNav(){
               {/* Search */}
               <div className="space-y-2">
                 <div className="text-[10px] uppercase tracking-widest text-[#8A8078]">Search</div>
-                <div className="flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-3 py-2">
-                  <span className="material-symbols-outlined text-[#8A8078] text-[18px]">search</span>
-                  <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder="Search products..." className="flex-1 outline-none text-sm bg-transparent" />
-                  <button onClick={handleSearch} className="bg-[#4B3621] text-white px-3 py-1 rounded-full text-xs">Go</button>
+                <div className="flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full pl-3 pr-1.5 py-1.5">
+                  <span className="material-symbols-outlined text-[#8A8078] text-[18px] shrink-0">search</span>
+                  <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder="Search products..." className="flex-1 outline-none text-sm bg-transparent min-w-0" />
+                  <button onClick={handleSearch} aria-label="Search" className="w-8 h-8 shrink-0 bg-[#4B3621] text-white rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[18px]">arrow_forward</span></button>
                 </div>
               </div>
 
@@ -160,12 +168,6 @@ export default function TopNav(){
               {(role==='gallery_owner' || role==='employee') && (
                 <div className="space-y-1">
                   <div className="text-[10px] uppercase tracking-widest text-[#8A8078] px-1">Dashboard</div>
-                  {role==='gallery_owner' ? (
-                    <button onClick={()=>handleNav('/dashboard/overview')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-[#4B3621] text-white"><span className="material-symbols-outlined text-[18px]">dashboard</span> Dashboard</button>
-                  ) : (
-                    <button onClick={()=>handleNav('/dashboard/my-products')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-white border border-[#E7DFD3]"><span className="material-symbols-outlined text-[18px]">inventory_2</span> Gallery Products</button>
-                  )}
-                  {/* show full gallery links in mobile */}
                   {galleryLinks.map(item=>(
                     <button key={item.id} onClick={()=>handleNav(item.path)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${location.pathname===item.path?'bg-[#4B3621] text-white':'bg-white border border-[#E7DFD3]'}`}><span className="material-symbols-outlined text-[18px]">{item.icon}</span>{item.label}</button>
                   ))}
@@ -176,7 +178,6 @@ export default function TopNav(){
               {role==='admin' && (
                 <div className="space-y-1">
                   <div className="text-[10px] uppercase tracking-widest text-[#8A8078] px-1">Administration</div>
-                  <button onClick={()=>handleNav('/admin/overview')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${location.pathname==='/admin/overview'?'bg-[#4B3621] text-white':'bg-white border border-[#E7DFD3]'}`}><span className="material-symbols-outlined text-[18px]">admin_panel_settings</span> Admin Overview</button>
                   {adminLinks.map(item=>(
                     <button key={item.id} onClick={()=>handleNav(item.path)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${location.pathname===item.path?'bg-[#4B3621] text-white':'bg-white border border-[#E7DFD3]'}`}><span className="material-symbols-outlined text-[18px]">{item.icon}</span>{item.label}</button>
                   ))}
@@ -197,7 +198,7 @@ export default function TopNav(){
             </div>
           </div>
         </div>
-      )}
+      ), document.body)}
     </header>
   )
 }
