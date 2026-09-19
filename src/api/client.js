@@ -36,8 +36,28 @@ export async function apiFetch(path, { method = 'GET', body, token, isFormData =
     err.status = res.status
     err.details = details
     err.data = data
+    handleAuthFailure({ path, status: res.status, message })
     throw err
   }
   return data
+}
+
+// Global 401 handler: an expired/invalid token becomes a clean logout + login
+// redirect instead of a "Token expired" box on whatever page fired the request.
+let isRedirecting = false
+function handleAuthFailure({ path, status, message }) {
+  if (status !== 401) return
+  if (typeof window === 'undefined') return
+  if (!/expired|invalid token|no token|deactivated|password was changed|user not found/i.test(message || '')) return
+  // Never redirect for auth endpoints themselves (avoids loop on bad login/OTP)
+  if (/^\/auth\//.test(path)) return
+  if (window.location.pathname === '/login') return
+  if (isRedirecting) return
+  isRedirecting = true
+  try {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+  } catch {}
+  window.location.replace('/login?expired=1')
 }
 export { BASE_URL }

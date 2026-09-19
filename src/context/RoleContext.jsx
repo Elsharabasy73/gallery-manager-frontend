@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useMemo } from 'react'
+import { createContext, useContext, useState, useMemo, useEffect } from 'react'
+import { isTokenExpired, clearStoredAuth } from '../utils/auth'
 
 export const ROLES = {
   customer: { id:'customer', label:'Customer', badge:'Customer', color:'bg-sky-500/20 text-sky-300 border-sky-500/30', user:'Alexandra Hayes' },
@@ -125,6 +126,11 @@ function getStoredAuth(){
     const token = localStorage.getItem('token')
     const rawUser = localStorage.getItem('user')
     if(!token || !rawUser) return { role: null, user: null, token: null }
+    // Purge stale session on load so an expired JWT never renders as logged-in
+    if(isTokenExpired(token)){
+      clearStoredAuth()
+      return { role: null, user: null, token: null }
+    }
     const user = JSON.parse(rawUser)
     return { role: mapApiRoleToFrontend(user?.role) || null, user, token }
   }catch{
@@ -158,11 +164,22 @@ export function RoleProvider({ children, defaultRole=null }){
     setRole(mapApiRoleToFrontend(nextUser?.role) || null)
   }
   const logout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    clearStoredAuth()
     setUser(null)
     setRole(null)
   }
+
+  // Keep auth state in sync across tabs (logout in one tab logs out the others)
+  useEffect(() => {
+    const onStorage = (e) => {
+      if(e.key === 'token' && !e.newValue){
+        setUser(null)
+        setRole(null)
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   const value = useMemo(()=>({
     role, setRole, user, setUser, setAuth, logout,

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { signup as signupApi, login as loginApi, sendVerificationOtp, verifyEmail as verifyEmailApi, forgotPassword, verifyResetOtp, resetPassword } from '../api/auth'
 import { useRole } from '../context/RoleContext'
+import { isTokenExpired } from '../utils/auth'
 
 function SplitLayout({ children }){
   return (
@@ -25,6 +26,16 @@ export function Login(){
   const [showPw, setShowPw] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(location.state?.justVerified ? '' : (location.state?.justSignedUp ? 'Account created — please log in.' : ''))
+  const sessionExpired = location.state?.expired || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('expired') === '1')
+
+  // Already holding a valid token → don't sit on the login page
+  useEffect(() => {
+    try{
+      const token = localStorage.getItem('token')
+      if(token && !isTokenExpired(token)) navigate('/', { replace: true })
+    }catch{}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleLogin = async ()=>{
     setError('')
@@ -36,7 +47,9 @@ export function Login(){
       if(res?.token) localStorage.setItem('token', res.token)
       if(res?.data) localStorage.setItem('user', JSON.stringify(res.data))
       if(setAuth && res?.data) setAuth(res.data, res.token)
-      navigate('/', { replace: true })
+      const redirectTo = location.state?.from?.pathname || '/'
+      // drop the ?expired=1 flag on successful login
+      navigate(redirectTo, { replace: true })
     }catch(e){
       // if backend says email not verified, redirect to OTP
       if(e.status === 403 && /not verified|verify/i.test(e.message)){
@@ -50,6 +63,7 @@ export function Login(){
 
   return <SplitLayout>
     <h2 className="font-serif text-2xl mb-1">Welcome back</h2><p className="text-xs text-[#8A8078] mb-6">Log in to continue</p>
+    {sessionExpired && <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-lg px-3 py-2 mb-3">Session expired — please log in again.</div>}
     {error && <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">{error}</div>}
     {location.state?.resetSuccess && <div className="bg-green-50 border border-green-200 text-green-700 text-xs rounded-lg px-3 py-2 mb-3">Password reset successfully — please log in with your new password.</div>}
     {location.state?.justVerified && <div className="bg-green-50 border border-green-200 text-green-700 text-xs rounded-lg px-3 py-2 mb-3">Email verified — please log in.</div>}
