@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react'
 import TopNav from './TopNav'
 import Footer from './Footer'
 import Sidebar from './Sidebar'
+import usePageTracking from '../hooks/usePageTracking'
 
 export default function Layout(){
   const location = useLocation()
+  usePageTracking()
   const path = location.pathname
   const needsSidebar = path.startsWith('/dashboard') || path.startsWith('/admin')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
