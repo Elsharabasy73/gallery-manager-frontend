@@ -7,3 +7,4 @@ opencode.json
 
 *.pem
 session-ses_*.md
+dist/
