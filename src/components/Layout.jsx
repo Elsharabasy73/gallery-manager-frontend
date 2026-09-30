@@ -5,9 +5,11 @@ import TopNav from './TopNav'
 import Footer from './Footer'
 import Sidebar from './Sidebar'
 import usePageTracking from '../hooks/usePageTracking'
+import { useLanguage } from '../i18n/LanguageContext'
 
 export default function Layout(){
   const location = useLocation()
+  const { t } = useLanguage()
   usePageTracking()
   const path = location.pathname
   const needsSidebar = path.startsWith('/dashboard') || path.startsWith('/admin')
@@ -27,7 +29,7 @@ export default function Layout(){
               onClick={()=>setMobileSidebarOpen(o=>!o)}
               className="md:hidden flex items-center justify-between w-full bg-white border border-[#E7DFD3] rounded-xl px-4 py-3 text-sm font-medium text-[#4B3621]"
             >
-              <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px]">dashboard</span> Dashboard Menu</span>
+              <span className="flex items-center gap-2"><span className="material-symbols-outlined text-[20px]">dashboard</span> {t('nav.dashboardMenu')}</span>
               <span className="material-symbols-outlined text-[20px]">{mobileSidebarOpen ? 'expand_less' : 'expand_more'}</span>
             </button>
             <div className={`${mobileSidebarOpen ? 'block' : 'hidden'} md:block w-full md:w-64 shrink-0`}>

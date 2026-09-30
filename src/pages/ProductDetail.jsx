@@ -6,8 +6,10 @@ import { getProductImageUrl, getGalleryLogoUrl } from '../utils/image'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { useRole } from '../context/RoleContext'
+import { useLanguage } from '../i18n/LanguageContext'
 
 export default function ProductDetail(){
+  const { t, formatPrice, formatNumber } = useLanguage()
   const { id } = useParams()
   const navigate = useNavigate()
   const { isAuthenticated, role } = useRole()
@@ -69,7 +71,7 @@ export default function ProductDetail(){
     try {
       await toggle(String(pid))
     } catch (e) {
-      setWishError(e.message || 'Wishlist failed')
+      setWishError(e.message || t('card.wishlistFailed'))
     } finally {
       setWishLoading(false)
     }
@@ -86,9 +88,9 @@ export default function ProductDetail(){
     setCartLoading(true)
     try {
       await addToCart(String(pid), qty)
-      setCartSuccess(`Added ${qty} item${qty > 1 ? 's' : ''} to cart`)
+      setCartSuccess(t('detail.added', { n: formatNumber(qty), s: '' }))
     } catch (e) {
-      alert(e.message || 'Failed to add to cart')
+      alert(e.message || t('card.wishlistFailed'))
     } finally {
       setCartLoading(false)
     }
@@ -112,15 +114,15 @@ export default function ProductDetail(){
     setBgPos({ x: xPercent, y: yPercent })
   }
 
-  if (loading) return <div className="text-center py-12 text-sm text-[#8A8078]">Loading product...</div>
-  if (!p) return <div className="text-center py-12 bg-white border rounded-xl">Product not found</div>
+  if (loading) return <div className="text-center py-12 text-sm text-[#8A8078]">{t('detail.loading')}</div>
+  if (!p) return <div className="text-center py-12 bg-white border rounded-xl">{t('detail.notFound')}</div>
 
   const pid = p._id || p.id || id
   const wish = isWishlisted(String(pid))
   const img = getProductImageUrl(p) || p.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80'
   // Handle gallery data - could be object, string ID, or null
   const galleryObj = p.gallery && typeof p.gallery === 'object' ? p.gallery : null
-  const galleryName = galleryObj?.name || (typeof p.gallery === 'string' ? '' : 'Gallery')
+  const galleryName = galleryObj?.name || (typeof p.gallery === 'string' ? '' : t('detail.unknownGallery'))
   const galleryId = galleryObj?._id || galleryObj?.id || (typeof p.gallery === 'string' ? p.gallery : null)
   const galleryCity = galleryObj?.city || ''
   const galleryCountry = galleryObj?.country || ''
@@ -128,7 +130,7 @@ export default function ProductDetail(){
   const price = p.price
   const compare = p.compareAtPrice || p.compare
   const stock = p.stock ?? 0
-  const desc = p.description || p.desc || 'Crafted from premium materials with attention to joinery and finish.'
+  const desc = p.description || p.desc || t('detail.galleryFallbackDesc')
 
   const resolveThumb = (s) => {
     if (!s) return null
@@ -185,7 +187,7 @@ export default function ProductDetail(){
             <>
               {/* desktop/tablet side pane — show from md breakpoint */}
               <div
-                className="hidden md:block absolute left-[calc(100%+16px)] top-0 w-[440px] h-[440px] rounded-xl overflow-hidden bg-white border-2 border-[#E7DFD3] shadow-2xl z-30 pointer-events-none"
+                className="hidden md:block absolute start-[calc(100%+16px)] top-0 w-[440px] h-[440px] rounded-xl overflow-hidden bg-white border-2 border-[#E7DFD3] shadow-2xl z-30 pointer-events-none"
                 style={{
                   backgroundImage: `url(${displaySrc})`,
                   backgroundRepeat: 'no-repeat',
@@ -223,23 +225,23 @@ export default function ProductDetail(){
             )
           })}
         </div>
-        <p className="text-[11px] text-[#8A8078] hidden md:block">Hover to zoom • Click thumbnail to change main image</p>
-        <p className="text-[11px] text-[#8A8078] md:hidden">Tap thumbnail to change image • Touch & hold to magnify</p>
+        <p className="text-[11px] text-[#8A8078] hidden md:block">{t('detail.zoomHint')}</p>
+        <p className="text-[11px] text-[#8A8078] md:hidden">{t('detail.zoomHintMobile')}</p>
       </div>
       <div className="space-y-4">
-        <div className="text-xs text-[#8A8078]">Home / {p.category?.name || 'Products'} / {p.name}</div>
+        <div className="text-xs text-[#8A8078]">{t('detail.home')} / {p.category?.name || t('products.title')} / {p.name}</div>
         <h1 className="font-serif text-3xl text-[#4B3621]">{p.name}</h1>
         <div className="flex items-baseline gap-3">
-          <span className="text-xl font-semibold">{Number(price).toLocaleString()} EGP</span>
-          {compare && <span className="line-through text-sm text-[#8A8078]">{Number(compare).toLocaleString()} EGP</span>}
+          <span className="text-xl font-semibold">{formatPrice(price)}</span>
+          {compare && <span className="line-through text-sm text-[#8A8078]">{formatPrice(compare)}</span>}
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <span className={`w-2 h-2 rounded-full ${Number(stock)>0?'bg-[#4C7A4C]':'bg-[#B3402E]'}`}></span> {Number(stock)>0 ? `In stock (${stock})` : 'Out of stock'}
+          <span className={`w-2 h-2 rounded-full ${Number(stock)>0?'bg-[#4C7A4C]':'bg-[#B3402E]'}`}></span> {Number(stock)>0 ? t('detail.inStock', { n: formatNumber(stock) }) : t('detail.outOfStock')}
           {p.dimensions && <span className="px-2 py-0.5 bg-[#E7DFD3] rounded-full">{typeof p.dimensions === 'string' ? p.dimensions : 'W 200 × D 90 × H 75 cm'}</span>}
         </div>
         {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
-        {cartSuccess && <div className="bg-green-50 border border-green-200 text-green-800 text-xs px-3 py-2 rounded-lg flex items-center justify-between">{cartSuccess}<button onClick={()=>navigate('/cart')} className="text-[#4B3621] underline font-medium">View Cart</button></div>}
-        <p className="text-sm text-[#8A8078]">{desc} Dimensions and materials are customizable per gallery.</p>
+        {cartSuccess && <div className="bg-green-50 border border-green-200 text-green-800 text-xs px-3 py-2 rounded-lg flex items-center justify-between">{cartSuccess}<button onClick={()=>navigate('/cart')} className="text-[#4B3621] underline font-medium">{t('detail.viewCart')}</button></div>}
+        <p className="text-sm text-[#8A8078]">{desc} {t('detail.customizable')}</p>
         <div className="flex gap-2">
           {(p.materials || ['Oak','Bouclé','Brass']).slice?.(0,4).map?.(m=>(
             <span key={m} className="text-xs border px-2 py-1 rounded-full">{typeof m === 'string' ? m : m.name || m}</span>
@@ -258,15 +260,15 @@ export default function ProductDetail(){
               className="flex-1 bg-[#4B3621] text-white py-2.5 rounded-lg text-sm font-medium disabled:opacity-60 flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
-              {cartLoading ? 'Adding...' : 'Add to Cart'}
+              {cartLoading ? t('detail.adding') : t('detail.addToCart')}
             </button>
-            <button onClick={handleWishlist} disabled={wishLoading} className={`w-10 h-10 rounded-lg border flex items-center justify-center disabled:opacity-60 ${wish?'bg-[#C19A6B] text-white border-[#C19A6B]': 'bg-white hover:bg-[#FAF7F2]'}`} title={wish ? 'Remove from wishlist' : 'Add to wishlist'}>
+            <button onClick={handleWishlist} disabled={wishLoading} className={`w-10 h-10 rounded-lg border flex items-center justify-center disabled:opacity-60 ${wish?'bg-[#C19A6B] text-white border-[#C19A6B]': 'bg-white hover:bg-[#FAF7F2]'}`} title={wish ? t('card.removeWishlist') : t('card.addWishlist')}>
               <span className={`material-symbols-outlined ${wish?'icon-fill':''}`}>favorite</span>
             </button>
           </div>
         )}
         {role === 'customer' && (Number(stock) === 0 || p?.status !== 'active') && (
-          <div className="text-sm text-[#B3402E]">This product is currently unavailable</div>
+          <div className="text-sm text-[#B3402E]">{t('detail.unavailable')}</div>
         )}
         <div className="bg-white border border-[#E7DFD3] rounded-xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -274,11 +276,11 @@ export default function ProductDetail(){
               {galleryLogo ? <img src={getGalleryLogoUrl(galleryObj) || ''} alt={galleryName} className="w-full h-full object-cover" onError={e=>e.target.style.display='none'} /> : (galleryName.slice(0,2).toUpperCase())}
             </div>
             <div>
-              <div className="text-sm font-medium">{galleryName || 'Unknown Gallery'}</div>
+              <div className="text-sm font-medium">{galleryName || t('detail.unknownGallery')}</div>
               <div className="text-xs text-[#8A8078]">{galleryCity}{galleryCity && galleryCountry ? ', ' : ''}{galleryCountry}</div>
             </div>
           </div>
-          <button onClick={()=> galleryId ? navigate(`/galleries/${galleryId}`) : navigate('/galleries')} className="text-xs border px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF7F2]">View Gallery</button>
+          <button onClick={()=> galleryId ? navigate(`/galleries/${galleryId}`) : navigate('/galleries')} className="text-xs border px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF7F2]">{t('detail.viewGallery')}</button>
         </div>
       </div>
     </div>

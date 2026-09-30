@@ -6,6 +6,7 @@ import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getCategories, unwrapCategories } from '../api/categories'
 import { getGalleryLogoUrl } from '../utils/image'
 import ProductCard from '../components/ProductCard'
+import { useLanguage } from '../i18n/LanguageContext'
 
 const FALLBACK_CATEGORIES = [
   { id: 'sofas', name: 'Sofas', arabicName: 'صوفا', slug: 'sofas' },
@@ -26,6 +27,7 @@ function getInitials(name = '') {
 
 export default function Home() {
   const navigate = useNavigate()
+  const { t, categoryLabel } = useLanguage()
   const [wishError, setWishError] = useState('')
   const [search, setSearch] = useState('')
 
@@ -151,22 +153,22 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#4B3621]/60 via-[#4B3621]/20 to-transparent flex flex-col items-center justify-end md:justify-center text-center p-8">
           <h1 className="font-serif text-3xl md:text-5xl text-white mb-6 max-w-3xl drop-shadow">
-            Furniture crafted for living
+            {t('home.heroTitle')}
           </h1>
           <div className="w-full max-w-2xl bg-white/95 backdrop-blur rounded-lg p-2 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#8A8078] ml-2">search</span>
+            <span className="material-symbols-outlined text-[#8A8078] ms-2">search</span>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="w-full bg-transparent outline-none text-sm placeholder:text-[#8A8078]"
-              placeholder="Search products, styles, or galleries..."
+              placeholder={t('home.searchPh')}
             />
             <button
               onClick={handleSearch}
               className="bg-[#4B3621] text-white px-6 py-2.5 rounded text-sm font-medium whitespace-nowrap"
             >
-              Browse Products
+              {t('home.browseProducts')}
             </button>
           </div>
         </div>
@@ -179,8 +181,7 @@ export default function Home() {
                 <div key={i} className="shrink-0 w-28 h-9 rounded-full bg-[#E7DFD3]/60 animate-pulse" />
               ))
             : categories.map((c) => {
-              console.log(c);
-                const label = c.arabicName ? `${c.name} • ${c.arabicName}` : c.name
+                const label = categoryLabel(c)
                 return (
                   <button
                     key={c.id || c.slug || c.name}
@@ -199,14 +200,14 @@ export default function Home() {
       <section>
         <div className="flex justify-between items-end mb-6">
           <div>
-            <h2 className="font-serif text-2xl text-[#4B3621]">Curated Selections</h2>
-            <p className="text-sm text-[#8A8078]">Handpicked pieces from premium galleries</p>
+            <h2 className="font-serif text-2xl text-[#4B3621]">{t('home.curated')}</h2>
+            <p className="text-sm text-[#8A8078]">{t('home.curatedSub')}</p>
           </div>
           <button
             onClick={() => navigate('/products')}
             className="hidden md:flex items-center gap-1 text-sm text-[#78582f]"
           >
-            View all <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+            {t('home.viewAll')} <span className="material-symbols-outlined text-[18px] rtl:rotate-180">arrow_forward</span>
           </button>
         </div>
 
@@ -228,7 +229,7 @@ export default function Home() {
       </section>
 
       <section className="bg-white rounded-xl border border-[#E7DFD3] p-8 text-center">
-        <h3 className="font-serif text-xl mb-6">Represented Galleries</h3>
+        <h3 className="font-serif text-xl mb-6">{t('home.galleries')}</h3>
 
 
 

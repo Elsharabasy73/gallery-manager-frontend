@@ -11,8 +11,10 @@ import { apiFetch } from '../api/client'
 import { getVisitors } from '../api/analytics'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { getProductImageUrl, getGalleryLogoUrl, getGalleryBannerUrl } from '../utils/image'
+import { useLanguage } from '../i18n/LanguageContext'
 
 export function AdminUsers(){
+  const { t, formatPrice, formatNumber, formatDate } = useLanguage()
   const [usersList, setUsersList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -49,15 +51,15 @@ export function AdminUsers(){
   const handleSearch = () => { setPage(1); setSearch(searchInput.trim()) }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this user?')) return
+    if (!confirm(t('admin.deleteUserConfirm'))) return
     setDeletingId(id)
     setActionMsg('')
     try {
       await deleteUser(id)
       setUsersList(prev => prev.filter(u => (u.id||u._id) !== id))
-      setActionMsg('User deleted')
+      setActionMsg(t('admin.userDeleted'))
     } catch (err) {
-      setActionMsg(err.message || 'Delete failed')
+      setActionMsg(err.message || t('admin.deleteFail'))
     } finally {
       setDeletingId(null)
     }
@@ -82,8 +84,8 @@ export function AdminUsers(){
     e.preventDefault()
     if (!editing) return
     const id = editing.id || editing._id
-    if (!editForm.firstName.trim() || !editForm.email.trim()) { setActionMsg('First name and email required'); return }
-    if (editForm.role === 'admin') { setActionMsg("Admins cannot assign 'admin' role"); return }
+    if (!editForm.firstName.trim() || !editForm.email.trim()) { setActionMsg(t('admin.firstEmailRequired')); return }
+    if (editForm.role === 'admin') { setActionMsg(t('admin.noAdminAssign')); return }
     setSaving(true)
     try {
       const payload = {
@@ -100,9 +102,9 @@ export function AdminUsers(){
       await updateUser(id, payload)
       setUsersList(prev => prev.map(x => (x.id||x._id)===id ? { ...x, ...payload, name: `${payload.firstName} ${payload.lastName||''}`.trim() } : x))
       setEditing(null)
-      setActionMsg('User updated')
+      setActionMsg(t('admin.userUpdated'))
     } catch (err) {
-      setActionMsg(err.message || 'Update failed')
+      setActionMsg(err.message || t('admin.updateFail'))
     } finally {
       setSaving(false)
     }
@@ -120,22 +122,22 @@ export function AdminUsers(){
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Users</h2></div>
+      <div className="flex justify-between"><h2 className="font-serif text-xl">{t('admin.users')}</h2></div>
       <div className="flex gap-2">
         <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2">
           <span className="material-symbols-outlined text-[#8A8078] text-[18px]">search</span>
-          <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder="Search name/email" className="flex-1 outline-none text-sm" />
+          <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder={t('admin.searchUserPh')} className="flex-1 outline-none text-sm" />
         </div>
-        <button onClick={handleSearch} className="bg-[#4B3621] text-white px-4 py-2 rounded-full text-sm">Search</button>
-        <button onClick={()=>{setSearch(''); setSearchInput(''); setPage(1)}} className="border px-3 py-2 rounded-full text-sm bg-white">Clear</button>
+        <button onClick={handleSearch} className="bg-[#4B3621] text-white px-4 py-2 rounded-full text-sm">{t('common.search')}</button>
+        <button onClick={()=>{setSearch(''); setSearchInput(''); setPage(1)}} className="border px-3 py-2 rounded-full text-sm bg-white">{t('common.clear')}</button>
       </div>
       {actionMsg && <div className="text-xs px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">{actionMsg}</div>}
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
-      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">Loading users...</div> : displayUsers.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">No users</div> : (
+      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">{t('admin.loadingUsers')}</div> : displayUsers.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">{t('admin.noUsers')}</div> : (
         <>
         <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden overflow-x-auto">
           <table className="w-full text-sm min-w-[560px]">
-            <thead className="bg-[#FAF7F2] text-xs text-[#8A8078]"><tr><th className="p-3 text-left">User</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead className="bg-[#FAF7F2] text-xs text-[#8A8078]"><tr><th className="p-3 text-start">{t('admin.thUser')}</th><th>{t('admin.thEmail')}</th><th>{t('admin.thRole')}</th><th>{t('admin.thStatus')}</th><th>{t('admin.thActions')}</th></tr></thead>
             <tbody>
               {displayUsers.map(u=>{
                 const uid = u.id || u._id || u.email
@@ -146,16 +148,16 @@ export function AdminUsers(){
                 const status = u.isActive ?? u.status ?? 'active'
                 const isActive = status === 'active' || status === true
                 return (
-                <tr key={uid} className="border-t"><td className="p-3 flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xs">{avatar}</div>{name}</td><td className="text-xs">{email}</td><td className="text-xs">{role}</td><td><span className={`px-2 py-0.5 rounded-full text-[11px] ${isActive?'bg-green-100 text-green-800':'bg-zinc-100'}`}>{isActive?'active':'inactive'}</span></td><td><div className="flex items-center gap-1 whitespace-nowrap"><button onClick={()=>startEdit(u)} className="text-xs border px-2 py-1 rounded hover:bg-[#FAF7F2]">Edit</button><button onClick={()=>handleDelete(uid)} disabled={deletingId===uid} className="text-xs bg-[#B3402E] text-white px-2 py-1 rounded disabled:opacity-60">{deletingId===uid?'Deleting...':'Delete'}</button></div></td></tr>
+                <tr key={uid} className="border-t"><td className="p-3 flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xs">{avatar}</div>{name}</td><td className="text-xs">{email}</td><td className="text-xs">{role}</td><td><span className={`px-2 py-0.5 rounded-full text-[11px] ${isActive?'bg-green-100 text-green-800':'bg-zinc-100'}`}>{isActive?t('admin.active'):t('admin.inactive')}</span></td><td><div className="flex items-center gap-1 whitespace-nowrap"><button onClick={()=>startEdit(u)} className="text-xs border px-2 py-1 rounded hover:bg-[#FAF7F2]">{t('common.edit')}</button><button onClick={()=>handleDelete(uid)} disabled={deletingId===uid} className="text-xs bg-[#B3402E] text-white px-2 py-1 rounded disabled:opacity-60">{deletingId===uid?t('common.deleting'):t('common.delete')}</button></div></td></tr>
               )})}
             </tbody>
           </table>
         </div>
         {pagination && (
           <div className="flex justify-center items-center gap-2 pt-2">
-            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">Prev</button>
-            <span className="text-sm text-[#8A8078]">Page {pagination.currentPage || page} / {pagination.numberOfPages || 1}</span>
-            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">Next</button>
+            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.prev')}</button>
+            <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage || page)} / {formatNumber(pagination.numberOfPages || 1)}</span>
+            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.next')}</button>
           </div>
         )}
         </>
@@ -163,16 +165,16 @@ export function AdminUsers(){
       {editing && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={()=>setEditing(null)}>
           <form onClick={e=>e.stopPropagation()} onSubmit={handleUpdate} className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
-            <h3 className="font-medium">Edit User {editing.id || editing._id}</h3>
+            <h3 className="font-medium">{t('admin.editUser')} {editing.id || editing._id}</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="text-xs">First Name*</label><input value={editForm.firstName} onChange={e=>setEditForm(s=>({...s,firstName:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
-              <div><label className="text-xs">Last Name</label><input value={editForm.lastName} onChange={e=>setEditForm(s=>({...s,lastName:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
+              <div><label className="text-xs">{t('admin.firstName')}</label><input value={editForm.firstName} onChange={e=>setEditForm(s=>({...s,firstName:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
+              <div><label className="text-xs">{t('admin.lastName')}</label><input value={editForm.lastName} onChange={e=>setEditForm(s=>({...s,lastName:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
             </div>
-            <div><label className="text-xs">Email*</label><input value={editForm.email} onChange={e=>setEditForm(s=>({...s,email:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
-            <div><label className="text-xs">Phone</label><input value={editForm.phone} onChange={e=>setEditForm(s=>({...s,phone:e.target.value}))} placeholder="+20..." className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
-            <div><label className="text-xs">Role</label><select value={editForm.role} onChange={e=>setEditForm(s=>({...s,role:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1"><option value="user">user</option><option value="gallery_owner">gallery_owner</option><option value="employee">employee</option></select><p className="text-[11px] text-[#8A8078] mt-1">Admin role is blocked — admin cannot create another admin. Backend uses `user` not `customer`.</p></div>
-            <div className="flex items-center gap-2"><input type="checkbox" checked={editForm.isActive} onChange={e=>setEditForm(s=>({...s,isActive:e.target.checked}))} id="isActive" /><label htmlFor="isActive" className="text-xs">Active (isActive)</label></div>
-            <div className="flex gap-3"><button type="button" onClick={()=>setEditing(null)} className="flex-1 border py-2 rounded-lg text-sm">Cancel</button><button type="submit" disabled={saving} className="flex-1 bg-[#4B3621] text-white py-2 rounded-lg text-sm disabled:opacity-60">{saving?'Saving...':'Save'}</button></div>
+            <div><label className="text-xs">{t('admin.thEmail')}*</label><input value={editForm.email} onChange={e=>setEditForm(s=>({...s,email:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
+            <div><label className="text-xs">{t('admin.phone')}</label><input value={editForm.phone} onChange={e=>setEditForm(s=>({...s,phone:e.target.value}))} placeholder="+20..." className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
+            <div><label className="text-xs">{t('admin.role')}</label><select value={editForm.role} onChange={e=>setEditForm(s=>({...s,role:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1"><option value="user">user</option><option value="gallery_owner">gallery_owner</option><option value="employee">employee</option></select><p className="text-[11px] text-[#8A8078] mt-1">{t('admin.roleHint')}</p></div>
+            <div className="flex items-center gap-2"><input type="checkbox" checked={editForm.isActive} onChange={e=>setEditForm(s=>({...s,isActive:e.target.checked}))} id="isActive" /><label htmlFor="isActive" className="text-xs">{t('admin.activeLabel')}</label></div>
+            <div className="flex gap-3"><button type="button" onClick={()=>setEditing(null)} className="flex-1 border py-2 rounded-lg text-sm">{t('common.cancel')}</button><button type="submit" disabled={saving} className="flex-1 bg-[#4B3621] text-white py-2 rounded-lg text-sm disabled:opacity-60">{saving?t('common.saving'):t('common.save')}</button></div>
           </form>
         </div>
       )}
@@ -180,6 +182,7 @@ export function AdminUsers(){
   )
 }
 export function AdminProducts(){
+  const { t, formatPrice, formatNumber, formatDate } = useLanguage()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -224,15 +227,15 @@ export function AdminProducts(){
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this product?')) return
+    if (!confirm(t('admin.deleteProductConfirm'))) return
     setDeletingId(id)
     setActionMsg('')
     try {
       await deleteProduct(id)
       setProducts(prev => prev.filter(p => (p.id||p._id) !== id))
-      setActionMsg('Product deleted')
+      setActionMsg(t('admin.productDeleted'))
     } catch (err) {
-      setActionMsg(err.message || 'Delete failed')
+      setActionMsg(err.message || t('admin.deleteFail'))
     } finally {
       setDeletingId(null)
     }
@@ -253,7 +256,7 @@ export function AdminProducts(){
     e.preventDefault()
     if (!editing) return
     const id = editing.id || editing._id
-    if (!editForm.name.trim()) { setActionMsg('Name required'); return }
+    if (!editForm.name.trim()) { setActionMsg(t('admin.nameRequired')); return }
     setSaving(true)
     try {
       // only schema fields, no isFeatured
@@ -266,9 +269,9 @@ export function AdminProducts(){
       await updateProduct(id, payload)
       setProducts(prev => prev.map(p => (p.id||p._id)===id ? { ...p, ...payload } : p))
       setEditing(null)
-      setActionMsg('Product updated')
+      setActionMsg(t('admin.productUpdated'))
     } catch (err) {
-      setActionMsg(err.message || 'Update failed')
+      setActionMsg(err.message || t('admin.updateFail'))
       if (err.details) setActionMsg(typeof err.details==='string'?err.details:JSON.stringify(err.details))
     } finally {
       setSaving(false)
@@ -277,18 +280,18 @@ export function AdminProducts(){
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Products</h2></div>
+      <div className="flex justify-between"><h2 className="font-serif text-xl">{t('admin.products')}</h2></div>
       <div className="flex gap-2">
         <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2">
           <span className="material-symbols-outlined text-[#8A8078] text-[18px]">search</span>
-          <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder="Search products..." className="flex-1 outline-none text-sm" />
+          <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder={t('admin.searchProductsPh')} className="flex-1 outline-none text-sm" />
         </div>
-        <button onClick={handleSearch} className="bg-[#4B3621] text-white px-4 py-2 rounded-full text-sm">Search</button>
-        <button onClick={()=>{setSearch(''); setSearchInput(''); setPage(1)}} className="border px-3 py-2 rounded-full text-sm bg-white">Clear</button>
+        <button onClick={handleSearch} className="bg-[#4B3621] text-white px-4 py-2 rounded-full text-sm">{t('common.search')}</button>
+        <button onClick={()=>{setSearch(''); setSearchInput(''); setPage(1)}} className="border px-3 py-2 rounded-full text-sm bg-white">{t('common.clear')}</button>
       </div>
       {actionMsg && <div className="text-xs px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">{actionMsg}</div>}
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
-      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">Loading products...</div> : products.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">No products</div> : (
+      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">{t('admin.loadingProducts')}</div> : products.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">{t('admin.noProducts')}</div> : (
         <>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((p) => {
@@ -300,9 +303,9 @@ export function AdminProducts(){
         </div>
         {pagination && (
           <div className="flex justify-center items-center gap-2 pt-2">
-            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">Prev</button>
-            <span className="text-sm text-[#8A8078]">Page {pagination.currentPage || page} / {pagination.numberOfPages || 1}</span>
-            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">Next</button>
+            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.prev')}</button>
+            <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage || page)} / {formatNumber(pagination.numberOfPages || 1)}</span>
+            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.next')}</button>
           </div>
         )}
         </>
@@ -310,11 +313,11 @@ export function AdminProducts(){
       {editing && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={()=>setEditing(null)}>
           <form onClick={e=>e.stopPropagation()} onSubmit={handleUpdate} className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
-            <h3 className="font-medium">Edit Product {editing.id || editing._id}</h3>
+            <h3 className="font-medium">{t('admin.editProduct')} {editing.id || editing._id}</h3>
             <div><label className="text-xs">Name*</label><input value={editForm.name} onChange={e=>setEditForm(s=>({...s,name:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
-            <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">Price*</label><input type="number" value={editForm.price} onChange={e=>setEditForm(s=>({...s,price:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">Stock</label><input type="number" value={editForm.stock} onChange={e=>setEditForm(s=>({...s,stock:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
-            <div><label className="text-xs">Status</label><div className="flex gap-2 mt-1 text-xs">{['draft','active','archived'].map(s=> <button key={s} type="button" onClick={()=>setEditForm(f=>({...f,status:s}))} className={`px-3 py-1 rounded-full border capitalize ${editForm.status===s?'bg-[#4B3621] text-white border-[#4B3621]':'bg-white'}`}>{s}</button>)}</div></div>
-            <div className="flex gap-3"><button type="button" onClick={()=>setEditing(null)} className="flex-1 border py-2 rounded-lg text-sm">Cancel</button><button type="submit" disabled={saving} className="flex-1 bg-[#4B3621] text-white py-2 rounded-lg text-sm disabled:opacity-60">{saving?'Saving...':'Save'}</button></div>
+            <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">{t('admin.price')}</label><input type="number" value={editForm.price} onChange={e=>setEditForm(s=>({...s,price:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">{t('admin.stock')}</label><input type="number" value={editForm.stock} onChange={e=>setEditForm(s=>({...s,stock:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
+            <div><label className="text-xs">{t('admin.status')}</label><div className="flex gap-2 mt-1 text-xs">{['draft','active','archived'].map(s=> <button key={s} type="button" onClick={()=>setEditForm(f=>({...f,status:s}))} className={`px-3 py-1 rounded-full border capitalize ${editForm.status===s?'bg-[#4B3621] text-white border-[#4B3621]':'bg-white'}`}>{s}</button>)}</div></div>
+            <div className="flex gap-3"><button type="button" onClick={()=>setEditing(null)} className="flex-1 border py-2 rounded-lg text-sm">{t('common.cancel')}</button><button type="submit" disabled={saving} className="flex-1 bg-[#4B3621] text-white py-2 rounded-lg text-sm disabled:opacity-60">{saving?t('common.saving'):t('common.save')}</button></div>
           </form>
         </div>
       )}
@@ -322,6 +325,7 @@ export function AdminProducts(){
   )
 }
 export function AdminGalleries(){
+  const { t, formatPrice, formatNumber, formatDate } = useLanguage()
   const [galleries, setGalleries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -359,14 +363,14 @@ export function AdminGalleries(){
   const handleSearch = () => { setPage(1); setSearch(searchInput.trim()) }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this gallery?')) return
+    if (!confirm(t('admin.deleteGalleryConfirm'))) return
     setDeletingId(id)
     try {
       await deleteGallery(id)
       setGalleries(prev => prev.filter(g=> (g.id||g._id)!==id))
-      setActionMsg('Gallery deleted')
+      setActionMsg(t('admin.galleryDeleted'))
     } catch (err) {
-      setActionMsg(err.message || 'Delete failed')
+      setActionMsg(err.message || t('admin.deleteFail'))
     } finally {
       setDeletingId(null)
     }
@@ -382,16 +386,16 @@ export function AdminGalleries(){
     e.preventDefault()
     if (!editing) return
     const id = editing.id || editing._id
-    if (!editForm.name.trim()) { setActionMsg('Name required'); return }
+    if (!editForm.name.trim()) { setActionMsg(t('admin.nameRequired')); return }
     setSaving(true)
     try {
       const payload = { name: editForm.name.trim(), city: editForm.city.trim(), country: editForm.country.trim(), description: editForm.description }
       await updateGallery(id, payload)
       setGalleries(prev => prev.map(g => (g.id||g._id)===id ? { ...g, ...payload } : g))
       setEditing(null)
-      setActionMsg('Gallery updated')
+      setActionMsg(t('admin.galleryUpdated'))
     } catch (err) {
-      setActionMsg(err.message || 'Update failed')
+      setActionMsg(err.message || t('admin.updateFail'))
     } finally {
       setSaving(false)
     }
@@ -399,18 +403,18 @@ export function AdminGalleries(){
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Galleries</h2></div>
+      <div className="flex justify-between"><h2 className="font-serif text-xl">{t('admin.galleries')}</h2></div>
       <div className="flex gap-2">
         <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2">
           <span className="material-symbols-outlined text-[#8A8078] text-[18px]">search</span>
-          <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder="Search galleries..." className="flex-1 outline-none text-sm" />
+          <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder={t('admin.searchGalleriesPh')} className="flex-1 outline-none text-sm" />
         </div>
-        <button onClick={handleSearch} className="bg-[#4B3621] text-white px-4 py-2 rounded-full text-sm">Search</button>
-        <button onClick={()=>{setSearch(''); setSearchInput(''); setPage(1)}} className="border px-3 py-2 rounded-full text-sm bg-white">Clear</button>
+        <button onClick={handleSearch} className="bg-[#4B3621] text-white px-4 py-2 rounded-full text-sm">{t('common.search')}</button>
+        <button onClick={()=>{setSearch(''); setSearchInput(''); setPage(1)}} className="border px-3 py-2 rounded-full text-sm bg-white">{t('common.clear')}</button>
       </div>
       {actionMsg && <div className="text-xs px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">{actionMsg}</div>}
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
-      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">Loading galleries...</div> : galleries.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">No galleries</div> : (
+      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">{t('admin.loadingGalleries')}</div> : galleries.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">{t('admin.noGalleries')}</div> : (
         <>
         <div className="grid md:grid-cols-2 gap-4">
           {galleries.map(g=>{
@@ -424,17 +428,17 @@ export function AdminGalleries(){
                 <div className="w-12 h-12 rounded-full bg-[#FAF7F2] border flex items-center justify-center font-serif overflow-hidden shrink-0">
                   {logoUrl ? <img src={logoUrl} alt={g.name} className="w-full h-full object-cover" /> : (g.logo || g.name?.slice(0,2).toUpperCase())}
                 </div>
-                <div className="flex-1 min-w-0"><div className="text-sm font-medium truncate">{g.name}</div><div className="text-xs text-[#8A8078] truncate">{g.city}{g.country?`, ${g.country}`:''} • {g.productCount ?? ''} products</div><div className="text-[11px] text-[#8A8078] truncate">{g.description||''}</div></div>
-                <div className="flex flex-row items-center gap-1 shrink-0 self-center whitespace-nowrap"><button onClick={()=>startEdit(g)} className="text-xs border px-3 py-1 rounded hover:bg-[#FAF7F2]">Edit</button><button onClick={()=>handleDelete(gid)} disabled={deletingId===gid} className="text-xs bg-[#B3402E] text-white px-3 py-1 rounded disabled:opacity-60">{deletingId===gid?'Deleting...':'Delete'}</button></div>
+                <div className="flex-1 min-w-0"><div className="text-sm font-medium truncate">{g.name}</div><div className="text-xs text-[#8A8078] truncate">{g.city}{g.country?`, ${g.country}`:''} • {g.productCount != null ? t('galleries.products', { n: formatNumber(g.productCount) }) : ''}</div><div className="text-[11px] text-[#8A8078] truncate">{g.description||''}</div></div>
+                <div className="flex flex-row items-center gap-1 shrink-0 self-center whitespace-nowrap"><button onClick={()=>startEdit(g)} className="text-xs border px-3 py-1 rounded hover:bg-[#FAF7F2]">{t('common.edit')}</button><button onClick={()=>handleDelete(gid)} disabled={deletingId===gid} className="text-xs bg-[#B3402E] text-white px-3 py-1 rounded disabled:opacity-60">{deletingId===gid?t('common.deleting'):t('common.delete')}</button></div>
               </div>
             </div>
           )})}
         </div>
         {pagination && (
           <div className="flex justify-center items-center gap-2 pt-2">
-            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">Prev</button>
-            <span className="text-sm text-[#8A8078]">Page {pagination.currentPage || page} / {pagination.numberOfPages || 1}</span>
-            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">Next</button>
+            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.prev')}</button>
+            <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage || page)} / {formatNumber(pagination.numberOfPages || 1)}</span>
+            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.next')}</button>
           </div>
         )}
         </>
@@ -442,11 +446,11 @@ export function AdminGalleries(){
       {editing && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={()=>setEditing(null)}>
           <form onClick={e=>e.stopPropagation()} onSubmit={handleUpdate} className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
-            <h3 className="font-medium">Edit Gallery {editing.id || editing._id}</h3>
+            <h3 className="font-medium">{t('admin.editGallery')} {editing.id || editing._id}</h3>
             <div><label className="text-xs">Name*</label><input value={editForm.name} onChange={e=>setEditForm(s=>({...s,name:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
-            <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">City</label><input value={editForm.city} onChange={e=>setEditForm(s=>({...s,city:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">Country</label><input value={editForm.country} onChange={e=>setEditForm(s=>({...s,country:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
-            <div><label className="text-xs">Description</label><textarea value={editForm.description} onChange={e=>setEditForm(s=>({...s,description:e.target.value}))} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
-            <div className="flex gap-3"><button type="button" onClick={()=>setEditing(null)} className="flex-1 border py-2 rounded-lg text-sm">Cancel</button><button type="submit" disabled={saving} className="flex-1 bg-[#4B3621] text-white py-2 rounded-lg text-sm disabled:opacity-60">{saving?'Saving...':'Save'}</button></div>
+            <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">{t('admin.city')}</label><input value={editForm.city} onChange={e=>setEditForm(s=>({...s,city:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">{t('admin.country')}</label><input value={editForm.country} onChange={e=>setEditForm(s=>({...s,country:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>
+            <div><label className="text-xs">{t('admin.description')}</label><textarea value={editForm.description} onChange={e=>setEditForm(s=>({...s,description:e.target.value}))} rows={3} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
+            <div className="flex gap-3"><button type="button" onClick={()=>setEditing(null)} className="flex-1 border py-2 rounded-lg text-sm">{t('common.cancel')}</button><button type="submit" disabled={saving} className="flex-1 bg-[#4B3621] text-white py-2 rounded-lg text-sm disabled:opacity-60">{saving?t('common.saving'):t('common.save')}</button></div>
           </form>
         </div>
       )}
@@ -455,6 +459,7 @@ export function AdminGalleries(){
 }
 export function AdminOrders(){
   const navigate = useNavigate()
+  const { t, formatPrice, formatNumber, formatDate } = useLanguage()
   const [ordersList, setOrdersList] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -477,7 +482,7 @@ export function AdminOrders(){
         setOrdersList(data)
       } catch (err) {
         if (cancelled) return
-        setError(err.message || 'Failed to load orders')
+        setError(err.message || t('admin.loadOrdersFail'))
         setOrdersList([])
       } finally {
         if (!cancelled) setLoading(false)
@@ -497,9 +502,11 @@ export function AdminOrders(){
     }
   }
 
+  const statusLabel = (s) => t(`status.${s}`) === `status.${s}` ? (ORDER_STATUSES[s]?.label || s) : t(`status.${s}`)
+
   const handleStatusChange = async (orderId, newStatus) => {
-    const statusLabel = ORDER_STATUSES[newStatus]?.label || newStatus
-    if (!window.confirm(`Change status to ${statusLabel}?`)) return
+    const label = statusLabel(newStatus)
+    if (!window.confirm(t('orderDetails.statusConfirm', { label }))) return
     setActionId(orderId)
     setSuccess('')
     setLocalError('')
@@ -512,10 +519,10 @@ export function AdminOrders(){
         await updateOrderStatus(orderId, newStatus)
       }
       await refreshOrders()
-      setSuccess(`Order status updated to ${statusLabel}`)
+      setSuccess(t('orderDetails.statusOk', { label }))
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      setLocalError(err.message || 'Failed to update order status')
+      setLocalError(err.message || t('orderDetails.statusFail'))
     } finally {
       setActionId(null)
     }
@@ -541,19 +548,19 @@ export function AdminOrders(){
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="font-serif text-xl">Admin — All Orders</h2>
+        <h2 className="font-serif text-xl">{t('admin.allOrders')}</h2>
         <div className="flex gap-2">
           <select 
             value={galleryFilter} 
             onChange={e => setGalleryFilter(e.target.value)} 
             className="border rounded-full px-3 py-1 text-xs bg-white"
           >
-            <option>All</option>
+            <option value="All">{t('common.all')}</option>
             {galleries.map(g => <option key={g}>{g}</option>)}
           </select>
           <div className="flex border rounded-full overflow-hidden text-xs">
-            <button onClick={() => setView('table')} className={`px-3 py-1 ${view === 'table' ? 'bg-[#4B3621] text-white' : ''}`}>Table</button>
-            <button onClick={() => setView('board')} className={`px-3 py-1 ${view === 'board' ? 'bg-[#4B3621] text-white' : ''}`}>Board</button>
+            <button onClick={() => setView('table')} className={`px-3 py-1 ${view === 'table' ? 'bg-[#4B3621] text-white' : ''}`}>{t('admin.table')}</button>
+            <button onClick={() => setView('board')} className={`px-3 py-1 ${view === 'board' ? 'bg-[#4B3621] text-white' : ''}`}>{t('admin.board')}</button>
           </div>
         </div>
       </div>
@@ -567,7 +574,7 @@ export function AdminOrders(){
           onClick={() => setStatusFilter('all')} 
           className={`px-3 py-1 rounded-full border ${statusFilter === 'all' ? 'bg-[#4B3621] text-white' : 'bg-white'}`}
         >
-          All ({statusCounts.all || 0})
+          {t('common.all')} ({formatNumber(statusCounts.all || 0)})
         </button>
         {Object.keys(ORDER_STATUSES).map(status => (
           <button 
@@ -575,26 +582,26 @@ export function AdminOrders(){
             onClick={() => setStatusFilter(status)} 
             className={`px-3 py-1 rounded-full border ${statusFilter === status ? 'bg-[#4B3621] text-white' : 'bg-white'}`}
           >
-            {ORDER_STATUSES[status].label} ({statusCounts[status] || 0})
+            {statusLabel(status)} ({formatNumber(statusCounts[status] || 0)})
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-sm text-[#8A8078]">Loading orders...</div>
+        <div className="text-center py-12 text-sm text-[#8A8078]">{t('admin.loadingOrders')}</div>
       ) : view === 'table' ? (
         <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-[#FAF7F2] text-xs text-[#8A8078]">
                 <tr>
-                  <th className="p-3 text-left">Order</th>
-                  <th>Customer</th>
-                  <th>Gallery</th>
-                  <th>Items</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Action</th>
+                  <th className="p-3 text-start">{t('admin.thOrder')}</th>
+                  <th>{t('admin.thCustomer')}</th>
+                  <th>{t('admin.thGallery')}</th>
+                  <th>{t('admin.thItems')}</th>
+                  <th>{t('admin.thTotal')}</th>
+                  <th>{t('admin.thStatus')}</th>
+                  <th>{t('galleryOrders.thAction')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -602,14 +609,14 @@ export function AdminOrders(){
                   const totalItems = o.items?.reduce((sum, i) => sum + i.quantity, 0) || 0
                   const totalPrice = Number(o.totalPrice || 0)
                   const customerName = `${o.user?.firstName || 'Unknown'} ${o.user?.lastName || ''}`.trim()
-                  const galleryName = o.gallery?.name || 'Unknown'
+                  const galleryName = o.gallery?.name || t('orders.unknownGallery')
                   const availableTransitions = ORDER_STATUSES[o.status]?.canTransitionTo || []
 
                   return (
                     <tr key={o.id} className="border-t">
                       <td className="p-3 font-mono text-xs">
                         {o.id?.substring(0, 8)}...
-                        <div className="text-[11px] text-[#8A8078]">{o.createdAt ? new Date(o.createdAt).toLocaleDateString() : ''}</div>
+                        <div className="text-[11px] text-[#8A8078]">{o.createdAt ? formatDate(o.createdAt) : ''}</div>
                       </td>
                       <td className="text-xs">
                         {customerName}
@@ -623,19 +630,19 @@ export function AdminOrders(){
                           {galleryName}
                         </div>
                       </td>
-                      <td className="text-center">{totalItems}</td>
-                      <td className="text-center text-xs">{totalPrice.toLocaleString()} EGP</td>
+                      <td className="text-center">{formatNumber(totalItems)}</td>
+                      <td className="text-center text-xs">{formatPrice(totalPrice)}</td>
                       <td>
                         <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusStyles(o.status)}`}>
-                          {ORDER_STATUSES[o.status]?.label || o.status}
+                          {statusLabel(o.status)}
                         </span>
                       </td>
                       <td className="text-center">
                         <button
                           onClick={() => navigate(`/admin/orders/${o.id}`)}
-                          className="text-xs border px-2 py-1 rounded mr-1 hover:bg-[#FAF7F2]"
+                          className="text-xs border px-2 py-1 rounded me-1 hover:bg-[#FAF7F2]"
                         >
-                          View
+                          {t('common.view')}
                         </button>
                         {availableTransitions.length > 0 && (
                           <select 
@@ -644,9 +651,9 @@ export function AdminOrders(){
                             disabled={actionId === o.id}
                             className="border rounded px-2 py-1 text-xs disabled:opacity-60"
                           >
-                            <option value="" disabled>Change status</option>
+                            <option value="" disabled>{t('status.changeStatus')}</option>
                             {availableTransitions.map(s => (
-                              <option key={s} value={s}>{ORDER_STATUSES[s].label}</option>
+                              <option key={s} value={s}>{statusLabel(s)}</option>
                             ))}
                           </select>
                         )}
@@ -664,10 +671,10 @@ export function AdminOrders(){
             <div key={status} className="bg-white border border-[#E7DFD3] rounded-xl p-3">
               <div className="text-xs font-semibold mb-2 flex justify-between items-center">
                 <span className={`px-2 py-0.5 rounded-full ${getStatusStyles(status)}`}>
-                  {ORDER_STATUSES[status].label}
+                  {statusLabel(status)}
                 </span>
                 <span className="bg-[#FAF7F2] px-2 rounded-full text-[#8A8078]">
-                  {ordersList.filter(o => o.status === status).length}
+                  {formatNumber(ordersList.filter(o => o.status === status).length)}
                 </span>
               </div>
               <div className="space-y-2">
@@ -678,20 +685,20 @@ export function AdminOrders(){
                     className="border rounded-lg p-3 text-xs cursor-pointer hover:bg-[#FAF7F2]"
                   >
                     <div className="font-mono">{o.id?.substring(0, 8)}...</div>
-                    <div className="text-[#8A8078]">{o.gallery?.name || 'Unknown'} • {Number(o.totalPrice || 0).toLocaleString()} EGP</div>
+                    <div className="text-[#8A8078]">{o.gallery?.name || t('orders.unknownGallery')} • {formatPrice(Number(o.totalPrice || 0))}</div>
                   </div>
                 ))}
                 {ordersList.filter(o => o.status === status).length === 0 && (
-                  <div className="text-[11px] text-[#8A8078] text-center py-4">No orders</div>
+                  <div className="text-[11px] text-[#8A8078] text-center py-4">{t('admin.noOrders')}</div>
                 )}
               </div>
             </div>
           ))}
           <div className="bg-white border border-[#E7DFD3] rounded-xl p-3">
             <div className="text-xs font-semibold mb-2 flex justify-between items-center">
-              <span className="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-800">Terminal</span>
+              <span className="px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-800">{t('status.terminal')}</span>
               <span className="bg-[#FAF7F2] px-2 rounded-full text-[#8A8078]">
-                {ordersList.filter(o => ['completed', 'cancelled'].includes(o.status)).length}
+                {formatNumber(ordersList.filter(o => ['completed', 'cancelled'].includes(o.status)).length)}
               </span>
             </div>
             <div className="space-y-2">
@@ -702,11 +709,11 @@ export function AdminOrders(){
                   className="border rounded-lg p-3 text-xs cursor-pointer hover:bg-[#FAF7F2] opacity-60"
                 >
                   <div className="font-mono">{o.id?.substring(0, 8)}...</div>
-                  <div className="text-[#8A8078]">{ORDER_STATUSES[o.status]?.label} • {Number(o.totalPrice || 0).toLocaleString()} EGP</div>
+                  <div className="text-[#8A8078]">{statusLabel(o.status)} • {formatPrice(Number(o.totalPrice || 0))}</div>
                 </div>
               ))}
               {ordersList.filter(o => ['completed', 'cancelled'].includes(o.status)).length === 0 && (
-                <div className="text-[11px] text-[#8A8078] text-center py-4">No orders</div>
+                <div className="text-[11px] text-[#8A8078] text-center py-4">{t('admin.noOrders')}</div>
               )}
             </div>
           </div>
@@ -716,6 +723,7 @@ export function AdminOrders(){
   )
 }
 export function AdminCategories(){
+  const { t, formatPrice, formatNumber, formatDate } = useLanguage()
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -747,7 +755,7 @@ export function AdminCategories(){
 
   const handleCreate = async (e) => {
     e.preventDefault()
-    if (!validName(form.name) || !validName(form.arabicName)) { setActionMsg('Name and Arabic name are required (3–60 characters each)'); return }
+    if (!validName(form.name) || !validName(form.arabicName)) { setActionMsg(t('admin.catValid')); return }
     setCreating(true)
     setActionMsg('')
     try {
@@ -756,9 +764,9 @@ export function AdminCategories(){
       if (created) setCategories(prev => [created, ...prev])
       else fetchCategories()
       setForm({ name:'', arabicName:'' })
-      setActionMsg('Category added')
+      setActionMsg(t('admin.catAdded'))
     } catch (err) {
-      setActionMsg(err.details ? (typeof err.details==='string'?err.details:JSON.stringify(err.details)) : (err.message || 'Create failed'))
+      setActionMsg(err.details ? (typeof err.details==='string'?err.details:JSON.stringify(err.details)) : (err.message || t('admin.catCreateFail')))
     } finally {
       setCreating(false)
     }
@@ -773,31 +781,31 @@ export function AdminCategories(){
   const handleUpdate = async (e) => {
     e.preventDefault()
     if (!editingId) return
-    if (!validName(editForm.name) || !validName(editForm.arabicName)) { setActionMsg('Name and Arabic name are required (3–60 characters each)'); return }
+    if (!validName(editForm.name) || !validName(editForm.arabicName)) { setActionMsg(t('admin.catValid')); return }
     setSaving(true)
     try {
       const payload = { name: editForm.name.trim(), arabicName: editForm.arabicName.trim() }
       await updateCategory(editingId, payload)
       setCategories(prev => prev.map(c => (c.id||c._id)===editingId ? { ...c, ...payload } : c))
       setEditingId(null)
-      setActionMsg('Category updated')
+      setActionMsg(t('admin.catUpdated'))
     } catch (err) {
-      setActionMsg(err.details ? (typeof err.details==='string'?err.details:JSON.stringify(err.details)) : (err.message || 'Update failed'))
+      setActionMsg(err.details ? (typeof err.details==='string'?err.details:JSON.stringify(err.details)) : (err.message || t('admin.updateFail')))
     } finally {
       setSaving(false)
     }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this category? Products using it will be affected.')) return
+    if (!confirm(t('admin.deleteCatConfirm'))) return
     setDeletingId(id)
     setActionMsg('')
     try {
       await deleteCategory(id)
       setCategories(prev => prev.filter(c => (c.id||c._id) !== id))
-      setActionMsg('Category deleted')
+      setActionMsg(t('admin.catDeleted'))
     } catch (err) {
-      setActionMsg(err.message || 'Delete failed')
+      setActionMsg(err.message || t('admin.deleteFail'))
     } finally {
       setDeletingId(null)
     }
@@ -805,15 +813,15 @@ export function AdminCategories(){
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between"><h2 className="font-serif text-xl">Admin — Categories</h2></div>
+      <div className="flex justify-between"><h2 className="font-serif text-xl">{t('admin.categories')}</h2></div>
       <form onSubmit={handleCreate} className="bg-white border border-[#E7DFD3] rounded-xl p-4 flex flex-col sm:flex-row gap-2">
-        <input value={form.name} onChange={e=>setForm(s=>({...s, name:e.target.value}))} placeholder="Name (e.g. Sofas)" className="flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f]" />
-        <input value={form.arabicName} onChange={e=>setForm(s=>({...s, arabicName:e.target.value}))} placeholder="Arabic name (e.g. صوفا)" className="flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f]" />
-        <button type="submit" disabled={creating} className="bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium disabled:opacity-60 whitespace-nowrap">{creating?'Adding…':'+ Add Category'}</button>
+        <input value={form.name} onChange={e=>setForm(s=>({...s, name:e.target.value}))} placeholder={t('admin.catNamePh')} className="flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f]" />
+        <input value={form.arabicName} onChange={e=>setForm(s=>({...s, arabicName:e.target.value}))} placeholder={t('admin.catArPh')} className="flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f]" />
+        <button type="submit" disabled={creating} className="bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium disabled:opacity-60 whitespace-nowrap">{creating?t('admin.adding'):t('admin.addCategory')}</button>
       </form>
       {actionMsg && <div className="text-xs px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">{actionMsg}</div>}
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
-      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">Loading categories...</div> : categories.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">No categories yet — add the first one above</div> : (
+      {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">{t('admin.loadingCats')}</div> : categories.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">{t('admin.noCats')}</div> : (
         <div className="bg-white border border-[#E7DFD3] rounded-xl divide-y divide-[#E7DFD3]/70 overflow-hidden">
           {categories.map((c) => {
             const cid = c.id || c._id
@@ -825,8 +833,8 @@ export function AdminCategories(){
                     <input value={editForm.name} onChange={e=>setEditForm(s=>({...s, name:e.target.value}))} className="flex-1 border border-[#E7DFD3] rounded-full px-3 py-1.5 text-sm outline-none focus:border-[#78582f]" />
                     <input value={editForm.arabicName} onChange={e=>setEditForm(s=>({...s, arabicName:e.target.value}))} className="flex-1 border border-[#E7DFD3] rounded-full px-3 py-1.5 text-sm outline-none focus:border-[#78582f]" />
                     <div className="flex gap-1.5 shrink-0">
-                      <button type="submit" disabled={saving} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-xs disabled:opacity-60">{saving?'Saving…':'Save'}</button>
-                      <button type="button" onClick={()=>setEditingId(null)} className="border px-3 py-1.5 rounded-full text-xs bg-white">Cancel</button>
+                      <button type="submit" disabled={saving} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-xs disabled:opacity-60">{saving?t('common.saving'):t('common.save')}</button>
+                      <button type="button" onClick={()=>setEditingId(null)} className="border px-3 py-1.5 rounded-full text-xs bg-white">{t('common.cancel')}</button>
                     </div>
                   </form>
                 ) : (
@@ -836,8 +844,8 @@ export function AdminCategories(){
                       <div className="text-sm font-medium truncate">{c.name}{c.arabicName ? <span className="text-[#8A8078] font-normal"> • {c.arabicName}</span> : null}</div>
                       {c.slug && <div className="text-[11px] text-[#8A8078] truncate">/{c.slug}</div>}
                     </div>
-                    <button onClick={()=>startEdit(c)} className="px-3 py-1.5 border rounded-full text-xs bg-white hover:bg-[#FAF7F2]">Edit</button>
-                    <button onClick={()=>handleDelete(cid)} disabled={deletingId===cid} className="px-3 py-1.5 rounded-full text-xs bg-[#B3402E] text-white disabled:opacity-60">{deletingId===cid?'…':'Delete'}</button>
+                    <button onClick={()=>startEdit(c)} className="px-3 py-1.5 border rounded-full text-xs bg-white hover:bg-[#FAF7F2]">{t('common.edit')}</button>
+                    <button onClick={()=>handleDelete(cid)} disabled={deletingId===cid} className="px-3 py-1.5 rounded-full text-xs bg-[#B3402E] text-white disabled:opacity-60">{deletingId===cid?t('common.deleting'):t('common.delete')}</button>
                   </>
                 )}
               </div>
@@ -855,6 +863,7 @@ const TRAFFIC_RANGES = [
 ]
 
 export function AdminOverview(){
+  const { t, formatPrice, formatNumber, formatDate } = useLanguage()
   const [counts, setCounts] = useState({ users: null, galleries: null, products: null })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -908,33 +917,33 @@ export function AdminOverview(){
     return ()=>{cancelled=true}
   },[range])
   const items = [
-    {k:'Users', v: counts.users},
-    {k:'Galleries', v: counts.galleries},
-    {k:'Products', v: counts.products},
+    {k: t('admin.usersCount'), v: counts.users},
+    {k: t('admin.galleriesCount'), v: counts.galleries},
+    {k: t('admin.productsCount'), v: counts.products},
   ]
   const totals = traffic?.totals || {}
   const trafficItems = [
-    {k:'Unique visitors', v: totals.visitors, hint: 'Distinct browsers'},
-    {k:'Visits', v: totals.visits, hint: 'Sessions (30m timeout)'},
-    {k:'Page views', v: totals.pageViews, hint: 'Total hits'},
+    {k: t('admin.uniqueVisitors'), v: totals.visitors, hint: t('admin.uniqueHint')},
+    {k: t('admin.visits'), v: totals.visits, hint: t('admin.visitsHint')},
+    {k: t('admin.pageViews'), v: totals.pageViews, hint: t('admin.viewsHint')},
   ]
   const series = Array.isArray(traffic?.series) ? traffic.series : []
   const topPages = Array.isArray(traffic?.topPages) ? traffic.topPages : []
   return (
     <div className="space-y-4">
-      <h2 className="font-serif text-2xl">Admin Overview</h2>
+      <h2 className="font-serif text-2xl">{t('admin.overview')}</h2>
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {items.map(s=>(
           <div key={s.k} className="bg-white border border-[#E7DFD3] rounded-xl p-4 text-center">
             <div className="text-xs text-[#8A8078]">{s.k}</div>
-            <div className="text-xl font-semibold">{loading ? '…' : (s.v ?? '—')}</div>
+            <div className="text-xl font-semibold">{loading ? '…' : (s.v != null ? formatNumber(s.v) : '—')}</div>
           </div>
         ))}
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <h3 className="font-serif text-lg">Site traffic</h3>
+        <h3 className="font-serif text-lg">{t('admin.traffic')}</h3>
         <div className="flex gap-1 text-xs">
           {TRAFFIC_RANGES.map(r=>(
             <button key={r.id} onClick={()=>setRange(r.id)} className={`px-3 py-1 rounded-full border ${range===r.id?'bg-[#4B3621] text-white border-[#4B3621]':'bg-white'}`}>{r.label}</button>
@@ -946,16 +955,16 @@ export function AdminOverview(){
         {trafficItems.map(s=>(
           <div key={s.k} className="bg-white border border-[#E7DFD3] rounded-xl p-4 text-center">
             <div className="text-xs text-[#8A8078]">{s.k}</div>
-            <div className="text-xl font-semibold">{trafficLoading ? '…' : (s.v ?? '—')}</div>
+            <div className="text-xl font-semibold">{trafficLoading ? '…' : (s.v != null ? formatNumber(s.v) : '—')}</div>
             <div className="text-[11px] text-[#8A8078]">{s.hint}</div>
           </div>
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
         <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
-          <div className="text-sm font-medium mb-2">Visitors & views over time</div>
-          {trafficLoading ? <div className="text-center py-12 text-sm text-[#8A8078]">Loading traffic...</div>
-          : series.length===0 ? <div className="text-center py-12 text-sm text-[#8A8078]">No visits yet — browse the site to generate traffic.</div>
+          <div className="text-sm font-medium mb-2">{t('admin.chartTitle')}</div>
+          {trafficLoading ? <div className="text-center py-12 text-sm text-[#8A8078]">{t('admin.loadingTraffic')}</div>
+          : series.length===0 ? <div className="text-center py-12 text-sm text-[#8A8078]">{t('admin.noTraffic')}</div>
           : (
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={series} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
@@ -963,22 +972,22 @@ export function AdminOverview(){
               <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(d)=>String(d).slice(5)} minTickGap={24} />
               <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
               <Tooltip />
-              <Line type="monotone" dataKey="visitors" name="Visitors" stroke="#4B3621" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="views" name="Views" stroke="#C19A6B" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="visitors" name={t('admin.uniqueVisitors')} stroke="#4B3621" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="views" name={t('admin.pageViews')} stroke="#C19A6B" strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
           )}
         </div>
         <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
-          <div className="text-sm font-medium mb-2">Top pages</div>
+          <div className="text-sm font-medium mb-2">{t('admin.topPages')}</div>
           {trafficLoading ? <div className="text-center py-8 text-sm text-[#8A8078]">…</div>
-          : topPages.length===0 ? <div className="text-center py-8 text-xs text-[#8A8078]">No data yet</div>
+          : topPages.length===0 ? <div className="text-center py-8 text-xs text-[#8A8078]">{t('common.noResults')}</div>
           : (
           <div className="space-y-2">
             {topPages.map(p=>(
               <div key={p.path} className="flex justify-between items-center text-xs border-b border-[#E7DFD3]/60 pb-2">
                 <span className="font-mono truncate max-w-[140px]" title={p.path}>{p.path}</span>
-                <span className="text-[#8A8078] whitespace-nowrap">{p.visitors} visitors • {p.views} views</span>
+                <span className="text-[#8A8078] whitespace-nowrap">{formatNumber(p.visitors)} {t('admin.uniqueVisitors')} • {formatNumber(p.views)} {t('admin.pageViews')}</span>
               </div>
             ))}
           </div>

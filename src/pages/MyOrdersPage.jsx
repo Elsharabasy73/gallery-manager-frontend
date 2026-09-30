@@ -1,15 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useRole } from '../context/RoleContext'
+import { useLanguage } from '../i18n/LanguageContext'
 import { getMyOrders, unwrapOrders, cancelOrder, getStatusStyles, ORDER_STATUSES } from '../api/orders'
 
-/**
- * MyOrdersPage - Customer's order history
- * Single Responsibility: Display and manage customer orders
- */
 export default function MyOrdersPage() {
   const navigate = useNavigate()
   const { role, isAuthenticated } = useRole()
+  const { t, formatDate, formatNumber, formatPrice } = useLanguage()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -18,7 +16,6 @@ export default function MyOrdersPage() {
   const [success, setSuccess] = useState('')
   const [localError, setLocalError] = useState('')
 
-  // Fetch orders on mount
   useEffect(() => {
     if (!isAuthenticated || role !== 'customer') return
 
@@ -33,36 +30,34 @@ export default function MyOrdersPage() {
         setOrders(data)
       } catch (err) {
         if (cancelled) return
-        setError(err.message || 'Failed to load orders')
+        setError(err.message || t('orders.loadFail'))
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
     fetchOrders()
     return () => { cancelled = true }
-  }, [isAuthenticated, role])
+  }, [isAuthenticated, role, t])
 
-  // Cancel order handler
   const handleCancelOrder = async (orderId) => {
-    if (!window.confirm('Are you sure you want to cancel this order? This action cannot be undone.')) return
+    if (!window.confirm(t('orders.cancelConfirm'))) return
     setCancellingId(orderId)
     setSuccess('')
     setLocalError('')
     try {
       await cancelOrder(orderId)
-      setOrders(prev => prev.map(o => 
+      setOrders(prev => prev.map(o =>
         o.id === orderId ? { ...o, status: 'cancelled' } : o
       ))
-      setSuccess('Order cancelled successfully')
+      setSuccess(t('orders.cancelledOk'))
       setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
-      setLocalError(err.message || 'Failed to cancel order')
+      setLocalError(err.message || t('orders.cancelFail'))
     } finally {
       setCancellingId(null)
     }
   }
 
-  // Calculate status counts
   const statusCounts = orders.reduce((acc, o) => {
     acc.all = (acc.all || 0) + 1
     acc[o.status] = (acc[o.status] || 0) + 1
@@ -70,26 +65,25 @@ export default function MyOrdersPage() {
   }, {})
 
   const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter)
+  const statusLabel = (s) => t(`status.${s}`, null) === `status.${s}` ? (ORDER_STATUSES[s]?.label || s) : t(`status.${s}`)
 
-  // Build status filters dynamically based on available statuses
   const statusFilters = [
-    { key: 'all', label: `All (${statusCounts.all || 0})` },
+    { key: 'all', label: `${t('orders.all')} (${formatNumber(statusCounts.all || 0)})` },
     ...Object.keys(ORDER_STATUSES).map(status => ({
       key: status,
-      label: `${ORDER_STATUSES[status].label} (${statusCounts[status] || 0})`
+      label: `${statusLabel(status)} (${formatNumber(statusCounts[status] || 0)})`
     }))
   ]
 
-  // Auth guard - only customers can access
   if (!isAuthenticated || role !== 'customer') {
     return (
       <div className="text-center py-12 bg-white border border-[#E7DFD3] rounded-xl">
-        <p className="text-sm text-[#8A8078]">Orders are available for customers only. Please log in as a customer.</p>
-        <button 
-          onClick={() => navigate('/login')} 
+        <p className="text-sm text-[#8A8078]">{t('orders.onlyCustomer')}</p>
+        <button
+          onClick={() => navigate('/login')}
           className="mt-3 bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm"
         >
-          Go to login
+          {t('common.goLogin')}
         </button>
       </div>
     )
@@ -97,17 +91,16 @@ export default function MyOrdersPage() {
 
   return (
     <div className="space-y-4">
-      <h2 className="font-serif text-2xl">My Orders</h2>
+      <h2 className="font-serif text-2xl">{t('orders.title')}</h2>
 
-      {/* Status Filters */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {statusFilters.map(f => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
             className={`shrink-0 px-3 py-1 rounded-full text-xs border ${
-              filter === f.key 
-                ? 'bg-[#4B3621] text-white border-[#4B3621]' 
+              filter === f.key
+                ? 'bg-[#4B3621] text-white border-[#4B3621]'
                 : 'bg-white hover:bg-[#FAF7F2]'
             }`}
           >
@@ -116,7 +109,6 @@ export default function MyOrdersPage() {
         ))}
       </div>
 
-      {/* Messages */}
       {success && (
         <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg flex items-center justify-between">
           {success}
@@ -135,19 +127,18 @@ export default function MyOrdersPage() {
         </div>
       )}
 
-      {/* Content */}
       {loading ? (
-        <div className="text-center py-12 text-sm text-[#8A8078]">Loading orders...</div>
+        <div className="text-center py-12 text-sm text-[#8A8078]">{t('orders.loading')}</div>
       ) : filteredOrders.length === 0 ? (
         <div className="text-center py-12 bg-white border border-dashed rounded-xl">
           <p className="text-sm text-[#8A8078]">
-            {filter === 'all' ? 'No orders yet' : `No ${ORDER_STATUSES[filter]?.label || filter} orders`}
+            {filter === 'all' ? t('orders.noOrders') : t('orders.noStatusOrders', { label: statusLabel(filter) })}
           </p>
-          <button 
-            onClick={() => navigate('/products')} 
+          <button
+            onClick={() => navigate('/products')}
             className="mt-3 text-[#C19A6B] text-sm underline"
           >
-            Browse products
+            {t('orders.browse')}
           </button>
         </div>
       ) : (
@@ -167,51 +158,44 @@ export default function MyOrdersPage() {
   )
 }
 
-/**
- * OrderCard - Single order display
- * Single Responsibility: Display one order with actions
- */
 function OrderCard({ order, isCancelling, onCancel, onViewDetails }) {
+  const { t, formatDate, formatNumber, formatPrice } = useLanguage()
   const totalItems = order.items?.reduce((sum, i) => sum + i.quantity, 0) || 0
   const totalPrice = Number(order.totalPrice || 0)
-  const galleryName = order.gallery?.name || 'Unknown Gallery'
-  const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'
-  const statusConfig = ORDER_STATUSES[order.status] || ORDER_STATUSES.cancelled
+  const galleryName = order.gallery?.name || t('orders.unknownGallery')
+  const orderDate = order.createdAt ? formatDate(order.createdAt) : t('orders.na')
+  const label = t(`status.${order.status}`, null) === `status.${order.status}` ? order.status : t(`status.${order.status}`)
 
-  // Customer can cancel pending or accepted orders
   const canCancel = ['pending', 'accepted'].includes(order.status)
 
   return (
     <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
-      {/* Order Header */}
       <div className="flex justify-between items-start text-xs">
         <div>
           <span className="font-mono">{order.id?.substring(0, 8)}...</span>
-          <span className="text-[#8A8078] ml-2">• {orderDate}</span>
+          <span className="text-[#8A8078] ms-2">• {orderDate}</span>
         </div>
         <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusStyles(order.status)}`}>
-          {statusConfig.label}
+          {label}
         </span>
       </div>
 
-      {/* Order Details */}
       <div className="flex items-center gap-2 mt-3 text-sm">
         <div className="w-8 h-8 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-[10px] font-medium">
           {galleryName.substring(0, 2).toUpperCase()}
         </div>
         <div className="flex-1">
           <div className="font-medium">{galleryName}</div>
-          <div className="text-xs text-[#8A8078]">{totalItems} items • {totalPrice.toLocaleString()} EGP</div>
+          <div className="text-xs text-[#8A8078]">{t('orders.items', { n: formatNumber(totalItems) })} • {formatPrice(totalPrice)}</div>
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex gap-2 mt-3">
         <button
           onClick={() => onViewDetails(order.id)}
           className="flex-1 text-xs border px-3 py-1.5 rounded-lg hover:bg-[#FAF7F2]"
         >
-          View Details
+          {t('orders.viewDetails')}
         </button>
         {canCancel && (
           <button
@@ -219,7 +203,7 @@ function OrderCard({ order, isCancelling, onCancel, onViewDetails }) {
             disabled={isCancelling}
             className="text-xs border border-[#B3402E] text-[#B3402E] px-3 py-1.5 rounded-lg hover:bg-red-50 disabled:opacity-60"
           >
-            {isCancelling ? 'Cancelling...' : 'Cancel'}
+            {isCancelling ? t('orders.cancelling') : t('orders.cancel')}
           </button>
         )}
       </div>
@@ -227,5 +211,4 @@ function OrderCard({ order, isCancelling, onCancel, onViewDetails }) {
   )
 }
 
-// Backward compatibility alias
 export const MyOrders = MyOrdersPage

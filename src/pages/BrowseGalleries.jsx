@@ -5,6 +5,7 @@ import { useRole } from '../context/RoleContext'
 import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getGalleryLogoUrl, getGalleryBannerUrl } from '../utils/image'
 import useHideOnScroll from '../hooks/useHideOnScroll'
+import { useLanguage } from '../i18n/LanguageContext'
 
 function getInitials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'GA'
@@ -12,6 +13,7 @@ function getInitials(name = '') {
 
 export default function BrowseGalleries() {
   const { role } = useRole()
+  const { t, formatNumber } = useLanguage()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -75,14 +77,14 @@ export default function BrowseGalleries() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { doSearch(); setPage(1) } }}
-            placeholder="Search galleries..."
+            placeholder={t('galleries.searchPh')}
             className="bg-transparent outline-none flex-1 text-sm min-w-0"
           />
         </div>
         <div className="flex gap-2 shrink-0">
-          <button onClick={() => { doSearch(); setPage(1) }} className="bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap">Search</button>
+          <button onClick={() => { doSearch(); setPage(1) }} className="bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap">{t('galleries.searchBtn')}</button>
           <select value={city} onChange={(e) => { setCity(e.target.value); setPage(1) }} className="border rounded-full px-3 py-2 text-sm bg-white min-w-[130px]">
-            <option>All Cities</option>
+            <option value="All">{t('galleries.allCities')}</option>
             <option>New York</option>
             <option>Stockholm</option>
             <option>Milan</option>
@@ -93,7 +95,7 @@ export default function BrowseGalleries() {
         </div>
       </div>
 
-      {loading && <div className="text-center py-4 text-sm text-[#8A8078]">Loading…</div>}
+      {loading && <div className="text-center py-4 text-sm text-[#8A8078]">{t('galleries.loading')}</div>}
 
       <div className="grid md:grid-cols-2 gap-6">
         {(loading ? Array.from({ length: 4 }).map((_, i) => ({ id: `skeleton-${i}`, skeleton: true })) : galleries).map((g) => {
@@ -123,13 +125,13 @@ export default function BrowseGalleries() {
                   </div>
                   <div className="pt-6 min-w-0">
                     <div className="font-medium text-sm truncate">{g.name}</div>
-                    <div className="text-xs text-[#8A8078] truncate">{g.city}{g.country ? `, ${g.country}` : ''}{productsCount != null ? ` • ${productsCount} products` : ''}</div>
+                    <div className="text-xs text-[#8A8078] truncate">{g.city}{g.country ? `, ${g.country}` : ''}{productsCount != null ? ` • ${t('galleries.products', { n: formatNumber(productsCount) })}` : ''}</div>
                   </div>
                 </div>
-                <p className="text-xs text-[#8A8078] mt-3 line-clamp-2">{g.description || 'Curated showroom featuring handcrafted furniture and timeless design pieces.'}</p>
+                <p className="text-xs text-[#8A8078] mt-3 line-clamp-2">{g.description || t('galleries.fallbackDesc')}</p>
                 <div className="flex gap-2 mt-3">
-                  <button onClick={() => navigate(`/galleries/${g.id}`)} className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">View Showroom</button>
-                  {role === 'admin' && <><button className="px-3 border rounded-lg text-xs">Edit</button><button className="px-3 bg-[#B3402E] text-white rounded-lg text-xs">Delete</button></>}
+                  <button onClick={() => navigate(`/galleries/${g.id}`)} className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">{t('galleries.viewShowroom')}</button>
+                  {role === 'admin' && <><button className="px-3 border rounded-lg text-xs">{t('common.edit')}</button><button className="px-3 bg-[#B3402E] text-white rounded-lg text-xs">{t('common.delete')}</button></>}
                 </div>
               </div>
             </div>
@@ -138,14 +140,14 @@ export default function BrowseGalleries() {
       </div>
 
       {!loading && galleries.length === 0 && (
-        <div className="text-center py-12 bg-white border border-dashed rounded-xl">No galleries — <button onClick={() => { setInput(''); setKeyword(''); setCity('All'); setPage(1) }} className="text-[#C19A6B] underline">Clear filters</button></div>
+        <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('galleries.empty')} <button onClick={() => { setInput(''); setKeyword(''); setCity('All'); setPage(1) }} className="text-[#C19A6B] underline">{t('galleries.clearFilters')}</button></div>
       )}
 
       {pagination && (
         <div className="flex justify-center items-center gap-2 pt-2">
-          <button disabled={!pagination.prev} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">Prev</button>
-          <span className="text-sm text-[#8A8078]">Page {pagination.currentPage} / {pagination.numberOfPages || 1}</span>
-          <button disabled={!pagination.next} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">Next</button>
+          <button disabled={!pagination.prev} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.prev')}</button>
+          <span className="text-sm text-[#8A8078]">{t('galleries.page', { cur: formatNumber(pagination.currentPage), total: formatNumber(pagination.numberOfPages || 1) })}</span>
+          <button disabled={!pagination.next} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.next')}</button>
         </div>
       )}
     </div>

@@ -7,6 +7,7 @@ import { getGalleryLogoUrl, getGalleryBannerUrl, STORAGE_BASE } from '../utils/i
 import ProductCard from '../components/ProductCard'
 import ShareGalleryModal from '../components/ShareGalleryModal'
 import useHideOnScroll from '../hooks/useHideOnScroll'
+import { useLanguage } from '../i18n/LanguageContext'
 
 function getInitials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'GA'
@@ -25,6 +26,7 @@ async function getGalleryProducts(galleryId, params = {}) {
 // {{LURL}}/api/v1/employees?galleryId=412c1b0f-82a0-4bbc-9b6a-c351d1246df1
 export default function GalleryProfile() {
   const { id } = useParams()
+  const { t, formatNumber } = useLanguage()
   const navigate = useNavigate()
 
   const [gallery, setGallery] = useState(null)
@@ -113,7 +115,7 @@ export default function GalleryProfile() {
   }
 
   if (galleryError || !gallery) {
-    return <div className="text-center py-16 bg-white border rounded-xl"><h2 className="font-serif text-2xl">Gallery not found</h2><p className="text-sm text-[#8A8078]">{galleryError}</p><button onClick={() => navigate('/galleries')} className="text-[#C19A6B] text-sm underline mt-2">Back to galleries</button></div>
+    return <div className="text-center py-16 bg-white border rounded-xl"><h2 className="font-serif text-2xl">{t('galleryProfile.notFound')}</h2><p className="text-sm text-[#8A8078]">{galleryError}</p><button onClick={() => navigate('/galleries')} className="text-[#C19A6B] text-sm underline mt-2">{t('galleryProfile.back')}</button></div>
   }
 
   const bannerSrc = getGalleryBannerUrl(gallery)
@@ -135,18 +137,18 @@ export default function GalleryProfile() {
             <div className="pt-10 min-w-0">
               <h1 className="font-serif text-2xl flex items-center gap-2 truncate">{gallery.name} <span className="w-2 h-2 rounded-full bg-[#4C7A4C] shrink-0"></span></h1>
               <div className="text-xs text-[#8A8078] flex items-center gap-1 truncate"><span className="material-symbols-outlined text-[14px]">location_on</span> {gallery.street ? `${gallery.street} · ` : ''}{gallery.city}{gallery.country ? ` · ${gallery.country}` : ''}</div>
-              <p className="text-xs text-[#8A8078] mt-1 line-clamp-2">{gallery.description || 'Curated showroom featuring handcrafted furniture and timeless design pieces.'}</p>
-              <div className="text-xs text-[#8A8078] mt-2">{pagination ? `${pagination.currentPage ? '' : ''}` : ''}{products.length} products{memberYear ? ` • member since ${memberYear}` : ''}</div>
+              <p className="text-xs text-[#8A8078] mt-1 line-clamp-2">{gallery.description || t('galleries.fallbackDesc')}</p>
+              <div className="text-xs text-[#8A8078] mt-2">{pagination ? `${pagination.currentPage ? '' : ''}` : ''}{t('galleryProfile.products', { n: formatNumber(products.length) })}{memberYear ? ` ${t('galleryProfile.memberSince', { year: formatNumber(memberYear) })}` : ''}</div>
             </div>
-            <div className="ml-auto hidden md:flex gap-2 pt-10 shrink-0 items-center">
+            <div className="ms-auto hidden md:flex gap-2 pt-10 shrink-0 items-center">
               {gallery.mapAddressUrl && <a href={gallery.mapAddressUrl} target="_blank" rel="noreferrer" title="Open location in Google Maps" aria-label="Open gallery location in Google Maps" className="w-10 h-10 bg-[#4B3621] text-white hover:bg-[#33210d] rounded-full flex items-center justify-center transition-colors"><span className="material-symbols-outlined text-[20px]">location_on</span></a>}
-              {gallery.phone && <a href={`tel:${gallery.phone}`} className="border px-4 py-1.5 rounded-full text-xs flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">call</span> Call</a>}
+              {gallery.phone && <a href={`tel:${gallery.phone}`} className="border px-4 py-1.5 rounded-full text-xs flex items-center gap-1"><span className="material-symbols-outlined text-[16px]">call</span> {t('galleryProfile.call')}</a>}
               <button onClick={() => setShareOpen(true)} aria-label="Share gallery" title="Share gallery" className="w-10 h-10 border rounded-full flex items-center justify-center hover:bg-[#FAF7F2]"><span className="material-symbols-outlined text-[20px]">share</span></button>
             </div>
           </div>
           <div className="md:hidden flex gap-2 mt-4 items-center">
             {gallery.mapAddressUrl && <a href={gallery.mapAddressUrl} target="_blank" rel="noreferrer" title="Open location in Google Maps" aria-label="Open gallery location in Google Maps" className="w-11 h-11 bg-[#4B3621] text-white rounded-full flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[22px]">location_on</span></a>}
-            {gallery.phone && <a href={`tel:${gallery.phone}`} className="flex-1 border px-4 py-2 rounded-full text-xs flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]">call</span> Call</a>}
+            {gallery.phone && <a href={`tel:${gallery.phone}`} className="flex-1 border px-4 py-2 rounded-full text-xs flex items-center justify-center gap-1"><span className="material-symbols-outlined text-[16px]">call</span> {t('galleryProfile.call')}</a>}
             <button onClick={() => setShareOpen(true)} aria-label="Share gallery" className="w-11 h-11 border rounded-full flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-[22px]">share</span></button>
           </div>
         </div>
@@ -155,9 +157,9 @@ export default function GalleryProfile() {
       <div className={`bg-white border border-[#E7DFD3] rounded-full p-2 flex items-center gap-2 sticky top-[72px] z-30 transition-all duration-300 motion-reduce:transition-none ${searchVisible ? 'translate-y-0 opacity-100' : '-translate-y-[120%] opacity-0 pointer-events-none'}`}>
         <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-full px-4 py-2 min-w-0">
           <span className="material-symbols-outlined text-[#8A8078]">search</span>
-          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { doSearch(); setPage(1) } }} placeholder="Search in this gallery..." className="bg-transparent outline-none flex-1 text-sm min-w-0" />
+          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { doSearch(); setPage(1) } }} placeholder={t('galleryProfile.searchPh')} className="bg-transparent outline-none flex-1 text-sm min-w-0" />
         </div>
-        <button onClick={() => { doSearch(); setPage(1) }} className="hidden sm:block bg-[#4B3621] text-white px-5 py-2 rounded-full text-xs">Search</button>
+        <button onClick={() => { doSearch(); setPage(1) }} className="hidden sm:block bg-[#4B3621] text-white px-5 py-2 rounded-full text-xs">{t('galleryProfile.searchBtn')}</button>
         <button className="w-9 h-9 border rounded-full flex items-center justify-center shrink-0"><span className="material-symbols-outlined">tune</span></button>
         <div className="hidden md:flex gap-1 shrink-0">
           <button onClick={() => setView('grid')} className={`w-8 h-8 rounded-full flex items-center justify-center ${view === 'grid' ? 'bg-[#4B3621] text-white' : 'border'}`}><span className="material-symbols-outlined text-[18px]">grid_view</span></button>
@@ -166,8 +168,8 @@ export default function GalleryProfile() {
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="text-xs text-[#8A8078]">{loadingProducts ? 'Loading…' : `${products.length} products${pagination ? ` • page ${pagination.currentPage}/${pagination.numberOfPages || 1}` : ''}`}</div>
-        {(keyword || page !== 1) && <button onClick={() => { setInput(''); setKeyword(''); setPage(1) }} className="text-xs text-[#C19A6B] underline">Clear search</button>}
+        <div className="text-xs text-[#8A8078]">{loadingProducts ? t('galleryProfile.loading') : `${t('galleryProfile.products', { n: formatNumber(products.length) })}${pagination ? ` ${t('galleryProfile.pageOf', { cur: formatNumber(pagination.currentPage), total: formatNumber(pagination.numberOfPages || 1) })}` : ''}`}</div>
+        {(keyword || page !== 1) && <button onClick={() => { setInput(''); setKeyword(''); setPage(1) }} className="text-xs text-[#C19A6B] underline">{t('galleryProfile.clearSearch')}</button>}
       </div>
 
       {productsError && <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{productsError}</div>}
@@ -178,7 +180,7 @@ export default function GalleryProfile() {
           {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden animate-pulse"><div className="aspect-[4/3] bg-[#E7DFD3]/60" /><div className="p-3"><div className="h-4 bg-[#E7DFD3]/60 rounded w-3/4" /></div></div>)}
         </div>
       ) : products.length === 0 ? (
-        <div className="text-center py-12 bg-white border border-dashed rounded-xl">No products in this gallery — {keyword ? <button onClick={() => { setInput(''); setKeyword('') }} className="text-[#C19A6B] underline">Clear search</button> : 'check back later'}</div>
+        <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('galleryProfile.noProducts')} {keyword ? <button onClick={() => { setInput(''); setKeyword('') }} className="text-[#C19A6B] underline">{t('galleryProfile.clearSearch')}</button> : t('galleryProfile.checkLater')}</div>
       ) : (
         <div className={view === 'grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'grid grid-cols-1 gap-4'}>
           {products.map((p) => (
@@ -194,15 +196,15 @@ export default function GalleryProfile() {
 
       {pagination && (
         <div className="flex justify-center items-center gap-2">
-          <button disabled={!pagination.prev} onClick={() => setPage((x) => Math.max(1, x - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">Prev</button>
-          <span className="text-sm text-[#8A8078]">Page {pagination.currentPage} / {pagination.numberOfPages || 1}</span>
-          <button disabled={!pagination.next} onClick={() => setPage((x) => x + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">Next</button>
+          <button disabled={!pagination.prev} onClick={() => setPage((x) => Math.max(1, x - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.prev')}</button>
+          <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage)} / {formatNumber(pagination.numberOfPages || 1)}</span>
+          <button disabled={!pagination.next} onClick={() => setPage((x) => x + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.next')}</button>
         </div>
       )}
 
       {gallery.images?.length > 0 && (
         <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
-          <h3 className="font-medium text-sm mb-3">Gallery images</h3>
+          <h3 className="font-medium text-sm mb-3">{t('galleryProfile.galleryImages')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {gallery.images.map((f, i) => {
               const src = f.startsWith('http') ? f : `${STORAGE_BASE}/storage/uploads/galleries/${gallery.storageFolder}/${f}`

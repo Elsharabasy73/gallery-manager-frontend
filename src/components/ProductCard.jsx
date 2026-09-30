@@ -3,30 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import { useRole } from '../context/RoleContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
+import { useLanguage } from '../i18n/LanguageContext'
 import { getProductImageUrl } from '../utils/image'
-
-function formatPrice(price) {
-  const n = Number(price)
-  if (Number.isNaN(n)) return price
-  return n.toLocaleString()
-}
 
 /**
  * Reusable ProductCard — single source of truth for product presentation.
- * Wishlist affordance is visible ONLY when role === 'customer' (fixes bug where
- * Home showed heart for gallery_owner / employee / admin / guest while Products hid it).
- *
- * Props:
- *  - product: product object
- *  - variant: 'default' | 'home' | 'wishlist' — 'home' minimal, 'default' with View/Save or Admin, 'wishlist' with View/Remove (for Wishlist page)
- *  - aspect: tailwind aspect class, e.g. 'aspect-[4/3]'
- *  - onWishlistError: optional callback(msg) to bubble wishlist errors to parent banner
+ * Wishlist affordance is visible ONLY when role === 'customer'.
  */
 export default function ProductCard({ product: p, variant = 'default', aspect = 'aspect-[4/3]', onWishlistError, onEdit, onDelete, deleting }) {
   const navigate = useNavigate()
   const { role, isAuthenticated } = useRole()
   const { isWishlisted, toggle } = useWishlist()
   const { addItem: addToCart, canAccessCart } = useCart()
+  const { t, formatPrice } = useLanguage()
   const [toggling, setToggling] = useState(false)
   const [addingToCart, setAddingToCart] = useState(false)
 
@@ -41,7 +30,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
   const stock = p?.stock
   const wished = pid ? isWishlisted(pid) : false
 
-  // Strict rule: only customers may see wishlist. Covers gallery_owner, employee, admin, and guest (role === null).
+  // Strict rule: only customers may see wishlist.
   const showWishlist = role === 'customer'
   const showAdminBadge = role === 'admin'
   const showAddToCart = role === 'customer' && Number(stock) > 0 && p?.status === 'active'
@@ -57,7 +46,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
     try {
       await toggle(pid)
     } catch (err) {
-      const msg = err?.message || 'Wishlist failed'
+      const msg = err?.message || t('card.wishlistFailed')
       if (onWishlistError) onWishlistError(msg)
     } finally {
       setToggling(false)
@@ -74,9 +63,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
     setAddingToCart(true)
     try {
       await addToCart(pid, 1)
-      // Success - cart context will update automatically
     } catch (err) {
-      // Error silently handled - cart context will show error if needed
       console.error('Add to cart failed:', err.message)
     } finally {
       setAddingToCart(false)
@@ -87,7 +74,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
     if (pid) navigate(`/products/${pid}`)
   }
 
-  // —— HOME VARIANT: minimal card (previous Home styling) ——
+  // —— HOME VARIANT ——
   if (variant === 'home') {
     return (
       <div className="group cursor-pointer" onClick={handleNavigate}>
@@ -101,10 +88,10 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
           {showWishlist && (
             <button
               onClick={handleWishlist}
-              className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition ${
+              className={`absolute top-2 end-2 w-8 h-8 rounded-full flex items-center justify-center transition ${
                 wished ? 'bg-[#C19A6B] text-white' : 'bg-white/90 hover:bg-white'
               }`}
-              aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+              aria-label={wished ? t('card.removeWishlist') : t('card.addWishlist')}
               disabled={toggling}
             >
               <span className={`material-symbols-outlined text-[18px] ${wished ? 'icon-fill' : ''}`}>favorite</span>
@@ -112,23 +99,23 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
           )}
           {Number(stock) === 0 && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-              <span className="bg-[#4B3621] text-white text-xs px-3 py-1 rounded-full">Out of stock</span>
+              <span className="bg-[#4B3621] text-white text-xs px-3 py-1 rounded-full">{t('card.outOfStock')}</span>
             </div>
           )}
         </div>
         <div className="flex justify-between text-sm gap-2">
           <span className="font-medium truncate">{p?.name}</span>
-          <span className="font-semibold whitespace-nowrap">{formatPrice(price)} EGP</span>
+          <span className="font-semibold whitespace-nowrap">{formatPrice(price)}</span>
         </div>
         <div className="text-xs text-[#8A8078] flex items-center gap-1 truncate">
           <span className="material-symbols-outlined text-[14px]">storefront</span>
-          {galleryName || categoryName || 'Gallery'}
+          {galleryName || categoryName || t('card.galleryFallback')}
         </div>
       </div>
     )
   }
 
-  // —— WISHLIST VARIANT: View + Remove (Wishlist page, customer-only) ——
+  // —— WISHLIST VARIANT ——
   if (variant === 'wishlist') {
     return (
       <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden group">
@@ -136,14 +123,14 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
           <img src={img} alt={p?.name} className="w-full h-full object-cover group-hover:scale-[1.02] transition" loading="lazy" />
           {Number(stock) === 0 && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-              <span className="bg-[#4B3621] text-white text-xs px-3 py-1 rounded-full">Out of stock</span>
+              <span className="bg-[#4B3621] text-white text-xs px-3 py-1 rounded-full">{t('card.outOfStock')}</span>
             </div>
           )}
         </div>
         <div className="p-3">
           <div className="flex justify-between gap-2">
             <span className="text-sm font-medium truncate">{p?.name}</span>
-            <span className="text-sm font-semibold whitespace-nowrap">{formatPrice(price)} EGP</span>
+            <span className="text-sm font-semibold whitespace-nowrap">{formatPrice(price)}</span>
           </div>
           <div className="text-xs text-[#8A8078] truncate">{galleryName}</div>
           <div className="flex gap-2 mt-3">
@@ -152,10 +139,10 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
               disabled={toggling}
               className="flex-1 border py-1.5 rounded-lg text-xs flex items-center justify-center gap-1 bg-white hover:bg-[#FAF7F2] disabled:opacity-60"
             >
-              <span className="material-symbols-outlined text-[16px] icon-fill text-[#C19A6B]">favorite</span> {toggling ? 'Removing...' : 'Remove'}
+              <span className="material-symbols-outlined text-[16px] icon-fill text-[#C19A6B]">favorite</span> {toggling ? t('card.removing') : t('card.remove')}
             </button>
             <button onClick={handleNavigate} className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">
-              View product
+              {t('card.viewProduct')}
             </button>
           </div>
         </div>
@@ -163,29 +150,29 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
     )
   }
 
-  // —— DEFAULT VARIANT: full card with action bar (used in Products, galleries, etc.) ——
+  // —— DEFAULT VARIANT ——
   return (
     <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden group">
       <div className={`relative ${aspect} overflow-hidden cursor-pointer`} onClick={handleNavigate}>
         <img src={img} alt={p?.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" />
         {Number(stock) === 0 && (
           <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-            <span className="bg-[#4B3621] text-white text-xs px-3 py-1 rounded-full">Out of stock</span>
+            <span className="bg-[#4B3621] text-white text-xs px-3 py-1 rounded-full">{t('card.outOfStock')}</span>
           </div>
         )}
         {showAdminBadge && (
-          <div className="absolute top-2 left-2 flex gap-1">
-            <span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full">Admin</span>
+          <div className="absolute top-2 start-2 flex gap-1">
+            <span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full">{t('nav.admin')}</span>
           </div>
         )}
         {showWishlist && (
           <button
             onClick={handleWishlist}
             disabled={toggling}
-            className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition ${
+            className={`absolute top-2 end-2 w-8 h-8 rounded-full flex items-center justify-center transition ${
               wished ? 'bg-[#C19A6B] text-white' : 'bg-white/90 hover:bg-white'
             }`}
-            aria-label={wished ? 'Remove from wishlist' : 'Add to wishlist'}
+            aria-label={wished ? t('card.removeWishlist') : t('card.addWishlist')}
           >
             <span className={`material-symbols-outlined text-[18px] ${wished ? 'icon-fill' : ''}`}>favorite</span>
           </button>
@@ -194,7 +181,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
       <div className="p-4">
         <div className="flex justify-between gap-2">
           <h3 className="font-medium text-sm truncate">{p?.name}</h3>
-          <span className="text-sm font-semibold whitespace-nowrap">{formatPrice(price)} EGP</span>
+          <span className="text-sm font-semibold whitespace-nowrap">{formatPrice(price)}</span>
         </div>
         <div className="text-xs text-[#8A8078] truncate">
           {galleryName}
@@ -203,7 +190,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
         </div>
         <div className="flex gap-2 mt-3">
           <button onClick={handleNavigate} className="flex-1 border py-1.5 rounded-lg text-xs">
-            View
+            {t('card.view')}
           </button>
           {showAddToCart && (
             <button
@@ -212,7 +199,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
               className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs disabled:opacity-60 flex items-center justify-center gap-1"
             >
               <span className="material-symbols-outlined text-[14px]">shopping_cart</span>
-              {addingToCart ? 'Adding...' : 'Add to Cart'}
+              {addingToCart ? t('card.adding') : t('card.addToCart')}
             </button>
           )}
           {showWishlist && !showAddToCart && (
@@ -224,13 +211,13 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
               }`}
             >
               <span className={`material-symbols-outlined text-[14px] ${wished ? 'icon-fill' : ''}`}>favorite</span>{' '}
-              {wished ? 'Saved' : 'Save'}
+              {wished ? t('card.saved') : t('card.save')}
             </button>
           )}
           {showAdminBadge && (
             <>
-              <button onClick={(e)=>{e.stopPropagation(); onEdit?.(p)}} className="px-3 py-1.5 rounded-lg bg-white border text-xs hover:bg-[#FAF7F2]">Edit</button>
-              <button onClick={(e)=>{e.stopPropagation(); onDelete?.(p)}} disabled={!!deleting} className="px-3 py-1.5 rounded-lg bg-[#B3402E] text-white text-xs disabled:opacity-60">{deleting?'Deleting...':'Delete'}</button>
+              <button onClick={(e)=>{e.stopPropagation(); onEdit?.(p)}} className="px-3 py-1.5 rounded-lg bg-white border text-xs hover:bg-[#FAF7F2]">{t('card.edit')}</button>
+              <button onClick={(e)=>{e.stopPropagation(); onDelete?.(p)}} disabled={!!deleting} className="px-3 py-1.5 rounded-lg bg-[#B3402E] text-white text-xs disabled:opacity-60">{deleting?t('card.deleting'):t('card.delete')}</button>
             </>
           )}
         </div>

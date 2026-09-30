@@ -5,12 +5,7 @@ import { getProducts, unwrapProducts } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
 import ProductCard from '../components/ProductCard'
 import useHideOnScroll from '../hooks/useHideOnScroll'
-
-const SORT_OPTIONS = [
-  { value: '-createdAt', label: 'Newest' },
-  { value: 'price', label: 'Price low→high' },
-  { value: '-price', label: 'Price high→low' },
-]
+import { useLanguage } from '../i18n/LanguageContext'
 
 const FALLBACK_CATEGORIES = [
   { id: 'sofas', name: 'Sofas', arabicName: 'صوفا', slug: 'sofas' },
@@ -21,6 +16,7 @@ const FALLBACK_CATEGORIES = [
 ]
 
 export default function Products() {
+  const { t, categoryLabel, formatNumber } = useLanguage()
   const [wishError, setWishError] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -33,6 +29,11 @@ export default function Products() {
   const doSearch = () => { setQ(input.trim()); setPage(1) }
 
   const [sort, setSort] = useState(searchParams.get('sort') || '-createdAt')
+  const SORT_OPTIONS = [
+    { value: '-createdAt', label: t('products.sortNewest') },
+    { value: 'price', label: t('products.sortLowHigh') },
+    { value: '-price', label: t('products.sortHighLow') },
+  ]
 
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
@@ -170,10 +171,10 @@ export default function Products() {
         <div className="flex flex-col md:flex-row gap-3 items-center">
           <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] border border-[#E7DFD3] rounded-full px-4 py-2 w-full min-w-0">
             <span className="material-symbols-outlined text-[#8A8078]">search</span>
-            <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') doSearch() }} placeholder="Search furniture..." className="bg-transparent outline-none flex-1 text-sm min-w-0" />
+            <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') doSearch() }} placeholder={t('products.searchPh')} className="bg-transparent outline-none flex-1 text-sm min-w-0" />
           </div>
           <div className="flex gap-2 w-full md:w-auto shrink-0">
-            <button onClick={doSearch} className="flex-1 md:flex-none bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap">Search</button>
+            <button onClick={doSearch} className="flex-1 md:flex-none bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap">{t('products.searchBtn')}</button>
             <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1) }} className="flex-1 md:flex-none border border-[#E7DFD3] rounded-full px-3 py-2 text-sm bg-white min-w-[140px]">
               {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -185,10 +186,10 @@ export default function Products() {
             onClick={() => toggle('All')}
             className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${activeCats.includes('All') ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
           >
-            All
+            {t('products.all')}
           </button>
           {displayCategories.map((c) => {
-            const label = c.arabicName ? `${c.name} • ${c.arabicName}` : c.name
+            const label = categoryLabel(c)
             const active = activeCats.includes(c.name)
             return (
               <button
@@ -204,23 +205,23 @@ export default function Products() {
         </div>
         <div className="flex flex-col sm:flex-row gap-2 mt-3">
           <div className="flex gap-2 flex-1 min-w-0">
-            <input type="number" inputMode="numeric" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="Min price" className="flex-1 min-w-0 border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2]" />
-            <input type="number" inputMode="numeric" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder="Max price" className="flex-1 min-w-0 border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2]" />
+            <input type="number" inputMode="numeric" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder={t('products.minPrice')} className="flex-1 min-w-0 border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2]" />
+            <input type="number" inputMode="numeric" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder={t('products.maxPrice')} className="flex-1 min-w-0 border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2]" />
           </div>
           <div className="flex gap-2 shrink-0">
-            <button onClick={applyPrice} className="px-4 py-1.5 rounded-full border text-sm bg-white whitespace-nowrap">Apply</button>
-            <button onClick={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt'); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('keyword'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">Clear</button>
+            <button onClick={applyPrice} className="px-4 py-1.5 rounded-full border text-sm bg-white whitespace-nowrap">{t('products.apply')}</button>
+            <button onClick={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt'); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('keyword'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">{t('products.clear')}</button>
           </div>
         </div>
       </div>
 
       {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
-      {loading && <div className="text-center py-4 text-sm text-[#8A8078]">Loading…</div>}
+      {loading && <div className="text-center py-4 text-sm text-[#8A8078]">{t('products.loading')}</div>}
 
       <div className="flex items-center justify-between text-xs text-[#8A8078]">
-        <span>{loading ? 'Loading…' : `${filtered.length} products${pagination ? ` • page ${pagination.currentPage || page}/${pagination.numberOfPages || 1}` : ''}`}</span>
+        <span>{loading ? t('products.loading') : `${t('products.count', { n: formatNumber(filtered.length) })}${pagination ? ` ${t('products.pageOf', { cur: formatNumber(pagination.currentPage || page), total: formatNumber(pagination.numberOfPages || 1) })}` : ''}`}</span>
         {(q || appliedMin || appliedMax || activeCats[0] !== 'All' || page !== 1) && (
-          <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPriceMin(''); setPriceMax(''); setPage(1); const np = new URLSearchParams(); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">Clear filters</button>
+          <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPriceMin(''); setPriceMax(''); setPage(1); const np = new URLSearchParams(); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button>
         )}
       </div>
 
@@ -229,13 +230,13 @@ export default function Products() {
           <ProductCard key={String(p._id || p.id)} product={p} onWishlistError={setWishError} />
         ))}
       </div>
-      {filtered.length === 0 && !loading && <div className="text-center py-12 bg-white border border-dashed rounded-xl">No products — <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">Clear filters</button></div>}
+      {filtered.length === 0 && !loading && <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('products.empty')} <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button></div>}
 
       {pagination && (
         <div className="flex justify-center items-center gap-2 pt-2">
-          <button disabled={!pagination.prev} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">Prev</button>
-          <span className="text-sm text-[#8A8078]">Page {pagination.currentPage} / {pagination.numberOfPages || 1}</span>
-          <button disabled={!pagination.next} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">Next</button>
+          <button disabled={!pagination.prev} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.prev')}</button>
+          <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage)} / {formatNumber(pagination.numberOfPages || 1)}</span>
+          <button disabled={!pagination.next} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.next')}</button>
         </div>
       )}
     </div>

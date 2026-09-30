@@ -15,9 +15,11 @@ import MyOrdersPage from './pages/MyOrdersPage'
 import { Overview, MyGallery, MyProducts, AddEditProduct, GalleryOrders, OrderDetails, Employees, AddEmployee, CreateGallery } from './pages/DashboardPages'
 import { AdminUsers, AdminProducts, AdminGalleries, AdminOrders, AdminOverview, AdminCategories } from './pages/AdminPages'
 import Profile from './pages/Profile'
+import { useLanguage } from './i18n/LanguageContext'
 
 function NotFound(){
-  return <div className="text-center py-16 bg-white border rounded-xl"><h2 className="font-serif text-2xl">404 — Not found</h2><p className="text-sm text-[#8A8078]">This page does not exist.</p><a href="/" className="text-[#C19A6B] text-sm underline">Go home</a></div>
+  const { t } = useLanguage()
+  return <div className="text-center py-16 bg-white border rounded-xl"><h2 className="font-serif text-2xl">{t('notFound.title')}</h2><p className="text-sm text-[#8A8078]">{t('notFound.text')}</p><a href="/" className="text-[#C19A6B] text-sm underline">{t('common.goHome')}</a></div>
 }
 
 export default function App(){

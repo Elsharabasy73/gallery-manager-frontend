@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Atelier Gallery — Furniture crafted for living</title>
+    <title>أتيليه جاليري — أثاث مُصمم للحياة</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
@@ -27,14 +27,16 @@
               error: "#B3402E",
             },
             fontFamily: {
-              serif: ["Playfair Display","serif"],
-              sans: ["Inter","sans-serif"]
+              serif: ["Playfair Display","Cairo","serif"],
+              sans: ["Inter","Cairo","Tajawal","sans-serif"]
             }
           }
         }
       }
     </script>
     <style>
+      html[dir="rtl"] body{font-family:"Cairo","Tajawal","Inter",sans-serif}
+      html[dir="rtl"] .font-serif{font-family:"Cairo","Tajawal",serif !important}
       .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24}
       .icon-fill{font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24}
       .hide-scrollbar::-webkit-scrollbar{display:none}
