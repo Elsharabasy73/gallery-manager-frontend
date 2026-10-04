@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { products as mockProducts } from '../data/mockData'
 import { getProducts, unwrapProducts } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
 import ProductCard from '../components/ProductCard'
@@ -41,8 +40,10 @@ export default function Products() {
   const [appliedMax, setAppliedMax] = useState('')
   const applyPrice = () => { setAppliedMin(priceMin.trim()); setAppliedMax(priceMax.trim()); setPage(1) }
 
-  const [items, setItems] = useState(mockProducts)
-  const [loading, setLoading] = useState(false)
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [reload, setReload] = useState(0)
   const [page, setPage] = useState(() => parseInt(searchParams.get('page') || '1', 10))
   const [pagination, setPagination] = useState(null)
   const { visible: filtersVisible } = useHideOnScroll({ threshold: 8, topBuffer: 160 })
@@ -112,6 +113,7 @@ export default function Products() {
     let cancelled = false
     async function run() {
       setLoading(true)
+      setLoadError('')
       try {
         const params = {
           limit: 12,
@@ -138,13 +140,13 @@ export default function Products() {
         const res = await getProducts(params)
         if (cancelled) return
         const data = unwrapProducts(res)
-        if (data.length) setItems(data)
-        else if (res?.results === 0) setItems([])
+        setItems(data)
         setPagination(res?.paginationResult || res?.pagination || null)
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setItems(mockProducts)
+          setItems([])
           setPagination(null)
+          setLoadError(err?.message || '')
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -152,7 +154,7 @@ export default function Products() {
     }
     run()
     return () => { cancelled = true }
-  }, [q, sort, appliedMin, appliedMax, activeCats, apiCategories, displayCategories, searchParams, page])
+  }, [q, sort, appliedMin, appliedMax, activeCats, apiCategories, displayCategories, searchParams, page, reload])
 
   const filtered = items.filter((p) => {
     const catName = p.category?.name || (typeof p.category === 'string' ? p.category : '') || ''
@@ -216,21 +218,34 @@ export default function Products() {
       </div>
 
       {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
-      {loading && <div className="text-center py-4 text-sm text-[#8A8078]">{t('products.loading')}</div>}
 
-      <div className="flex items-center justify-between text-xs text-[#8A8078]">
-        <span>{loading ? t('products.loading') : `${t('products.count', { n: formatNumber(filtered.length) })}${pagination ? ` ${t('products.pageOf', { cur: formatNumber(pagination.currentPage || page), total: formatNumber(pagination.numberOfPages || 1) })}` : ''}`}</span>
-        {(q || appliedMin || appliedMax || activeCats[0] !== 'All' || page !== 1) && (
-          <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPriceMin(''); setPriceMax(''); setPage(1); const np = new URLSearchParams(); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button>
-        )}
-      </div>
+      {loading ? (
+        <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-[#E7DFD3] bg-white py-12" role="status" aria-label={t('products.loading')}>
+          <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#E7DFD3] border-t-[#C19A6B]" aria-hidden="true" />
+          <span className="text-sm text-[#8A8078]">{t('products.loading')}</span>
+        </div>
+      ) : loadError ? (
+        <div className="rounded-xl border border-[#E7DFD3] bg-white py-12 text-center">
+          <p className="text-sm text-[#8A8078]">{loadError || t('products.loadError')}</p>
+          <button onClick={() => setReload((value) => value + 1)} className="mt-3 text-sm text-[#C19A6B] underline">{t('products.retry')}</button>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between text-xs text-[#8A8078]">
+            <span>{`${t('products.count', { n: formatNumber(filtered.length) })}${pagination ? ` ${t('products.pageOf', { cur: formatNumber(pagination.currentPage || page), total: formatNumber(pagination.numberOfPages || 1) })}` : ''}`}</span>
+            {(q || appliedMin || appliedMax || activeCats[0] !== 'All' || page !== 1) && (
+              <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPriceMin(''); setPriceMax(''); setPage(1); const np = new URLSearchParams(); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button>
+            )}
+          </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((p) => (
-          <ProductCard key={String(p._id || p.id)} product={p} onWishlistError={setWishError} />
-        ))}
-      </div>
-      {filtered.length === 0 && !loading && <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('products.empty')} <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button></div>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((p) => (
+              <ProductCard key={String(p._id || p.id)} product={p} onWishlistError={setWishError} />
+            ))}
+          </div>
+          {filtered.length === 0 && <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('products.empty')} <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button></div>}
+        </>
+      )}
 
       {pagination && (
         <div className="flex justify-center items-center gap-2 pt-2">

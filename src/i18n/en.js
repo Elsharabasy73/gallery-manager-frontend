@@ -109,6 +109,8 @@ export default {
   'products.clearFilters': 'Clear filters',
   'products.empty': 'No products —',
   'products.loading': 'Loading…',
+  'products.loadError': 'Could not load products. Please try again.',
+  'products.retry': 'Try again',
 
   'detail.loading': 'Loading product...',
   'detail.notFound': 'Product not found',

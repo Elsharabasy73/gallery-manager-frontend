@@ -109,6 +109,8 @@ export default {
   'products.clearFilters': 'مسح الفلاتر',
   'products.empty': 'لا توجد منتجات —',
   'products.loading': 'جارٍ التحميل…',
+  'products.loadError': 'تعذر تحميل المنتجات. يرجى المحاولة مرة أخرى.',
+  'products.retry': 'حاول مرة أخرى',
 
   'detail.loading': 'جارٍ تحميل المنتج...',
   'detail.notFound': 'المنتج غير موجود',

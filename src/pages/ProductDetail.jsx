@@ -119,7 +119,11 @@ export default function ProductDetail(){
 
   const pid = p._id || p.id || id
   const wish = isWishlisted(String(pid))
-  const img = getProductImageUrl(p) || p.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80'
+  const img = getProductImageUrl({
+    mainImageUrl: p.mainImageUrl,
+    images: p.images,
+    storageFolder: p.storageFolder,
+  })
   // Handle gallery data - could be object, string ID, or null
   const galleryObj = p.gallery && typeof p.gallery === 'object' ? p.gallery : null
   const galleryName = galleryObj?.name || (typeof p.gallery === 'string' ? '' : t('detail.unknownGallery'))
@@ -141,11 +145,7 @@ export default function ProductDetail(){
     const list = []
     if (p.mainImageUrl) list.push(p.mainImageUrl)
     if (Array.isArray(p.images)) list.push(...p.images)
-    if (list.length === 0) list.push(img)
-    if (list.length < 4) {
-      const fallbacks = ['https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=300&q=80','https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&w=300&q=80']
-      fallbacks.forEach(f=>{ if(list.length < 4) list.push(f)})
-    }
+    if (list.length === 0 && img) list.push(img)
     const resolved = list.map(resolveThumb).filter(Boolean)
     return [...new Set(resolved)].slice(0,6)
   })()
@@ -167,7 +167,13 @@ export default function ProductDetail(){
             onTouchMove={handleMouseMove}
             onTouchEnd={()=>setIsZoomVisible(false)}
           >
-            <img src={displaySrc} alt={p.name} className="w-full h-full object-cover" draggable={false} />
+            {displaySrc ? (
+              <img src={displaySrc} alt={p.name} className="w-full h-full object-cover" draggable={false} />
+            ) : (
+              <div className="flex h-full items-center justify-center text-[#C19A6B]" aria-label="No product image">
+                <span className="material-symbols-outlined text-5xl" aria-hidden="true">image</span>
+              </div>
+            )}
             {/* lens overlay — visible on hover */}
             {isZoomVisible && (
               <div
