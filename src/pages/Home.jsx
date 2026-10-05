@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { products as mockProducts, galleries as mockGalleries } from '../data/mockData'
+import { galleries as mockGalleries } from '../data/mockData'
 import { getProducts, unwrapProducts } from '../api/products'
 import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getCategories, unwrapCategories } from '../api/categories'
@@ -75,15 +75,11 @@ export default function Home() {
         })
         if (cancelled) return
         const data = unwrapProducts(res)
-        // fallback to mock if empty (keeps UI populated in dev)
-        setProducts(data.length ? data : mockProducts.slice(0, 4))
-        if (!data.length && !res?.results) {
-          // if backend returned empty but no error, still show mock
-        }
+        setProducts(data)
       } catch (err) {
         if (cancelled) return
         setErrorProducts(err.message || 'Failed to load products')
-        setProducts(mockProducts.slice(0, 4))
+        setProducts([])
       } finally {
         if (!cancelled) setLoadingProducts(false)
       }
@@ -101,11 +97,11 @@ export default function Home() {
         })
         if (cancelled) return
         const data = unwrapGalleries(res)
-        setGalleries(data.length ? data : mockGalleries.slice(0, 4))
+        setGalleries(data)
       } catch (err) {
         if (cancelled) return
         setErrorGalleries(err.message || 'Failed to load galleries')
-        setGalleries(mockGalleries.slice(0, 4))
+        setGalleries([])
       } finally {
         if (!cancelled) setLoadingGalleries(false)
       }
@@ -213,36 +209,35 @@ export default function Home() {
 
         {wishError && <div className="mb-3 bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {loadingProducts
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="aspect-[4/3] rounded-xl bg-[#E7DFD3]/60 mb-3" />
-                  <div className="h-4 bg-[#E7DFD3]/60 rounded w-3/4 mb-2" />
-                  <div className="h-3 bg-[#E7DFD3]/40 rounded w-1/2" />
-                </div>
-              ))
-            : products.map((p) => (
-                <ProductCard key={p.id || p._id} product={p} variant="home" onWishlistError={setWishError} />
-              ))}
-        </div>
+        {loadingProducts ? (
+          <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-[#E7DFD3] bg-white py-12" role="status" aria-label={t('products.loading')}>
+            <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#E7DFD3] border-t-[#C19A6B]" aria-hidden="true" />
+            <span className="text-sm text-[#8A8078]">{t('products.loading')}</span>
+          </div>
+        ) : products.length ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {products.map((p) => (
+              <ProductCard key={p.id || p._id} product={p} variant="home" onWishlistError={setWishError} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-[#E7DFD3] bg-white py-12 text-center text-sm text-[#8A8078]">
+            {errorProducts ? t('products.loadError') : t('products.empty')}
+          </div>
+        )}
       </section>
 
       <section className="bg-white rounded-xl border border-[#E7DFD3] p-8 text-center">
         <h3 className="font-serif text-xl mb-6">{t('home.galleries')}</h3>
 
-
-
-        <div className="flex flex-wrap justify-center gap-10">
-          {loadingGalleries
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center gap-2 animate-pulse">
-                  <div className="w-20 h-20 rounded-full bg-[#E7DFD3]/60" />
-                  <div className="h-3 w-20 bg-[#E7DFD3]/60 rounded" />
-                  <div className="h-2 w-16 bg-[#E7DFD3]/40 rounded" />
-                </div>
-              ))
-            : galleries.map((g) => {
+        {loadingGalleries ? (
+          <div className="flex min-h-40 flex-col items-center justify-center gap-3" role="status" aria-label={t('galleries.loading')}>
+            <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#E7DFD3] border-t-[#C19A6B]" aria-hidden="true" />
+            <span className="text-sm text-[#8A8078]">{t('galleries.loading')}</span>
+          </div>
+        ) : galleries.length ? (
+          <div className="flex flex-wrap justify-center gap-10">
+            {galleries.map((g) => {
                 const gid = g.id || g._id
                 const city = g.city ? `${g.city}${g.country ? `, ${g.country}` : ''}` : g.country || mockGalleries.find((m) => m.id === gid)?.city || ''
                 const logoSrc = getGalleryLogoUrl(g)
@@ -264,8 +259,11 @@ export default function Home() {
                     <span className="text-xs text-[#8A8078]">{city}</span>
                   </button>
                 )
-              })}
-        </div>
+            })}
+          </div>
+        ) : (
+          <p className="py-8 text-sm text-[#8A8078]">{errorGalleries || t('galleries.empty')}</p>
+        )}
       </section>
     </div>
   )

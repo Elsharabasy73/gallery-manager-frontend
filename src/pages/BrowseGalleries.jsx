@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { galleries as mockGalleries } from '../data/mockData'
 import { useRole } from '../context/RoleContext'
 import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getGalleryLogoUrl, getGalleryBannerUrl } from '../utils/image'
@@ -54,12 +53,10 @@ export default function BrowseGalleries() {
         const res = await getGalleries(params)
         if (cancelled) return
         const data = unwrapGalleries(res)
-        setGalleries(data.length ? data : mockGalleries)
+        setGalleries(data)
         setPagination(res?.paginationResult || null)
-        // if API returned empty results, keep mock fallback silent? Show empty if explicit search
-        if (data.length === 0 && (keyword || city !== 'All')) setGalleries([])
       } catch {
-        if (!cancelled) setGalleries(mockGalleries)
+        if (!cancelled) setGalleries([])
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -95,18 +92,14 @@ export default function BrowseGalleries() {
         </div>
       </div>
 
-      {loading && <div className="text-center py-4 text-sm text-[#8A8078]">{t('galleries.loading')}</div>}
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {(loading ? Array.from({ length: 4 }).map((_, i) => ({ id: `skeleton-${i}`, skeleton: true })) : galleries).map((g) => {
-          if (g.skeleton) {
-            return (
-              <div key={g.id} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden animate-pulse">
-                <div className="h-28 bg-[#E7DFD3]/60" />
-                <div className="p-4"><div className="h-4 bg-[#E7DFD3]/60 rounded w-1/2 mb-2" /><div className="h-3 bg-[#E7DFD3]/40 rounded w-1/3" /></div>
-              </div>
-            )
-          }
+      {loading ? (
+        <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-[#E7DFD3] bg-white py-12" role="status" aria-label={t('galleries.loading')}>
+          <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#E7DFD3] border-t-[#C19A6B]" aria-hidden="true" />
+          <span className="text-sm text-[#8A8078]">{t('galleries.loading')}</span>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-6">
+        {galleries.map((g) => {
           const bannerSrc = getGalleryBannerUrl(g) || g.banner
           const logoSrc = getGalleryLogoUrl(g)
           const initials = getInitials(g.name)
@@ -137,7 +130,8 @@ export default function BrowseGalleries() {
             </div>
           )
         })}
-      </div>
+        </div>
+      )}
 
       {!loading && galleries.length === 0 && (
         <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('galleries.empty')} <button onClick={() => { setInput(''); setKeyword(''); setCity('All'); setPage(1) }} className="text-[#C19A6B] underline">{t('galleries.clearFilters')}</button></div>
