@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { getMyGallery, updateGallery } from '../api/galleries'
 import { getGalleryLogoUrl, getGalleryBannerUrl, STORAGE_BASE, getProductImageUrl } from '../utils/image'
 import { apiFetch } from '../api/client'
-import { unwrapProducts, getProduct, unwrapProduct, createProduct, updateProduct } from '../api/products'
+import { unwrapProducts, getProduct, unwrapProduct, createProduct, updateProduct, deleteProduct } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
 import { createEmployee, getEmployees, getEmployee, updateEmployee, unwrapEmployees, unwrapEmployee } from '../api/employees'
 import { getGalleryOrders, getOrder, acceptOrder, updateOrderStatus, cancelOrder, unwrapOrders, unwrapOrder, getStatusStyles, ORDER_STATUSES, isValidTransition } from '../api/orders'
@@ -341,6 +341,9 @@ export function MyProducts(){
   const [productsList,setProductsList]=useState([])
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
+  const [deletingId,setDeletingId]=useState(null)
+  const [actionMsg,setActionMsg]=useState('')
+  const [actionError,setActionError]=useState(false)
   const [page,setPage]=useState(1)
   const [pagination,setPagination]=useState(null)
 
@@ -400,6 +403,23 @@ export function MyProducts(){
     return String(p.status).toLowerCase()===filter.toLowerCase()
   })
 
+  const handleDelete = async (productId) => {
+    if (!confirm(t('admin.deleteProductConfirm'))) return
+    setDeletingId(productId)
+    setActionMsg('')
+    setActionError(false)
+    try {
+      await deleteProduct(productId)
+      setProductsList(prev => prev.filter(p => String(p.id || p._id) !== String(productId)))
+      setActionMsg(t('admin.productDeleted'))
+    } catch (err) {
+      setActionError(true)
+      setActionMsg(err.message || t('admin.deleteFail'))
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   if(!galleryId && loading) return <div className="text-center py-16 text-sm text-[#8A8078]">{t('myProducts.loadGallery')}</div>
   if(error && !galleryId) return <div className="text-center py-16 bg-white border rounded-xl"><p className="text-sm text-[#8A8078]">{error}</p><button onClick={()=>navigate('/dashboard/create-gallery')} className="mt-3 bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm">{t('myProducts.createGallery')}</button></div>
 
@@ -409,6 +429,7 @@ export function MyProducts(){
         <h2 className="font-serif text-xl">{t('myProducts.title')}</h2>
         <button onClick={()=>navigate('/dashboard/add-product')} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-sm">{t('myProducts.add')}</button>
       </div>
+      {actionMsg && <div className={`text-sm px-4 py-2 rounded-lg ${actionError?'bg-[#ffdad6] text-[#93000a]':'bg-green-50 text-green-800'}`}>{actionMsg}</div>}
       <div className="flex gap-2">
         {['All','Active','Draft','Archived'].map(f=>(
           <button key={f} onClick={()=>setFilter(f)} className={`px-3 py-1 rounded-full text-xs border ${filter===f?'bg-[#4B3621] text-white':'bg-white'}`}>{f}</button>
@@ -432,7 +453,7 @@ export function MyProducts(){
                   <td className="text-center">{formatPrice(p.price)}</td>
                   <td className={`text-center ${Number(p.stock)<=3?'text-amber-600':''}`}>{p.stock ?? '—'}</td>
                   <td className="text-center"><span className={`px-2 py-0.5 rounded-full text-[11px] ${String(p.status).toLowerCase()==='active'?'bg-green-100 text-green-800': String(p.status).toLowerCase()==='draft'?'bg-amber-100 text-amber-800':'bg-zinc-100'}`}>{p.status || '—'}</span></td>
-                  <td className="text-center"><button onClick={()=>navigate(`/dashboard/add-product?id=${p.id||p._id}`)} className="text-xs border px-2 py-1 rounded me-1">{t('common.edit')}</button><button className="text-xs text-[#B3402E]">{t('common.delete')}</button></td>
+                  <td className="text-center"><button onClick={()=>navigate(`/dashboard/add-product?id=${p.id||p._id}`)} className="text-xs border px-2 py-1 rounded me-1">{t('common.edit')}</button><button onClick={()=>handleDelete(p.id||p._id)} disabled={String(deletingId)===String(p.id||p._id)} className="text-xs text-[#B3402E] disabled:opacity-60">{String(deletingId)===String(p.id||p._id)?t('common.deleting'):t('common.delete')}</button></td>
                 </tr>
               )})}
             </tbody>
