@@ -129,11 +129,10 @@ export function Signup(){
 
   return <SplitLayout>
     <h2 className="font-serif text-2xl mb-1">{t('auth.createTitle')}</h2><p className="text-xs text-[#8A8078] mb-4">{t('auth.createSub')}</p>
-    <div className="grid grid-cols-3 gap-2 mb-4">
+    <div className="grid grid-cols-2 gap-2 mb-4">
       {[
         {id:'customer', label: t('auth.customer'), desc: t('auth.customerDesc')},
         {id:'gallery_owner', label: t('auth.owner'), desc: t('auth.ownerDesc')},
-        {id:'craftsman', label: t('auth.craftsman'), desc: t('auth.craftsmanDesc')},
       ].map(r=>(
         <button key={r.id} onClick={()=>setRole(r.id)} className={`border rounded-lg p-3 text-start ${role===r.id?'border-[#4B3621] bg-[#FAF7F2]':'border-[#E7DFD3]'}`}>
           <div className="text-xs font-semibold">{r.label}</div><div className="text-[11px] text-[#8A8078]">{r.desc}</div>
