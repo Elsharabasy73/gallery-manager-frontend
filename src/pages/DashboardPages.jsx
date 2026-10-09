@@ -1,4 +1,3 @@
-import { products, orders } from '../data/mockData'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getMyGallery, updateGallery } from '../api/galleries'
@@ -15,9 +14,44 @@ import { compressImage, prepareImages, IMAGE_PRESETS } from '../utils/compressIm
 
 export function Overview(){
   const { t, formatNumber, formatPrice } = useLanguage()
-  const { gallery, loading, error } = useGallery()
+  const { gallery, galleryId, loading, error } = useGallery()
+  const [recentOrders, setRecentOrders] = useState([])
+  const [recentOrdersLoading, setRecentOrdersLoading] = useState(true)
+  const [recentOrdersError, setRecentOrdersError] = useState('')
   const productCount = gallery?.productCount
   const employeeCount = gallery?.employeeCount
+
+  useEffect(() => {
+    if (!galleryId) {
+      setRecentOrders([])
+      setRecentOrdersLoading(false)
+      setRecentOrdersError('')
+      return
+    }
+
+    let cancelled = false
+    async function fetchRecentOrders() {
+      setRecentOrdersLoading(true)
+      setRecentOrdersError('')
+      try {
+        const res = await getGalleryOrders(galleryId)
+        if (cancelled) return
+        const data = unwrapOrders(res)
+        data.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        setRecentOrders(data.slice(0, 3))
+      } catch (err) {
+        if (cancelled) return
+        setRecentOrders([])
+        setRecentOrdersError(err.message || t('dashboard.recentOrdersFail'))
+      } finally {
+        if (!cancelled) setRecentOrdersLoading(false)
+      }
+    }
+
+    fetchRecentOrders()
+    return () => { cancelled = true }
+  }, [galleryId, t])
+
   return (
     <div className="space-y-6">
       <h2 className="font-serif text-2xl">{t('dashboard.overview')}</h2>
@@ -35,9 +69,26 @@ export function Overview(){
       <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
         <h3 className="font-medium mb-3">{t('dashboard.recentOrders')}</h3>
         <div className="space-y-2">
-          {orders.slice(0,3).map(o=>(
-            <div key={o.id} className="flex justify-between text-sm border-b py-2"><span>{o.id} • {o.gallery}</span><span className="text-[#8A8078]">{o.status}</span><span>{formatPrice(o.total)}</span></div>
-          ))}
+          {recentOrdersLoading ? (
+            <p className="text-sm text-[#8A8078] py-2">{t('common.loading')}</p>
+          ) : recentOrdersError ? (
+            <p role="alert" className="text-sm text-[#B3402E] py-2">{recentOrdersError}</p>
+          ) : recentOrders.length === 0 ? (
+            <p className="text-sm text-[#8A8078] py-2">{t('dashboard.noRecentOrders')}</p>
+          ) : recentOrders.map((o) => {
+            const orderRef = o.orderNumber || (o.id ? o.id.slice(0, 8) : t('orders.na'))
+            const galleryName = o.gallery?.name || gallery?.name || t('orders.unknownGallery')
+            const status = t(`status.${o.status}`, null) === `status.${o.status}`
+              ? (ORDER_STATUSES[o.status]?.label || o.status)
+              : t(`status.${o.status}`)
+            return (
+              <div key={o.id} className="flex justify-between items-center gap-3 text-sm border-b py-2">
+                <span className="truncate">{orderRef} • {galleryName}</span>
+                <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusStyles(o.status)}`}>{status}</span>
+                <span className="shrink-0">{formatPrice(o.totalPrice)}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>

@@ -1,9 +1,12 @@
+import { Link } from 'react-router-dom'
 import { getProductImageUrl } from '../utils/image'
 import { useLanguage } from '../i18n/LanguageContext'
 
 export default function CartItemCard({ item, isLoading, onUpdateQty, onRemove }) {
   const { t, formatNumber, formatPrice } = useLanguage()
   const product = item.product || {}
+  const productId = product.id || product._id || item.productId
+  const productUrl = productId ? `/products/${productId}` : null
   const displayImg = getProductImageUrl(product)
   const price = Number(product.price || 0)
   const hasPrice = price > 0
@@ -11,20 +14,43 @@ export default function CartItemCard({ item, isLoading, onUpdateQty, onRemove })
 
   return (
     <div className="flex gap-3 py-3 border-t">
-      {displayImg ? (
+      {productUrl ? (
+        <Link to={productUrl} className="shrink-0 block rounded-lg overflow-hidden hover:opacity-80 transition">
+          {displayImg ? (
+            <img
+              src={displayImg}
+              alt={product.name || t('cartItem.product')}
+              className="w-16 h-16 rounded-lg object-cover bg-[#FAF7F2]"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-lg bg-[#E7DFD3] flex items-center justify-center">
+              <span className="material-symbols-outlined text-[#8A8078] text-2xl">image</span>
+            </div>
+          )}
+        </Link>
+      ) : displayImg ? (
         <img
           src={displayImg}
           alt={product.name || t('cartItem.product')}
-          className="w-16 h-16 rounded-lg object-cover bg-[#FAF7F2]"
+          className="w-16 h-16 rounded-lg object-cover bg-[#FAF7F2] shrink-0"
         />
       ) : (
-        <div className="w-16 h-16 rounded-lg bg-[#E7DFD3] flex items-center justify-center">
+        <div className="w-16 h-16 rounded-lg bg-[#E7DFD3] flex items-center justify-center shrink-0">
           <span className="material-symbols-outlined text-[#8A8078] text-2xl">image</span>
         </div>
       )}
 
-      <div className="flex-1">
-        <div className="text-sm font-medium">{product.name || t('cartItem.unknown')}</div>
+      <div className="flex-1 min-w-0">
+        {productUrl ? (
+          <Link
+            to={productUrl}
+            className="text-sm font-medium hover:text-[#C19A6B] hover:underline transition block truncate"
+          >
+            {product.name || t('cartItem.unknown')}
+          </Link>
+        ) : (
+          <div className="text-sm font-medium truncate">{product.name || t('cartItem.unknown')}</div>
+        )}
         <div className="text-xs text-[#8A8078]">
           {hasPrice ? `${formatNumber(price)} ${t('common.currency')} × ` : ''}
           {formatNumber(qty)}

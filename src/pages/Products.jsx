@@ -278,9 +278,11 @@ export default function Products() {
 
       {pagination && (
         <div className="flex justify-center items-center gap-2 pt-2">
+          <button disabled={pagination.currentPage <= 1} onClick={() => setPage(1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.first')}</button>
           <button disabled={!pagination.prev} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.prev')}</button>
           <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage)} / {formatNumber(pagination.numberOfPages || 1)}</span>
           <button disabled={!pagination.next} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.next')}</button>
+          <button disabled={pagination.currentPage >= (pagination.lastPage || pagination.numberOfPages || 1)} onClick={() => setPage(pagination.lastPage || pagination.numberOfPages || 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.last')}</button>
         </div>
       )}
     </div>

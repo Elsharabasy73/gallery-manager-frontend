@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { useRole } from '../context/RoleContext'
 import { useCart } from '../context/CartContext'
 import { useLanguage } from '../i18n/LanguageContext'
-import { createOrder } from '../api/orders'
+import { createOrder, unwrapOrder } from '../api/orders'
+import { getGallery, unwrapGallery } from '../api/galleries'
 import CartItemCard from '../components/CartItemCard'
 
 export default function CartPage() {
@@ -73,18 +74,74 @@ export default function CartPage() {
     }
   }
 
-  const handleCheckout = async (galleryId) => {
+  const handleCheckout = async (group) => {
+    const galleryId = group.galleryId
+    const whatsappWindow = window.open('about:blank', '_blank')
+    if (whatsappWindow) whatsappWindow.opener = null
+
     setCheckoutLoading(galleryId)
     setSuccess('')
     setLocalError('')
     try {
-      await createOrder({ galleryId })
+      const orderResponse = await createOrder({ galleryId })
+      const order = unwrapOrder(orderResponse)
       setSuccess(t('cart.orderPlaced'))
       await refresh()
+
+      if (!whatsappWindow) {
+        setLocalError(t('cart.whatsappPopupBlocked'))
+      } else {
+        try {
+          const galleryResponse = await getGallery(galleryId, { fields: 'id,name,phone' })
+          const gallery = unwrapGallery(galleryResponse)
+          const phoneDigits = String(gallery?.phone || '').replace(/\D/g, '')
+          const whatsappPhone = phoneDigits.startsWith('00')
+            ? phoneDigits.slice(2)
+            : phoneDigits.startsWith('0')
+              ? `20${phoneDigits.slice(1)}`
+              : phoneDigits
+
+          if (!whatsappPhone) {
+            throw new Error(t('cart.whatsappUnavailable'))
+          }
+
+          const orderReference = order?.orderNumber || order?.id || 'غير متاح'
+          const productLines = group.items.map((item, index) => {
+            const product = item.product || {}
+            const productId = product.id || product._id || item.productId
+            const productUrl = productId ? new URL(`/products/${productId}`, window.location.origin).href : ''
+            const arabicIndex = new Intl.NumberFormat('ar-EG').format(index + 1)
+            const arabicQuantity = new Intl.NumberFormat('ar-EG').format(item.quantity)
+            return `${arabicIndex}. ${product.name || 'منتج'} — الكمية: ${arabicQuantity}${productUrl ? `\n${productUrl}` : ''}`
+          })
+          const arabicSubtotal = new Intl.NumberFormat('ar-EG', {
+            style: 'currency',
+            currency: 'EGP',
+            maximumFractionDigits: 2,
+          }).format(group.subtotal)
+          const message = [
+            `مرحباً ${gallery.name || group.galleryName}،`,
+            `أرسلت للتو الطلب رقم ${orderReference}.`,
+            '',
+            'أرجو تأكيد توفر المنتجات التالية:',
+            ...productLines,
+            '',
+            `المجموع الفرعي: ${arabicSubtotal}`,
+            'يرجى الرد في أقرب وقت ممكن لتأكيد الطلب وترتيب الخطوات التالية. شكراً لكم!',
+          ].join('\n')
+          const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`
+          whatsappWindow.location.replace(whatsappUrl)
+        } catch (err) {
+          whatsappWindow.close()
+          setLocalError(err.message || t('cart.whatsappUnavailable'))
+        }
+      }
+
       setTimeout(() => {
         navigate('/my-orders')
       }, 1500)
     } catch (err) {
+      whatsappWindow?.close()
       setLocalError(err.message || 'Failed to checkout')
     } finally {
       setCheckoutLoading(null)
@@ -158,7 +215,7 @@ export default function CartPage() {
               checkoutLoading={checkoutLoading}
               onUpdateQty={handleUpdateQty}
               onRemove={handleRemove}
-              onCheckout={handleCheckout}
+              onCheckout={() => handleCheckout(group)}
             />
           ))
         )}
