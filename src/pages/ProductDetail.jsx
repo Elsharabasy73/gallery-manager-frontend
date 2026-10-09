@@ -132,6 +132,7 @@ export default function ProductDetail(){
   const galleryCountry = galleryObj?.country || ''
   const galleryLogo = galleryObj?.logo || null
   const price = p.price
+  const hasPrice = Number(price) > 0
   const compare = p.compareAtPrice || p.compare
   const stock = p.stock ?? 0
   const desc = p.description || p.desc || t('detail.galleryFallbackDesc')
@@ -237,10 +238,12 @@ export default function ProductDetail(){
       <div className="space-y-4">
         <div className="text-xs text-[#8A8078]">{t('detail.home')} / {p.category?.name || t('products.title')} / {p.name}</div>
         <h1 className="font-serif text-3xl text-[#4B3621]">{p.name}</h1>
-        <div className="flex items-baseline gap-3">
-          <span className="text-xl font-semibold">{formatPrice(price)}</span>
-          {compare && <span className="line-through text-sm text-[#8A8078]">{formatPrice(compare)}</span>}
-        </div>
+        {hasPrice && (
+          <div className="flex items-baseline gap-3">
+            <span className="text-xl font-semibold">{formatPrice(price)}</span>
+            {compare && <span className="line-through text-sm text-[#8A8078]">{formatPrice(compare)}</span>}
+          </div>
+        )}
         <div className="flex items-center gap-2 text-xs">
           <span className={`w-2 h-2 rounded-full ${Number(stock)>0?'bg-[#4C7A4C]':'bg-[#B3402E]'}`}></span> {Number(stock)>0 ? t('detail.inStock', { n: formatNumber(stock) }) : t('detail.outOfStock')}
           {p.dimensions && <span className="px-2 py-0.5 bg-[#E7DFD3] rounded-full">{typeof p.dimensions === 'string' ? p.dimensions : 'W 200 × D 90 × H 75 cm'}</span>}

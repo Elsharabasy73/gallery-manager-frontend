@@ -27,6 +27,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
   const galleryName = p?.gallery?.name || (typeof p?.gallery === 'string' ? p.gallery : '') || ''
   const categoryName = p?.category?.name || (typeof p?.category === 'string' ? p.category : '') || ''
   const price = p?.price
+  const hasPrice = Number(price) > 0
   const stock = p?.stock
   const wished = pid ? isWishlisted(pid) : false
 
@@ -105,7 +106,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
         </div>
         <div className="flex justify-between text-sm gap-2">
           <span className="font-medium truncate">{p?.name}</span>
-          <span className="font-semibold whitespace-nowrap">{formatPrice(price)}</span>
+          {hasPrice && <span className="font-semibold whitespace-nowrap">{formatPrice(price)}</span>}
         </div>
         <div className="text-xs text-[#8A8078] flex items-center gap-1 truncate">
           <span className="material-symbols-outlined text-[14px]">storefront</span>
@@ -130,7 +131,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
         <div className="p-3">
           <div className="flex justify-between gap-2">
             <span className="text-sm font-medium truncate">{p?.name}</span>
-            <span className="text-sm font-semibold whitespace-nowrap">{formatPrice(price)}</span>
+            {hasPrice && <span className="text-sm font-semibold whitespace-nowrap">{formatPrice(price)}</span>}
           </div>
           <div className="text-xs text-[#8A8078] truncate">{galleryName}</div>
           <div className="flex gap-2 mt-3">
@@ -181,7 +182,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
       <div className="p-4">
         <div className="flex justify-between gap-2">
           <h3 className="font-medium text-sm truncate">{p?.name}</h3>
-          <span className="text-sm font-semibold whitespace-nowrap">{formatPrice(price)}</span>
+          {hasPrice && <span className="text-sm font-semibold whitespace-nowrap">{formatPrice(price)}</span>}
         </div>
         <div className="text-xs text-[#8A8078] truncate">
           {galleryName}

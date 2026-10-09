@@ -6,6 +6,7 @@ export default function CartItemCard({ item, isLoading, onUpdateQty, onRemove })
   const product = item.product || {}
   const displayImg = getProductImageUrl(product)
   const price = Number(product.price || 0)
+  const hasPrice = price > 0
   const qty = item.quantity
 
   return (
@@ -24,7 +25,10 @@ export default function CartItemCard({ item, isLoading, onUpdateQty, onRemove })
 
       <div className="flex-1">
         <div className="text-sm font-medium">{product.name || t('cartItem.unknown')}</div>
-        <div className="text-xs text-[#8A8078]">{formatNumber(price)} {t('common.currency')} × {formatNumber(qty)}</div>
+        <div className="text-xs text-[#8A8078]">
+          {hasPrice ? `${formatNumber(price)} ${t('common.currency')} × ` : ''}
+          {formatNumber(qty)}
+        </div>
         {product.stock !== undefined && product.stock <= 5 && (
           <div className="text-xs text-amber-600">{t('cartItem.onlyLeft', { n: formatNumber(product.stock) })}</div>
         )}

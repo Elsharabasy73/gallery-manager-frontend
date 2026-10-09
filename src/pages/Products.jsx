@@ -63,12 +63,26 @@ export default function Products() {
       const catObj = displayCategories.find((cat) => cat.name === next[0])
       if (catObj) {
         const id = catObj.id || catObj._id
+        newParams.delete('categoryId[in]')
         if (id) newParams.set('categoryId', String(id))
         if (catObj.slug) newParams.set('category', catObj.slug)
         else newParams.delete('category')
       }
+    } else if (next.length > 1) {
+      const categoryIds = next
+        .map((name) => displayCategories.find((cat) => cat.name === name))
+        .map((cat) => cat?.id || cat?._id)
+        .filter(Boolean)
+      newParams.delete('categoryId')
+      newParams.delete('category')
+      if (categoryIds.length === next.length) {
+        newParams.set('categoryId[in]', categoryIds.join(','))
+      } else {
+        newParams.delete('categoryId[in]')
+      }
     } else {
       newParams.delete('categoryId')
+      newParams.delete('categoryId[in]')
       newParams.delete('category')
     }
     setSearchParams(newParams, { replace: true })
@@ -91,14 +105,19 @@ export default function Products() {
   // sync category from URL (homepage navigation: /products?categoryId=...&category=slug) -> select pill
   useEffect(() => {
     const categoryId = searchParams.get('categoryId')
+    const categoryIds = searchParams.get('categoryId[in]')?.split(',').filter(Boolean) || []
     const categorySlug = searchParams.get('category')
-    if (!categoryId && !categorySlug) return
+    if (!categoryId && !categoryIds.length && !categorySlug) return
     if (!(activeCats.length === 1 && activeCats[0] === 'All')) return
     const cats = apiCategories.length ? apiCategories : FALLBACK_CATEGORIES
     let found = null
     if (categoryId) found = cats.find((c) => String(c.id) === String(categoryId) || String(c._id) === String(categoryId))
     if (!found && categorySlug) found = cats.find((c) => c.slug === categorySlug || c.name === categorySlug || c.name?.toLowerCase() === categorySlug?.toLowerCase())
     if (found) setActiveCats([found.name])
+    else if (categoryIds.length) {
+      const selected = cats.filter((cat) => categoryIds.includes(String(cat.id || cat._id)))
+      if (selected.length) setActiveCats(selected.map((cat) => cat.name))
+    }
   }, [apiCategories, searchParams, activeCats])
 
   useEffect(() => {
@@ -129,12 +148,22 @@ export default function Products() {
           const cid = cat?.id || cat?._id
           if (cid) params.categoryId = cid
           else if (cat?.slug) params.category = cat.slug
+        } else if (activeCats.length > 1) {
+          const categoryIds = activeCats
+            .map((name) => displayCategories.find((cat) => cat.name === name))
+            .map((cat) => cat?.id || cat?._id)
+            .filter(Boolean)
+          if (categoryIds.length === activeCats.length) {
+            params['categoryId[in]'] = categoryIds.join(',')
+          }
         } else {
           const urlCatId = searchParams.get('categoryId')
           if (urlCatId) params.categoryId = urlCatId
           else {
+            const urlCatIds = searchParams.get('categoryId[in]')
+            if (urlCatIds) params['categoryId[in]'] = urlCatIds
             const urlCat = searchParams.get('category')
-            if (urlCat) params.category = urlCat
+            if (!urlCatIds && urlCat) params.category = urlCat
           }
         }
         const res = await getProducts(params)
@@ -212,7 +241,7 @@ export default function Products() {
           </div>
           <div className="flex gap-2 shrink-0">
             <button onClick={applyPrice} className="px-4 py-1.5 rounded-full border text-sm bg-white whitespace-nowrap">{t('products.apply')}</button>
-            <button onClick={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt'); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('keyword'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">{t('products.clear')}</button>
+            <button onClick={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt'); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('categoryId[in]'); np.delete('category'); np.delete('keyword'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">{t('products.clear')}</button>
           </div>
         </div>
       </div>
@@ -243,7 +272,7 @@ export default function Products() {
               <ProductCard key={String(p._id || p.id)} product={p} onWishlistError={setWishError} />
             ))}
           </div>
-          {filtered.length === 0 && <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('products.empty')} <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button></div>}
+          {filtered.length === 0 && <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('products.empty')} <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('categoryId[in]'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button></div>}
         </>
       )}
 
