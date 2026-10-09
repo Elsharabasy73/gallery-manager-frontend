@@ -15,7 +15,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
   const { role, isAuthenticated } = useRole()
   const { isWishlisted, toggle } = useWishlist()
   const { addItem: addToCart, canAccessCart } = useCart()
-  const { t, formatPrice } = useLanguage()
+  const { t, formatPrice, categoryLabel } = useLanguage()
   const [toggling, setToggling] = useState(false)
   const [addingToCart, setAddingToCart] = useState(false)
 
@@ -25,7 +25,8 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
     p?.image ||
     'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=600&q=80'
   const galleryName = p?.gallery?.name || (typeof p?.gallery === 'string' ? p.gallery : '') || ''
-  const categoryName = p?.category?.name || (typeof p?.category === 'string' ? p.category : '') || ''
+  const galleryId = p?.gallery?.id || p?.gallery?._id
+  const categoryName = categoryLabel(p?.category)
   const price = p?.price
   const hasPrice = Number(price) > 0
   const stock = p?.stock
@@ -184,10 +185,26 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
           <h3 className="font-medium text-sm truncate">{p?.name}</h3>
           {hasPrice && <span className="text-sm font-semibold whitespace-nowrap">{formatPrice(price)}</span>}
         </div>
-        <div className="text-xs text-[#8A8078] truncate">
-          {galleryName}
-          {galleryName && categoryName ? ' • ' : ''}
-          {categoryName}
+        <div className="mt-2 flex items-center justify-between gap-2 min-w-0">
+          {galleryName && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                if (galleryId) navigate(`/galleries/${galleryId}`)
+              }}
+              disabled={!galleryId}
+              className="text-xs text-[#8A8078] truncate min-w-0 text-start hover:text-[#4B3621] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621] disabled:cursor-default disabled:no-underline"
+            >
+              {galleryName}
+            </button>
+          )}
+          {categoryName && (
+            <span className="inline-flex items-center gap-1 shrink-0 rounded-full border border-[#C19A6B]/40 bg-[#FAF3E8] px-2.5 py-1 text-[11px] font-semibold text-[#6B4D2E]">
+              <span className="material-symbols-outlined text-[14px]">category</span>
+              {categoryName}
+            </span>
+          )}
         </div>
         <div className="flex gap-2 mt-3">
           <button onClick={handleNavigate} className="flex-1 border py-1.5 rounded-lg text-xs">
