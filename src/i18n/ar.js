@@ -241,6 +241,8 @@ export default {
   'auth.password': 'كلمة المرور',
   'auth.login': 'تسجيل الدخول',
   'auth.loggingIn': 'جارٍ تسجيل الدخول...',
+  'auth.orContinueWith': 'أو تابع عبر',
+  'auth.googleFailed': 'فشل تسجيل الدخول عبر جوجل. حاول مرة أخرى.',
   'auth.forgot': 'نسيت كلمة المرور؟',
   'auth.createAccount': 'إنشاء حساب',
   'auth.needEmailPass': 'أدخل البريد الإلكتروني وكلمة المرور.',

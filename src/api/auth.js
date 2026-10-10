@@ -25,6 +25,13 @@ export function login({ email, password }) {
   return apiFetch('/auth/login', { method: 'POST', body: { email, password } })
 }
 
+export function googleLogin({ idToken, role }) {
+  return apiFetch('/auth/google', {
+    method: 'POST',
+    body: { idToken, role: toApiRole(role) },
+  })
+}
+
 export function sendVerificationOtp(email) {
   return apiFetch('/auth/send-verification-otp', { method: 'POST', body: { email } })
 }

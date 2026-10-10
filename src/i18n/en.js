@@ -241,6 +241,8 @@ export default {
   'auth.password': 'Password',
   'auth.login': 'Log in',
   'auth.loggingIn': 'Logging in...',
+  'auth.orContinueWith': 'or continue with',
+  'auth.googleFailed': 'Google sign-in failed. Please try again.',
   'auth.forgot': 'Forgot password?',
   'auth.createAccount': 'Create account',
   'auth.needEmailPass': 'Please enter email and password.',
