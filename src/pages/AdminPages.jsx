@@ -143,13 +143,14 @@ export function AdminUsers(){
               {displayUsers.map(u=>{
                 const uid = u.id || u._id || u.email
                 const name = u.name || `${u.firstName||''} ${u.lastName||''}`.trim() || u.email
-                const avatar = u.avatar || (name ? name.slice(0,2).toUpperCase() : 'U')
+                const avatarUrl = typeof u.avatar === 'string' && /^https?:\/\//i.test(u.avatar) ? u.avatar : null
+                const initials = name ? name.slice(0,2).toUpperCase() : 'U'
                 const email = u.email
                 const role = u.role
                 const status = u.isActive ?? u.status ?? 'active'
                 const isActive = status === 'active' || status === true
                 return (
-                <tr key={uid} className="border-t"><td className="p-3 flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xs">{avatar}</div>{name}</td><td className="text-xs">{email}</td><td className="text-xs">{role}</td><td><span className={`px-2 py-0.5 rounded-full text-[11px] ${isActive?'bg-green-100 text-green-800':'bg-zinc-100'}`}>{isActive?t('admin.active'):t('admin.inactive')}</span></td><td><div className="flex items-center gap-1 whitespace-nowrap"><button onClick={()=>startEdit(u)} className="text-xs border px-2 py-1 rounded hover:bg-[#FAF7F2]">{t('common.edit')}</button><button onClick={()=>handleDelete(uid)} disabled={deletingId===uid} className="text-xs bg-[#B3402E] text-white px-2 py-1 rounded disabled:opacity-60">{deletingId===uid?t('common.deleting'):t('common.delete')}</button></div></td></tr>
+                <tr key={uid} className="border-t"><td className="p-3 flex items-center gap-2">{avatarUrl ? <img src={avatarUrl} alt={name} className="w-8 h-8 rounded-full object-cover border border-[#E7DFD3]" /> : <div className="w-8 h-8 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xs">{initials}</div>}{name}</td><td className="text-xs">{email}</td><td className="text-xs">{role}</td><td><span className={`px-2 py-0.5 rounded-full text-[11px] ${isActive?'bg-green-100 text-green-800':'bg-zinc-100'}`}>{isActive?t('admin.active'):t('admin.inactive')}</span></td><td><div className="flex items-center gap-1 whitespace-nowrap"><button onClick={()=>startEdit(u)} className="text-xs border px-2 py-1 rounded hover:bg-[#FAF7F2]">{t('common.edit')}</button><button onClick={()=>handleDelete(uid)} disabled={deletingId===uid} className="text-xs bg-[#B3402E] text-white px-2 py-1 rounded disabled:opacity-60">{deletingId===uid?t('common.deleting'):t('common.delete')}</button></div></td></tr>
               )})}
             </tbody>
           </table>
