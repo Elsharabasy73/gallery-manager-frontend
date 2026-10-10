@@ -12,8 +12,9 @@ import { Login, Signup, Otp, ForgotPassword } from './pages/AuthPages'
 import WishlistPage from './pages/WishlistPage'
 import CartPage from './pages/CartPage'
 import MyOrdersPage from './pages/MyOrdersPage'
+import Support from './pages/Support'
 import { Overview, MyGallery, MyProducts, AddEditProduct, GalleryOrders, OrderDetails, Employees, AddEmployee, CreateGallery } from './pages/DashboardPages'
-import { AdminUsers, AdminProducts, AdminGalleries, AdminOrders, AdminOverview, AdminCategories } from './pages/AdminPages'
+import { AdminUsers, AdminProducts, AdminGalleries, AdminOrders, AdminOverview, AdminCategories, AdminSupport } from './pages/AdminPages'
 import Profile from './pages/Profile'
 import { useLanguage } from './i18n/LanguageContext'
 
@@ -33,6 +34,7 @@ export default function App(){
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/galleries" element={<BrowseGalleries />} />
         <Route path="/galleries/:id" element={<GalleryProfile />} />
+        <Route path="/support" element={<Support />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/otp" element={<Otp />} />
@@ -65,6 +67,7 @@ export default function App(){
         <Route path="/admin/galleries" element={<Protected allow={['admin']} pageId="admin-galleries" redirectToHome><AdminGalleries /></Protected>} />
         <Route path="/admin/orders" element={<Protected allow={['admin']} pageId="admin-orders" redirectToHome><AdminOrders /></Protected>} />
         <Route path="/admin/categories" element={<Protected allow={['admin']} pageId="admin-categories" redirectToHome><AdminCategories /></Protected>} />
+        <Route path="/admin/support" element={<Protected allow={['admin']} pageId="admin-support" redirectToHome><AdminSupport /></Protected>} />
         <Route path="/admin/orders/:id" element={<Protected allow={['admin']} pageId="order-details"><OrderDetails /></Protected>} />
 
         {/* legacy path redirects for old state keys */}
