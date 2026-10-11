@@ -41,6 +41,8 @@ export const PERMISSIONS = {
   'admin-orders': ['admin'],
   'admin-categories': ['admin'],
   'admin-overview': ['admin'],
+  'admin-support': ['admin'],
+  support: ['customer','gallery_owner','employee','admin'],
   profile: ['customer','gallery_owner','employee','admin'],
 }
 
@@ -76,6 +78,8 @@ export const PATH_TO_PAGE = {
   '/admin/galleries': 'admin-galleries',
   '/admin/orders': 'admin-orders',
   '/admin/categories': 'admin-categories',
+  '/admin/support': 'admin-support',
+  '/support': 'support',
   '/profile': 'profile',
 }
 
@@ -85,6 +89,7 @@ export const NAV_CONFIG = {
     { id:'products', label:'Products', path:'/products' },
     { id:'galleries', label:'Galleries', path:'/galleries' },
     { id:'about', label:'About Us', path:'/about' },
+    { id:'support', label:'Support', path:'/support' },
   ],
   customer: [
     { id:'wishlist', label:'Wishlist', icon:'favorite', path:'/wishlist' },
@@ -107,6 +112,7 @@ export const NAV_CONFIG = {
     { id:'admin-galleries', label:'Galleries', icon:'store', path:'/admin/galleries', roles:['admin'] },
     { id:'admin-orders', label:'All Orders', icon:'receipt_long', path:'/admin/orders', roles:['admin'] },
     { id:'admin-categories', label:'Categories', icon:'sell', path:'/admin/categories', roles:['admin'] },
+    { id:'admin-support', label:'Support', icon:'support_agent', path:'/admin/support', roles:['admin'] },
   ]
 }
 
@@ -148,7 +154,7 @@ export function RoleProvider({ children, defaultRole=null }){
     if(!allowed) return true
     // guest (unauthenticated, role === null) can access public + auth routes only
     if(!role){
-      const guestAllowed = ['home','about','products','product-detail','galleries','gallery-profile','login','signup','otp','forgot-password','reset-password']
+      const guestAllowed = ['home','about','products','product-detail','galleries','gallery-profile','login','signup','otp','forgot-password','reset-password','support']
       return guestAllowed.includes(pageId)
     }
     return allowed.includes(role)

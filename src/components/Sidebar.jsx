@@ -23,6 +23,7 @@ const NAV_LABEL_KEYS = {
   'admin-galleries': 'nav.adminGalleries',
   'admin-orders': 'nav.allOrders',
   'admin-categories': 'nav.categories',
+  'admin-support': 'nav.support',
 }
 
 const ROLE_LABEL_KEYS = {

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useLanguage } from '../i18n/LanguageContext'
 
 export default function Footer(){
@@ -7,7 +8,7 @@ export default function Footer(){
       <div className="max-w-7xl mx-auto px-4 md:px-10 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="font-serif text-xl">{t('brand')}</div>
         <div className="flex gap-6 text-xs text-white/60">
-          <a href="#">{t('footer.privacy')}</a><a href="#">{t('footer.terms')}</a><a href="#">{t('footer.contact')}</a><a href="#">{t('footer.shipping')}</a>
+          <a href="#">{t('footer.privacy')}</a><a href="#">{t('footer.terms')}</a><Link to="/support">{t('footer.contact')}</Link><a href="#">{t('footer.shipping')}</a>
         </div>
         <div className="text-xs text-white/60">{t('footer.rights')}</div>
       </div>

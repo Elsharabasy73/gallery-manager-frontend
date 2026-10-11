@@ -12,6 +12,7 @@ const NAV_LABEL_KEYS = {
   products: 'nav.products',
   galleries: 'nav.galleries',
   about: 'nav.about',
+  support: 'nav.support',
   wishlist: 'nav.wishlist',
   cart: 'nav.cart',
   'my-orders': 'nav.myOrders',
