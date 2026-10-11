@@ -1,6 +1,6 @@
 // Arabic dictionary (MSA, Egyptian-friendly) — mirrors en.js keys
 export default {
-  brand: 'أتيليه جاليري',
+  brand: 'Galleri',
   brandTagline: 'حيث تلتقي المعارض بالبيوت الراقية. دفء وثقة وحِرفة.',
 
   'common.loading': 'جارٍ التحميل…',
@@ -72,7 +72,7 @@ export default {
   'footer.terms': 'الشروط',
   'footer.contact': 'اتصل بنا',
   'footer.shipping': 'الشحن',
-  'footer.rights': '© 2024 أتيليه جاليري. جميع الحقوق محفوظة.',
+  'footer.rights': '© 2024 Galleri. جميع الحقوق محفوظة.',
 
   'sidebar.dashboard': 'لوحة التحكم',
   'sidebar.galleryManage': 'إدارة المعرض',

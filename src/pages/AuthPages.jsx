@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { signup as signupApi, login as loginApi, sendVerificationOtp, verifyEmail as verifyEmailApi, forgotPassword, verifyResetOtp, resetPassword } from '../api/auth'
+import { getMyGallery } from '../api/galleries'
 import { useRole } from '../context/RoleContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import { isTokenExpired } from '../utils/auth'
@@ -48,6 +49,25 @@ export function Login(){
       if(res?.token) localStorage.setItem('token', res.token)
       if(res?.data) localStorage.setItem('user', JSON.stringify(res.data))
       if(setAuth && res?.data) setAuth(res.data, res.token)
+
+      // If gallery_owner, check if they have a gallery — redirect to create if not
+      const userRole = res?.data?.role
+      if (userRole === 'gallery_owner') {
+        try {
+          const galRes = await getMyGallery()
+          const gal = galRes?.data?.data || galRes?.data || galRes
+          const hasGallery = gal && (gal.id || gal._id || gal.gallery?.id)
+          if (!hasGallery) {
+            navigate('/dashboard/create-gallery', { replace: true })
+            return
+          }
+        } catch {
+          // 404 or error means no gallery
+          navigate('/dashboard/create-gallery', { replace: true })
+          return
+        }
+      }
+
       const redirectTo = location.state?.from?.pathname || '/'
       navigate(redirectTo, { replace: true })
     }catch(e){

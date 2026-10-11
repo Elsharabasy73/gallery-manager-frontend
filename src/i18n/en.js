@@ -1,6 +1,6 @@
 // English dictionary — source of truth (current UI strings, verbatim)
 export default {
-  brand: 'Atelier Gallery',
+  brand: 'Galleri',
   brandTagline: 'Where galleries meet discerning homes. Warm, trusted, handcrafted.',
 
   'common.loading': 'Loading…',
@@ -72,7 +72,7 @@ export default {
   'footer.terms': 'Terms',
   'footer.contact': 'Contact',
   'footer.shipping': 'Shipping',
-  'footer.rights': '© 2024 Atelier Gallery. All rights reserved.',
+  'footer.rights': '© 2024 Galleri. All rights reserved.',
 
   'sidebar.dashboard': 'Dashboard',
   'sidebar.galleryManage': 'Gallery Manage',

@@ -113,7 +113,9 @@ export default function TopNav(){
   return (
     <header className={`bg-[#FAF7F2] sticky top-0 z-40 border-b border-[#E7DFD3] transition-transform duration-300 motion-reduce:transition-none ${showHeader ? 'translate-y-0' : '-translate-y-full'} ${scrolled && showHeader ? 'shadow-sm' : ''}`}>
       <div className="flex justify-between items-center w-full px-4 md:px-10 py-3 max-w-7xl mx-auto h-16">
-        <button onClick={()=>navigate('/')} className="font-serif text-2xl text-[#4B3621] tracking-tight">{t('brand')}</button>
+        <button onClick={()=>navigate('/')} className="flex items-center" aria-label={t('brand')}>
+          <img src="/galleri-logo.svg" alt={t('brand')} className="h-10 md:h-11 w-auto" />
+        </button>
         <nav className="hidden md:flex items-center gap-6">
           {NAV_CONFIG.storefront.map(link=>(
             <NavLink key={link.id} to={link.path}
