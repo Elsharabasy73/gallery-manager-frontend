@@ -171,26 +171,27 @@ export default function Home() {
       </section>
 
       <section>
-        <div className="flex gap-3 overflow-x-auto hide-scrollbar py-2">
-          {loadingCategories
-            ? Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="shrink-0 w-28 h-9 rounded-full bg-[#E7DFD3]/60 animate-pulse" />
-              ))
-            : categories.map((c) => {
-                const label = categoryLabel(c)
-                return (
-                  <button
-                    key={c.id || c.slug || c.name}
-                    onClick={() => handleCategoryClick(c)}
-                    className="shrink-0 border border-[#E7DFD3] bg-white px-5 py-2 rounded-full text-sm hover:bg-[#FAF7F2] transition"
-                    title={c.slug}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
+        <div className="relative">
+          <div className="flex gap-3 overflow-x-auto hide-scrollbar scroll-fade-mask py-2 pe-10">
+            {loadingCategories
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="shrink-0 w-28 h-9 rounded-full bg-[#E7DFD3]/60 animate-pulse" />
+                ))
+              : categories.map((c) => {
+                  const label = categoryLabel(c)
+                  return (
+                    <button
+                      key={c.id || c.slug || c.name}
+                      onClick={() => handleCategoryClick(c)}
+                      className="shrink-0 border border-[#E7DFD3] bg-white px-5 py-2 rounded-full text-sm hover:bg-[#FAF7F2] transition shadow-xs"
+                      title={c.slug}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+          </div>
         </div>
-
       </section>
 
       <section>

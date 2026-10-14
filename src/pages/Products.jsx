@@ -211,28 +211,30 @@ export default function Products() {
             </select>
           </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar mt-3 pb-1">
-          <button
-            key="All"
-            onClick={() => toggle('All')}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${activeCats.includes('All') ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
-          >
-            {t('products.all')}
-          </button>
-          {displayCategories.map((c) => {
-            const label = categoryLabel(c)
-            const active = activeCats.includes(c.name)
-            return (
-              <button
-                key={c.id || c._id || c.slug || c.name}
-                onClick={() => toggle(c.name)}
-                className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${active ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
-                title={c.slug}
-              >
-                {label}
-              </button>
-            )
-          })}
+        <div className="relative">
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar scroll-fade-mask mt-3 pb-1 pe-8">
+            <button
+              key="All"
+              onClick={() => toggle('All')}
+              className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${activeCats.includes('All') ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
+            >
+              {t('products.all')}
+            </button>
+            {displayCategories.map((c) => {
+              const label = categoryLabel(c)
+              const active = activeCats.includes(c.name)
+              return (
+                <button
+                  key={c.id || c._id || c.slug || c.name}
+                  onClick={() => toggle(c.name)}
+                  className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${active ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
+                  title={c.slug}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 mt-3">
           <div className="flex gap-2 flex-1 min-w-0">
