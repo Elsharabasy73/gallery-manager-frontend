@@ -7,6 +7,7 @@ import { getGalleryLogoUrl, getGalleryBannerUrl, STORAGE_BASE } from '../utils/i
 import ProductCard from '../components/ProductCard'
 import ShareGalleryModal from '../components/ShareGalleryModal'
 import ImageLightboxModal from '../components/ImageLightboxModal'
+import Pagination from '../components/Pagination'
 import useHideOnScroll from '../hooks/useHideOnScroll'
 import { useLanguage } from '../i18n/LanguageContext'
 
@@ -379,11 +380,12 @@ export default function GalleryProfile() {
       )}
 
       {pagination && (
-        <div className="flex justify-center items-center gap-2">
-          <button disabled={!pagination.prev} onClick={() => setPage((x) => Math.max(1, x - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.prev')}</button>
-          <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage)} / {formatNumber(pagination.numberOfPages || 1)}</span>
-          <button disabled={!pagination.next} onClick={() => setPage((x) => x + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.next')}</button>
-        </div>
+        <Pagination
+          pagination={pagination}
+          page={page}
+          onPageChange={(newPage) => setPage(newPage)}
+          showFirstLast={true}
+        />
       )}
 
       <ShareGalleryModal

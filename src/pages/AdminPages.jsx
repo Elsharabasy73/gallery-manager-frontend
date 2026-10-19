@@ -12,6 +12,7 @@ import { apiFetch } from '../api/client'
 import { getVisitors } from '../api/analytics'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import { getProductImageUrl, getGalleryLogoUrl, getGalleryBannerUrl } from '../utils/image'
+import Pagination from '../components/Pagination'
 import { useLanguage } from '../i18n/LanguageContext'
 
 export function AdminUsers(){
@@ -156,11 +157,12 @@ export function AdminUsers(){
           </table>
         </div>
         {pagination && (
-          <div className="flex justify-center items-center gap-2 pt-2">
-            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.prev')}</button>
-            <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage || page)} / {formatNumber(pagination.numberOfPages || 1)}</span>
-            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.next')}</button>
-          </div>
+          <Pagination
+            pagination={pagination}
+            page={page}
+            onPageChange={(newPage) => setPage(newPage)}
+            showFirstLast={true}
+          />
         )}
         </>
       )}
@@ -304,11 +306,12 @@ export function AdminProducts(){
           })}
         </div>
         {pagination && (
-          <div className="flex justify-center items-center gap-2 pt-2">
-            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.prev')}</button>
-            <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage || page)} / {formatNumber(pagination.numberOfPages || 1)}</span>
-            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.next')}</button>
-          </div>
+          <Pagination
+            pagination={pagination}
+            page={page}
+            onPageChange={(newPage) => setPage(newPage)}
+            showFirstLast={true}
+          />
         )}
         </>
       )}
@@ -437,11 +440,12 @@ export function AdminGalleries(){
           )})}
         </div>
         {pagination && (
-          <div className="flex justify-center items-center gap-2 pt-2">
-            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.prev')}</button>
-            <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage || page)} / {formatNumber(pagination.numberOfPages || 1)}</span>
-            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40 bg-white">{t('common.next')}</button>
-          </div>
+          <Pagination
+            pagination={pagination}
+            page={page}
+            onPageChange={(newPage) => setPage(newPage)}
+            showFirstLast={true}
+          />
         )}
         </>
       )}
@@ -1134,12 +1138,13 @@ export function AdminSupport(){
           })}
         </div>
       )}
-      {pagination?.numberOfPages > 1 && (
-        <div className="flex items-center justify-center gap-2 text-sm">
-          <button disabled={page<=1} onClick={()=>setPage(p=>Math.max(1,p-1))} className="px-3 py-1.5 border rounded-full bg-white disabled:opacity-50">{t('common.prev')}</button>
-          <span className="text-xs text-[#8A8078]">{t('common.page')} {page}/{pagination.numberOfPages}</span>
-          <button disabled={page>=pagination.numberOfPages} onClick={()=>setPage(p=>p+1)} className="px-3 py-1.5 border rounded-full bg-white disabled:opacity-50">{t('common.next')}</button>
-        </div>
+      {pagination && (
+        <Pagination
+          pagination={pagination}
+          page={page}
+          onPageChange={(newPage) => setPage(newPage)}
+          showFirstLast={true}
+        />
       )}
     </div>
   )

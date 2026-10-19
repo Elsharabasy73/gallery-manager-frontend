@@ -4,6 +4,7 @@ import { useRole } from '../context/RoleContext'
 import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getGalleryLogoUrl, getGalleryBannerUrl } from '../utils/image'
 import useHideOnScroll from '../hooks/useHideOnScroll'
+import Pagination from '../components/Pagination'
 import { useLanguage } from '../i18n/LanguageContext'
 
 function getInitials(name = '') {
@@ -138,11 +139,12 @@ export default function BrowseGalleries() {
       )}
 
       {pagination && (
-        <div className="flex justify-center items-center gap-2 pt-2">
-          <button disabled={!pagination.prev} onClick={() => setPage((p) => Math.max(1, p - 1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.prev')}</button>
-          <span className="text-sm text-[#8A8078]">{t('galleries.page', { cur: formatNumber(pagination.currentPage), total: formatNumber(pagination.numberOfPages || 1) })}</span>
-          <button disabled={!pagination.next} onClick={() => setPage((p) => p + 1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.next')}</button>
-        </div>
+        <Pagination
+          pagination={pagination}
+          page={page}
+          onPageChange={(newPage) => setPage(newPage)}
+          showFirstLast={true}
+        />
       )}
     </div>
   )

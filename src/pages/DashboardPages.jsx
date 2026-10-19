@@ -10,6 +10,7 @@ import { getGalleryOrders, getOrder, acceptOrder, updateOrderStatus, cancelOrder
 import { useGallery } from '../context/GalleryContext'
 import { useRole } from '../context/RoleContext'
 import { useLanguage } from '../i18n/LanguageContext'
+import Pagination from '../components/Pagination'
 import { compressImage, prepareImages, IMAGE_PRESETS } from '../utils/compressImage'
 
 export function Overview(){
@@ -511,10 +512,13 @@ export function MyProducts(){
           </table>
         </div>
         {pagination && (
-          <div className="flex justify-center items-center gap-2 p-3 border-t">
-            <button disabled={!pagination.prev && page===1} onClick={()=>setPage(x=>Math.max(1,x-1))} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.prev')}</button>
-            <span className="text-sm text-[#8A8078]">{t('common.page')} {formatNumber(pagination.currentPage || page)} / {formatNumber(pagination.numberOfPages || 1)}</span>
-            <button disabled={!pagination.next && pagination?.numberOfPages && page>=pagination.numberOfPages} onClick={()=>setPage(x=>x+1)} className="px-3 py-1.5 rounded-lg border text-sm disabled:opacity-40">{t('common.next')}</button>
+          <div className="p-3 border-t">
+            <Pagination
+              pagination={pagination}
+              page={page}
+              onPageChange={(newPage) => setPage(newPage)}
+              showFirstLast={true}
+            />
           </div>
         )}
       </div>
