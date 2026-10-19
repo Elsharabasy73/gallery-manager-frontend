@@ -25,6 +25,50 @@ function getInitials(name = '') {
     .join('') || 'GA'
 }
 
+function getProductCategoryKey(product) {
+  const category = product?.category
+  const value = typeof category === 'string'
+    ? category
+    : category?.id || category?.slug || category?.name || product?.categoryId || product?.name || product?.id
+  return String(value || '').trim().toLocaleLowerCase()
+}
+
+function selectHomeProducts(candidates, limit) {
+  const selected = []
+  const categoryCounts = new Map()
+
+  for (const product of candidates) {
+    if (selected.length >= limit) break
+    const key = getProductCategoryKey(product)
+    if (key && categoryCounts.has(key)) continue
+    selected.push(product)
+    if (key) categoryCounts.set(key, 1)
+  }
+
+  while (selected.length < limit) {
+    let nextProduct = null
+    let nextKey = null
+    let lowestCount = Infinity
+
+    for (const product of candidates) {
+      if (selected.includes(product)) continue
+      const key = getProductCategoryKey(product)
+      const count = key ? categoryCounts.get(key) || 0 : 0
+      if (count < lowestCount) {
+        nextProduct = product
+        nextKey = key
+        lowestCount = count
+      }
+    }
+
+    if (!nextProduct) break
+    selected.push(nextProduct)
+    if (nextKey) categoryCounts.set(nextKey, lowestCount + 1)
+  }
+
+  return selected
+}
+
 export default function Home() {
   const navigate = useNavigate()
   const { t, categoryLabel } = useLanguage()
@@ -62,20 +106,20 @@ export default function Home() {
     // ── Products: home curated selection
     // per request: must include limit param + fields/sort/filter as UI needs
     // example from Postman: /api/v1/products?fields=id,name,mainImageUrl,gallery[id,name,slug,phone]&sort=price,-stock&price=250&page=1&limit=12
-    // home uses: limit=4, minimal fields for card, sorted by newest/featured
+    // Fetch a larger candidate set so the homepage can avoid repeating one category.
     async function fetchProducts() {
       setLoadingProducts(true)
       setErrorProducts('')
       try {
         const res = await getProducts({
-          limit: 4,
+          limit: 20,
           page: 1,
           fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,gallery[id,name,slug],category[id,name,slug]',
           sort: '-createdAt',
         })
         if (cancelled) return
         const data = unwrapProducts(res)
-        setProducts(data)
+        setProducts(selectHomeProducts(data, 4))
       } catch (err) {
         if (cancelled) return
         setErrorProducts(err.message || 'Failed to load products')
