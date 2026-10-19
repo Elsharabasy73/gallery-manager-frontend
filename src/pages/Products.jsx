@@ -136,7 +136,7 @@ export default function Products() {
       setLoadError('')
       try {
         const params = {
-          limit: 12,
+          limit: 20,
           page,
           sort,
           fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,galleryId,gallery[id,name,slug],category[id,name,slug,arabicName]',

@@ -74,6 +74,7 @@ export default function Home() {
   const { t, categoryLabel } = useLanguage()
   const [wishError, setWishError] = useState('')
   const [search, setSearch] = useState('')
+  const [activeTab, setActiveTab] = useState('curated') // 'curated' | 'new' | 'featured'
 
   const [products, setProducts] = useState([])
   const [galleries, setGalleries] = useState([])
@@ -92,34 +93,37 @@ export default function Home() {
   }
 
   const handleCategoryClick = (category) => {
-    // backend expects categoryId or category filter via product.categoryId
-    // navigate with both id and slug for future Products page to consume
     const id = category.id || category._id
     const slug = category.slug
     if (id) navigate(`/products?categoryId=${encodeURIComponent(id)}&category=${encodeURIComponent(slug || category.name)}`)
     else navigate(`/products?category=${encodeURIComponent(category.name)}`)
   }
 
+  // Fetch more candidates than the showcase displays so categories stay varied.
   useEffect(() => {
     let cancelled = false
 
-    // ── Products: home curated selection
-    // per request: must include limit param + fields/sort/filter as UI needs
-    // example from Postman: /api/v1/products?fields=id,name,mainImageUrl,gallery[id,name,slug,phone]&sort=price,-stock&price=250&page=1&limit=12
-    // Fetch a larger candidate set so the homepage can avoid repeating one category.
     async function fetchProducts() {
       setLoadingProducts(true)
       setErrorProducts('')
       try {
-        const res = await getProducts({
-          limit: 20,
+        const queryParams = {
+          limit: 32,
           page: 1,
-          fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,gallery[id,name,slug],category[id,name,slug]',
-          sort: '-createdAt',
-        })
+          fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,description,materials,gallery[id,name,slug,city,country],category[id,name,slug]',
+        }
+        if (activeTab === 'new') {
+          queryParams.sort = '-createdAt'
+        } else if (activeTab === 'featured') {
+          queryParams.sort = '-ratingsAverage,-sold,-createdAt'
+        } else {
+          queryParams.sort = '-createdAt'
+        }
+
+        const res = await getProducts(queryParams)
         if (cancelled) return
         const data = unwrapProducts(res)
-        setProducts(selectHomeProducts(data, 4))
+        setProducts(selectHomeProducts(data, 8))
       } catch (err) {
         if (cancelled) return
         setErrorProducts(err.message || 'Failed to load products')
@@ -128,6 +132,16 @@ export default function Home() {
         if (!cancelled) setLoadingProducts(false)
       }
     }
+
+    fetchProducts()
+    return () => {
+      cancelled = true
+    }
+  }, [activeTab])
+
+  // Fetch galleries and categories once on mount
+  useEffect(() => {
+    let cancelled = false
 
     async function fetchGalleries() {
       setLoadingGalleries(true)
@@ -173,7 +187,6 @@ export default function Home() {
       }
     }
 
-    fetchProducts()
     fetchGalleries()
     fetchCategories()
     return () => {
@@ -183,6 +196,7 @@ export default function Home() {
 
   return (
     <div className="space-y-16 sm:space-y-20 lg:space-y-28">
+      {/* Hero section */}
       <section className="relative min-h-[520px] overflow-hidden rounded-2xl shadow-sm sm:min-h-[580px] lg:min-h-[640px]">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -228,6 +242,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Categories section */}
       <section id="home-categories" className="scroll-mt-24">
         <div className="mb-5 flex flex-col gap-2 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -259,19 +274,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Curated Products Showcase with Tabs & 8 items */}
       <section>
-        <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
+        <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#9A754B]">{t('home.productsEyebrow')}</p>
             <h2 className="font-serif text-2xl text-[#4B3621] sm:text-3xl">{t('home.curated')}</h2>
             <p className="mt-1 text-sm text-[#8A8078]">{t('home.curatedSub')}</p>
           </div>
-          <button
-            onClick={() => navigate('/products')}
-            className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-sm text-[#78582f] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#78582f]"
-          >
-            {t('home.viewAll')} <span className="material-symbols-outlined text-[18px] rtl:rotate-180">arrow_forward</span>
-          </button>
+
+          {/* Interactive filter tabs */}
+          <div className="flex items-center gap-1.5 rounded-full border border-[#E7DFD3] bg-white p-1 shadow-xs overflow-x-auto hide-scrollbar self-start sm:self-auto">
+            {[
+              { id: 'curated', label: t('home.tabCurated') },
+              { id: 'new', label: t('home.tabNew') },
+              { id: 'featured', label: t('home.tabFeatured') },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'bg-[#4B3621] text-white shadow-xs'
+                    : 'text-[#8A8078] hover:text-[#4B3621]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {wishError && <div className="mb-3 bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
@@ -282,11 +314,23 @@ export default function Home() {
             <span className="text-sm text-[#8A8078]">{t('products.loading')}</span>
           </div>
         ) : products.length ? (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-            {products.map((p) => (
-              <ProductCard key={p.id || p._id} product={p} variant="home" onWishlistError={setWishError} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+              {products.map((p) => (
+                <ProductCard key={p.id || p._id} product={p} variant="home" onWishlistError={setWishError} />
+              ))}
+            </div>
+
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={() => navigate('/products')}
+                className="inline-flex items-center gap-2 rounded-full border border-[#4B3621] bg-white px-6 py-2.5 text-sm font-medium text-[#4B3621] shadow-xs transition hover:bg-[#FAF7F2] hover:shadow-sm"
+              >
+                {t('home.exploreAll')}
+                <span className="material-symbols-outlined text-[18px] rtl:rotate-180" aria-hidden="true">arrow_forward</span>
+              </button>
+            </div>
+          </>
         ) : (
           <div className="rounded-xl border border-[#E7DFD3] bg-white py-12 text-center text-sm text-[#8A8078]">
             {errorProducts ? t('products.loadError') : t('products.empty')}
@@ -294,6 +338,7 @@ export default function Home() {
         )}
       </section>
 
+      {/* Galleries section */}
       <section>
         <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
           <div>
@@ -317,47 +362,47 @@ export default function Home() {
         ) : galleries.length ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:gap-6">
             {galleries.map((g) => {
-                const gid = g.id || g._id
-                const city = g.city ? `${g.city}${g.country ? `, ${g.country}` : ''}` : g.country || mockGalleries.find((m) => m.id === gid)?.city || ''
-                const logoSrc = getGalleryLogoUrl(g)
-                const bannerSrc = getGalleryBannerUrl(g)
-                const initials = getInitials(g.name)
-                return (
-                  <button
-                    key={gid}
-                    onClick={() => navigate(`/galleries/${gid}`)}
-                    className="group w-full overflow-hidden rounded-2xl border border-[#E7DFD3] bg-white text-start shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
-                  >
-                    <div className="relative h-32 overflow-hidden bg-[#E7DFD3] sm:h-40">
-                      <img
-                        src={bannerSrc || g.banner || "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=900&q=80"}
-                        alt=""
-                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#201a17]/45 to-transparent" />
+              const gid = g.id || g._id
+              const city = g.city ? `${g.city}${g.country ? `, ${g.country}` : ''}` : g.country || mockGalleries.find((m) => m.id === gid)?.city || ''
+              const logoSrc = getGalleryLogoUrl(g)
+              const bannerSrc = getGalleryBannerUrl(g)
+              const initials = getInitials(g.name)
+              return (
+                <button
+                  key={gid}
+                  onClick={() => navigate(`/galleries/${gid}`)}
+                  className="group w-full overflow-hidden rounded-2xl border border-[#E7DFD3] bg-white text-start shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
+                >
+                  <div className="relative h-32 overflow-hidden bg-[#E7DFD3] sm:h-40">
+                    <img
+                      src={bannerSrc || g.banner || "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=900&q=80"}
+                      alt=""
+                      className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#201a17]/45 to-transparent" />
+                  </div>
+                  <div className="flex items-center gap-3 p-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[#FAF7F2] font-serif text-[#4B3621] shadow-sm">
+                      {logoSrc ? (
+                        <img src={logoSrc} alt="" className="h-full w-full object-cover" loading="lazy" />
+                      ) : (
+                        initials
+                      )}
                     </div>
-                    <div className="flex items-center gap-3 p-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[#FAF7F2] font-serif text-[#4B3621] shadow-sm">
-                        {logoSrc ? (
-                          <img src={logoSrc} alt="" className="h-full w-full object-cover" loading="lazy" />
-                        ) : (
-                          initials
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium text-[#4B3621] sm:text-base">{g.name}</span>
-                        <span className="mt-1 flex items-center gap-1 truncate text-xs text-[#8A8078]">
-                          {city && <><span className="material-symbols-outlined text-[14px]" aria-hidden="true">location_on</span>{city}</>}
-                        </span>
-                      </div>
-                      <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#78582f]">
-                        {t('home.visitGallery')}
-                        <span className="material-symbols-outlined text-[16px] rtl:rotate-180" aria-hidden="true">arrow_forward</span>
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-[#4B3621] sm:text-base">{g.name}</span>
+                      <span className="mt-1 flex items-center gap-1 truncate text-xs text-[#8A8078]">
+                        {city && <><span className="material-symbols-outlined text-[14px]" aria-hidden="true">location_on</span>{city}</>}
                       </span>
                     </div>
-                  </button>
-                )
+                    <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#78582f]">
+                      {t('home.visitGallery')}
+                      <span className="material-symbols-outlined text-[16px] rtl:rotate-180" aria-hidden="true">arrow_forward</span>
+                    </span>
+                  </div>
+                </button>
+              )
             })}
           </div>
         ) : (
