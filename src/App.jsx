@@ -4,6 +4,7 @@ import Protected from './components/Protected'
 
 import Home from './pages/Home'
 import About from './pages/About'
+import Terms from './pages/Terms'
 import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
 import BrowseGalleries from './pages/BrowseGalleries'
@@ -30,6 +31,7 @@ export default function App(){
         {/* public */}
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/galleries" element={<BrowseGalleries />} />

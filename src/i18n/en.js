@@ -148,8 +148,9 @@ export default {
   'detail.unknownGallery': 'Unknown Gallery',
   'detail.galleryFallbackDesc': 'Crafted from premium materials with attention to joinery and finish.',
   'detail.customizable': 'Dimensions and materials are customizable per gallery.',
-  'detail.zoomHint': 'Hover to zoom • Click thumbnail to change main image',
-  'detail.zoomHintMobile': 'Tap thumbnail to change image • Touch & hold to magnify',
+  'detail.zoomHint': 'Click the image to zoom • Click a thumbnail to change the main image',
+  'detail.zoomHintMobile': 'Tap the image to zoom • Tap a thumbnail to change the main image',
+  'detail.openImage': 'Open product image gallery',
   'detail.home': 'Home',
 
   'card.outOfStock': 'Out of stock',

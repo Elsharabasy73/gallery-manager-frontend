@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { products as mockProducts } from '../data/mockData'
 import { getProduct, unwrapProduct } from '../api/products'
@@ -7,6 +7,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { useRole } from '../context/RoleContext'
 import { useLanguage } from '../i18n/LanguageContext'
+import ImageLightboxModal from '../components/ImageLightboxModal'
 
 export default function ProductDetail(){
   const { t, formatPrice, formatNumber } = useLanguage()
@@ -23,14 +24,9 @@ export default function ProductDetail(){
   const [cartLoading, setCartLoading] = useState(false)
   const [cartSuccess, setCartSuccess] = useState(null)
 
-  // image gallery + magnifier state — hooks must be before any early return
+  // Image gallery state — hooks must be before any early return.
   const [activeSrc, setActiveSrc] = useState(null)
-  const [isZoomVisible, setIsZoomVisible] = useState(false)
-  const [lensPos, setLensPos] = useState({ x: 0, y: 0 })
-  const [bgPos, setBgPos] = useState({ x: 50, y: 50 })
-  const zoomLevel = 1.5
-  const lensSize = 150
-  const mainRef = useRef(null)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   useEffect(()=>{
     let cancelled=false
@@ -96,24 +92,6 @@ export default function ProductDetail(){
     }
   }
 
-  const handleMouseMove = (e) => {
-    const el = mainRef.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY
-    const x = clientX - rect.left
-    const y = clientY - rect.top
-    const xPercent = (x / rect.width) * 100
-    const yPercent = (y / rect.height) * 100
-    // clamp lens inside image
-    const half = lensSize / 2
-    const clampedX = Math.max(half, Math.min(rect.width - half, x))
-    const clampedY = Math.max(half, Math.min(rect.height - half, y))
-    setLensPos({ x: clampedX, y: clampedY })
-    setBgPos({ x: xPercent, y: yPercent })
-  }
-
   if (loading) return <div className="text-center py-12 text-sm text-[#8A8078]">{t('detail.loading')}</div>
   if (!p) return <div className="text-center py-12 bg-white border rounded-xl">{t('detail.notFound')}</div>
 
@@ -148,7 +126,7 @@ export default function ProductDetail(){
     if (Array.isArray(p.images)) list.push(...p.images)
     if (list.length === 0 && img) list.push(img)
     const resolved = list.map(resolveThumb).filter(Boolean)
-    return [...new Set(resolved)].slice(0,6)
+    return [...new Set(resolved)]
   })()
   const images = rawImages
   const displaySrc = activeSrc || img
@@ -156,17 +134,12 @@ export default function ProductDetail(){
   return (
     <div className="grid md:grid-cols-2 gap-8">
       <div className="space-y-3">
-        {/* Main image with Amazon-like magnifier */}
         <div className="relative">
-          <div
-            ref={mainRef}
-            className="aspect-[4/3] rounded-xl overflow-hidden bg-white border border-[#E7DFD3] cursor-zoom-in relative select-none touch-none"
-            onMouseEnter={()=>setIsZoomVisible(true)}
-            onMouseLeave={()=>setIsZoomVisible(false)}
-            onMouseMove={handleMouseMove}
-            onTouchStart={(e)=>{ setIsZoomVisible(true); handleMouseMove(e) }}
-            onTouchMove={handleMouseMove}
-            onTouchEnd={()=>setIsZoomVisible(false)}
+          <button
+            type="button"
+            className="block w-full aspect-[4/3] rounded-xl overflow-hidden bg-white border border-[#E7DFD3] cursor-zoom-in relative select-none"
+            onClick={() => setLightboxOpen(true)}
+            aria-label={t('detail.openImage')}
           >
             {displaySrc ? (
               <img src={displaySrc} alt={p.name} className="w-full h-full object-cover" draggable={false} />
@@ -175,46 +148,7 @@ export default function ProductDetail(){
                 <span className="material-symbols-outlined text-5xl" aria-hidden="true">image</span>
               </div>
             )}
-            {/* lens overlay — visible on hover */}
-            {isZoomVisible && (
-              <div
-                className="hidden md:block absolute pointer-events-none border-2 border-[#C19A6B]/70 bg-[#C19A6B]/10 shadow-sm z-10"
-                style={{
-                  width: lensSize,
-                  height: lensSize,
-                  left: lensPos.x - lensSize/2,
-                  top: lensPos.y - lensSize/2,
-                }}
-              />
-            )}
-          </div>
-
-          {/* Zoom result pane — Amazon style, appears to the right */}
-          {isZoomVisible && (
-            <>
-              {/* desktop/tablet side pane — show from md breakpoint */}
-              <div
-                className="hidden md:block absolute start-[calc(100%+16px)] top-0 w-[440px] h-[440px] rounded-xl overflow-hidden bg-white border-2 border-[#E7DFD3] shadow-2xl z-30 pointer-events-none"
-                style={{
-                  backgroundImage: `url(${displaySrc})`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: `${zoomLevel * 100}% auto`,
-                  backgroundPosition: `${Math.max(0, Math.min(100, bgPos.x))}% ${Math.max(0, Math.min(100, bgPos.y))}%`,
-                }}
-              />
-              {/* mobile: inline magnified overlay */}
-              <div
-                className="md:hidden absolute inset-0 rounded-xl overflow-hidden pointer-events-none border-2 border-[#E7DFD3] bg-white shadow-xl z-20"
-                style={{
-                  backgroundImage: `url(${displaySrc})`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: `${zoomLevel * 100}% auto`,
-                  backgroundPosition: `${Math.max(0, Math.min(100, bgPos.x))}% ${Math.max(0, Math.min(100, bgPos.y))}%`,
-                  opacity: isZoomVisible ? 1 : 0,
-                }}
-              />
-            </>
-          )}
+          </button>
         </div>
 
         <div className="grid grid-cols-4 gap-2">
@@ -235,6 +169,13 @@ export default function ProductDetail(){
         <p className="text-[11px] text-[#8A8078] hidden md:block">{t('detail.zoomHint')}</p>
         <p className="text-[11px] text-[#8A8078] md:hidden">{t('detail.zoomHintMobile')}</p>
       </div>
+      <ImageLightboxModal
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        images={images}
+        initialIndex={Math.max(0, images.indexOf(displaySrc))}
+        galleryName={p.name}
+      />
       <div className="space-y-4">
         <div className="text-xs text-[#8A8078]">{t('detail.home')} / {p.category?.name || t('products.title')} / {p.name}</div>
         <h1 className="font-serif text-3xl text-[#4B3621]">{p.name}</h1>
