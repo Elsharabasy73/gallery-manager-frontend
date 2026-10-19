@@ -4,7 +4,7 @@ import { galleries as mockGalleries } from '../data/mockData'
 import { getProducts, unwrapProducts } from '../api/products'
 import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getCategories, unwrapCategories } from '../api/categories'
-import { getGalleryLogoUrl } from '../utils/image'
+import { getGalleryBannerUrl, getGalleryLogoUrl } from '../utils/image'
 import ProductCard from '../components/ProductCard'
 import { useLanguage } from '../i18n/LanguageContext'
 
@@ -138,8 +138,8 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="space-y-12">
-      <section className="relative w-full h-[58vh] min-h-[420px] rounded-xl overflow-hidden shadow-sm">
+    <div className="space-y-16 sm:space-y-20 lg:space-y-28">
+      <section className="relative min-h-[520px] overflow-hidden rounded-2xl shadow-sm sm:min-h-[580px] lg:min-h-[640px]">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -147,30 +147,51 @@ export default function Home() {
               "url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=80')",
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#4B3621]/60 via-[#4B3621]/20 to-transparent flex flex-col items-center justify-end md:justify-center text-center p-8">
-          <h1 className="font-serif text-3xl md:text-5xl text-white mb-6 max-w-3xl drop-shadow">
+        <div className="absolute inset-0 flex flex-col items-start justify-end bg-gradient-to-t from-[#201a17]/80 via-[#4B3621]/35 to-[#4B3621]/10 p-6 text-start sm:p-10 md:justify-center md:p-16">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.22em] text-white/85 sm:text-sm">
+            {t('home.heroEyebrow')}
+          </p>
+          <h1 className="mb-4 max-w-3xl font-serif text-4xl leading-tight text-white drop-shadow sm:text-5xl md:mb-5 md:text-6xl lg:text-7xl">
             {t('home.heroTitle')}
           </h1>
-          <div className="w-full max-w-2xl bg-white/95 backdrop-blur rounded-lg p-2 flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#8A8078] ms-2">search</span>
+          <p className="mb-7 max-w-xl text-sm leading-6 text-white/90 sm:text-base sm:leading-7">
+            {t('home.heroIntro')}
+          </p>
+          <div className="mb-4 flex w-full max-w-2xl items-center gap-2 rounded-xl bg-white/95 p-1.5 shadow-lg backdrop-blur sm:p-2">
+            <span className="material-symbols-outlined ms-2 text-[#8A8078]" aria-hidden="true">search</span>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full bg-transparent outline-none text-sm placeholder:text-[#8A8078]"
+              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#8A8078]"
               placeholder={t('home.searchPh')}
+              aria-label={t('home.searchPh')}
             />
             <button
               onClick={handleSearch}
-              className="bg-[#4B3621] text-white px-6 py-2.5 rounded text-sm font-medium whitespace-nowrap"
+              className="shrink-0 whitespace-nowrap rounded-lg bg-[#4B3621] px-3 py-2.5 text-xs font-medium text-white transition hover:bg-[#33210d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:px-6 sm:text-sm"
             >
               {t('home.browseProducts')}
             </button>
           </div>
+          <a
+            href="#home-categories"
+            className="inline-flex items-center gap-2 rounded-full border border-white/50 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            {t('home.browseCategories')}
+            <span className="material-symbols-outlined text-[18px] rtl:rotate-180" aria-hidden="true">arrow_forward</span>
+          </a>
         </div>
       </section>
 
-      <section>
+      <section id="home-categories" className="scroll-mt-24">
+        <div className="mb-5 flex flex-col gap-2 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#9A754B]">{t('home.categoryEyebrow')}</p>
+            <h2 className="font-serif text-2xl text-[#4B3621] sm:text-3xl">{t('home.categoryTitle')}</h2>
+          </div>
+          <p className="max-w-md text-sm leading-6 text-[#8A8078]">{t('home.categorySub')}</p>
+        </div>
         <div className="relative">
           <div className="flex gap-3 overflow-x-auto hide-scrollbar scroll-fade-mask py-2 pe-10">
             {loadingCategories
@@ -183,7 +204,7 @@ export default function Home() {
                     <button
                       key={c.id || c.slug || c.name}
                       onClick={() => handleCategoryClick(c)}
-                      className="shrink-0 border border-[#E7DFD3] bg-white px-5 py-2 rounded-full text-sm hover:bg-[#FAF7F2] transition shadow-xs"
+                      className="shrink-0 rounded-full border border-[#E7DFD3] bg-white px-5 py-2 text-sm shadow-xs transition hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
                       title={c.slug}
                     >
                       {label}
@@ -195,14 +216,15 @@ export default function Home() {
       </section>
 
       <section>
-        <div className="flex justify-between items-end mb-6">
+        <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
           <div>
-            <h2 className="font-serif text-2xl text-[#4B3621]">{t('home.curated')}</h2>
-            <p className="text-sm text-[#8A8078]">{t('home.curatedSub')}</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#9A754B]">{t('home.productsEyebrow')}</p>
+            <h2 className="font-serif text-2xl text-[#4B3621] sm:text-3xl">{t('home.curated')}</h2>
+            <p className="mt-1 text-sm text-[#8A8078]">{t('home.curatedSub')}</p>
           </div>
           <button
             onClick={() => navigate('/products')}
-            className="hidden md:flex items-center gap-1 text-sm text-[#78582f]"
+            className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-sm text-[#78582f] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#78582f]"
           >
             {t('home.viewAll')} <span className="material-symbols-outlined text-[18px] rtl:rotate-180">arrow_forward</span>
           </button>
@@ -216,7 +238,7 @@ export default function Home() {
             <span className="text-sm text-[#8A8078]">{t('products.loading')}</span>
           </div>
         ) : products.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-5 lg:grid-cols-4 lg:gap-6">
             {products.map((p) => (
               <ProductCard key={p.id || p._id} product={p} variant="home" onWishlistError={setWishError} />
             ))}
@@ -228,8 +250,20 @@ export default function Home() {
         )}
       </section>
 
-      <section className="bg-white rounded-xl border border-[#E7DFD3] p-8 text-center">
-        <h3 className="font-serif text-xl mb-6">{t('home.galleries')}</h3>
+      <section>
+        <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#9A754B]">{t('home.galleriesEyebrow')}</p>
+            <h2 className="font-serif text-2xl text-[#4B3621] sm:text-3xl">{t('home.galleries')}</h2>
+            <p className="mt-1 text-sm text-[#8A8078]">{t('home.galleriesSub')}</p>
+          </div>
+          <button
+            onClick={() => navigate('/galleries')}
+            className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-sm text-[#78582f] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#78582f]"
+          >
+            {t('home.viewAll')} <span className="material-symbols-outlined text-[18px] rtl:rotate-180" aria-hidden="true">arrow_forward</span>
+          </button>
+        </div>
 
         {loadingGalleries ? (
           <div className="flex min-h-40 flex-col items-center justify-center gap-3" role="status" aria-label={t('galleries.loading')}>
@@ -237,27 +271,47 @@ export default function Home() {
             <span className="text-sm text-[#8A8078]">{t('galleries.loading')}</span>
           </div>
         ) : galleries.length ? (
-          <div className="flex flex-wrap justify-center gap-10">
+          <div className="grid gap-5 sm:grid-cols-2 lg:gap-6">
             {galleries.map((g) => {
                 const gid = g.id || g._id
                 const city = g.city ? `${g.city}${g.country ? `, ${g.country}` : ''}` : g.country || mockGalleries.find((m) => m.id === gid)?.city || ''
                 const logoSrc = getGalleryLogoUrl(g)
+                const bannerSrc = getGalleryBannerUrl(g)
                 const initials = getInitials(g.name)
                 return (
                   <button
                     key={gid}
                     onClick={() => navigate(`/galleries/${gid}`)}
-                    className="flex flex-col items-center gap-2 hover:opacity-80 transition"
+                    className="group w-full overflow-hidden rounded-2xl border border-[#E7DFD3] bg-white text-start shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
                   >
-                    <div className="w-20 h-20 rounded-full bg-[#FAF7F2] border flex items-center justify-center font-serif overflow-hidden">
-                      {logoSrc ? (
-                        <img src={logoSrc} alt={g.name} className="w-full h-full object-cover" />
-                      ) : (
-                        initials
-                      )}
+                    <div className="relative h-32 overflow-hidden bg-[#E7DFD3] sm:h-40">
+                      <img
+                        src={bannerSrc || g.banner || "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=900&q=80"}
+                        alt=""
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#201a17]/45 to-transparent" />
                     </div>
-                    <span className="text-sm font-medium">{g.name}</span>
-                    <span className="text-xs text-[#8A8078]">{city}</span>
+                    <div className="flex items-center gap-3 p-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-[#FAF7F2] font-serif text-[#4B3621] shadow-sm">
+                        {logoSrc ? (
+                          <img src={logoSrc} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        ) : (
+                          initials
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-[#4B3621] sm:text-base">{g.name}</span>
+                        <span className="mt-1 flex items-center gap-1 truncate text-xs text-[#8A8078]">
+                          {city && <><span className="material-symbols-outlined text-[14px]" aria-hidden="true">location_on</span>{city}</>}
+                        </span>
+                      </div>
+                      <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-[#78582f]">
+                        {t('home.visitGallery')}
+                        <span className="material-symbols-outlined text-[16px] rtl:rotate-180" aria-hidden="true">arrow_forward</span>
+                      </span>
+                    </div>
                   </button>
                 )
             })}

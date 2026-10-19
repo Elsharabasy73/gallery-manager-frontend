@@ -79,18 +79,21 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
   // —— HOME VARIANT ——
   if (variant === 'home') {
     return (
-      <div className="group cursor-pointer" onClick={handleNavigate}>
-        <div className={`relative ${aspect} rounded-xl overflow-hidden bg-white mb-3 border border-[#E7DFD3]`}>
+      <div
+        className="group cursor-pointer overflow-hidden rounded-2xl border border-[#E7DFD3] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+        onClick={handleNavigate}
+      >
+        <div className={`relative ${aspect} overflow-hidden bg-[#F0EBE3]`}>
           <img
             src={img}
             alt={p?.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
             loading="lazy"
           />
           {showWishlist && (
             <button
               onClick={handleWishlist}
-              className={`absolute top-2 end-2 w-8 h-8 rounded-full flex items-center justify-center transition ${
+              className={`absolute end-2 top-2 flex h-9 w-9 items-center justify-center rounded-full shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f] ${
                 wished ? 'bg-[#C19A6B] text-white' : 'bg-white/90 hover:bg-white'
               }`}
               aria-label={wished ? t('card.removeWishlist') : t('card.addWishlist')}
@@ -105,13 +108,15 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
             </div>
           )}
         </div>
-        <div className="flex justify-between text-sm gap-2">
-          <span className="font-medium truncate">{p?.name}</span>
-          {hasPrice && <span className="font-semibold whitespace-nowrap">{formatPrice(price)}</span>}
-        </div>
-        <div className="text-xs text-[#8A8078] flex items-center gap-1 truncate">
-          <span className="material-symbols-outlined text-[14px]">storefront</span>
-          {galleryName || categoryName || t('card.galleryFallback')}
+        <div className="p-3 sm:p-4">
+          <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+            <span className="truncate text-sm font-medium text-[#33210d]">{p?.name}</span>
+            {hasPrice && <span className="shrink-0 whitespace-nowrap text-sm font-semibold text-[#4B3621]">{formatPrice(price)}</span>}
+          </div>
+          <div className="mt-2 flex items-center gap-1 truncate text-xs text-[#8A8078]">
+            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">storefront</span>
+            <span className="truncate">{galleryName || categoryName || t('card.galleryFallback')}</span>
+          </div>
         </div>
       </div>
     )
