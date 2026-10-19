@@ -160,7 +160,7 @@ export default function TopNav(){
           )}
           <div className="w-px h-6 bg-[#E7DFD3] mx-1 hidden md:block"></div>
           {!isAuthenticated ? (
-            <button onClick={()=>navigate('/login')} className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium bg-[#4B3621] text-white">
+            <button onClick={()=>navigate('/login', { state: { from: location } })} className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-medium bg-[#4B3621] text-white">
               {t('nav.login')}
             </button>
           ) : (
@@ -247,7 +247,7 @@ export default function TopNav(){
               {/* Profile / Auth */}
               <div className="space-y-1 pt-2 border-t border-[#E7DFD3]">
                 {!isAuthenticated ? (
-                  <button onClick={()=>handleNav('/login')} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium bg-[#4B3621] text-white"><span className="material-symbols-outlined text-[18px]">login</span> {t('nav.login')}</button>
+                  <button onClick={()=>{ setMenuOpen(false); navigate('/login', { state: { from: location } }) }} className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium bg-[#4B3621] text-white"><span className="material-symbols-outlined text-[18px]">login</span> {t('nav.login')}</button>
                 ) : (
                   <>
                     <button onClick={()=>handleNav('/profile')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${isActive('/profile')?'bg-[#4B3621] text-white':'bg-white border border-[#E7DFD3]'}`}><span className="material-symbols-outlined text-[18px]">person</span> {t('nav.profile')}</button>

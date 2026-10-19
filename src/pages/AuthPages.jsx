@@ -62,7 +62,9 @@ export function Login() {
   useEffect(() => {
     try {
       const token = localStorage.getItem("token");
-      if (token && !isTokenExpired(token)) navigate("/", { replace: true });
+      if (token && !isTokenExpired(token)) {
+        navigate(location.state?.from || "/", { replace: true });
+      }
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -98,14 +100,16 @@ export function Login() {
         }
       }
 
-      const redirectTo = location.state?.from?.pathname || "/";
+      const redirectTo = location.state?.from || "/";
       navigate(redirectTo, { replace: true });
     } catch (e) {
       if (e.status === 403 && /not verified|verify/i.test(e.message)) {
         try {
           await sendVerificationOtp(email.trim());
         } catch {}
-        navigate("/otp", { state: { email: email.trim() } });
+        navigate("/otp", {
+          state: { email: email.trim(), from: location.state?.from },
+        });
         return;
       }
       setError(e.message || t("auth.loginFailed"));
@@ -129,7 +133,7 @@ export function Login() {
       if (res?.token) localStorage.setItem("token", res.token);
       if (res?.data) localStorage.setItem("user", JSON.stringify(res.data));
       if (setAuth && res?.data) setAuth(res.data, res.token);
-      const redirectTo = location.state?.from?.pathname || "/";
+      const redirectTo = location.state?.from || "/";
       navigate(redirectTo, { replace: true });
     } catch (e) {
       setError(e.message || t("auth.googleFailed"));
@@ -250,7 +254,11 @@ export function Login() {
             {t("auth.forgot")}
           </button>
           <button
-            onClick={() => navigate("/signup")}
+            onClick={() =>
+              navigate("/signup", {
+                state: { from: location.state?.from },
+              })
+            }
             className="text-[#4B3621] font-medium"
           >
             {t("auth.createAccount")}
@@ -262,6 +270,7 @@ export function Login() {
 }
 export function Signup() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
   const { setAuth } = useRole();
   const [role, setRole] = useState("customer");
@@ -315,7 +324,13 @@ export function Signup() {
           otpErr?.message,
         );
       }
-      navigate("/otp", { state: { email: emailToVerify, fromSignup: true } });
+      navigate("/otp", {
+        state: {
+          email: emailToVerify,
+          fromSignup: true,
+          from: location.state?.from,
+        },
+      });
     } catch (e) {
       if (e.details) {
         const fe = {};
@@ -350,7 +365,7 @@ export function Signup() {
       if (res?.token) localStorage.setItem("token", res.token);
       if (res?.data) localStorage.setItem("user", JSON.stringify(res.data));
       if (setAuth && res?.data) setAuth(res.data, res.token);
-      navigate("/", { replace: true });
+      navigate(location.state?.from || "/", { replace: true });
     } catch (e) {
       setError(e.message || t("auth.googleFailed"));
     } finally {
@@ -472,7 +487,14 @@ export function Signup() {
       </div>
       <div className="text-xs text-center mt-3">
         {t("auth.haveAccount")}{" "}
-        <button onClick={() => navigate("/login")} className="text-[#C19A6B]">
+        <button
+          onClick={() =>
+            navigate("/login", {
+              state: { from: location.state?.from },
+            })
+          }
+          className="text-[#C19A6B]"
+        >
           {t("auth.login")}
         </button>
       </div>
@@ -575,7 +597,11 @@ export function Otp() {
       setInfo("");
       setTimeout(() => {
         navigate("/login", {
-          state: { email: email.trim(), justVerified: true },
+          state: {
+            email: email.trim(),
+            justVerified: true,
+            from: location.state?.from,
+          },
           replace: true,
         });
       }, 1500);
