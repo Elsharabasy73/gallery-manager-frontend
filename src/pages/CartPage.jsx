@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+﻿import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useRole } from '../context/RoleContext'
 import { useCart } from '../context/CartContext'
@@ -77,38 +77,48 @@ export default function CartPage() {
 
   const handleCheckout = async (group) => {
     const galleryId = group.galleryId
-    const whatsappWindow = window.open('about:blank', '_blank')
-    if (whatsappWindow) whatsappWindow.opener = null
 
     setCheckoutLoading(galleryId)
     setSuccess('')
     setLocalError('')
     try {
-      const orderResponse = await createOrder({ galleryId })
+      // Pre-fetch gallery phone and create the order in parallel so we have
+      // the WhatsApp URL ready before we open the popup window.
+      // Opening a popup immediately after multiple async awaits often triggers
+      // popup blockers; by doing all async work first, we minimise the gap
+      // between the open() call and the navigation, giving browsers the best
+      // chance to allow the window.
+      const [orderResponse, galleryResponse] = await Promise.all([
+        createOrder({ galleryId }),
+        getGallery(galleryId, { fields: 'id,name,phone' }),
+      ])
+
       const order = unwrapOrder(orderResponse)
+      const gallery = unwrapGallery(galleryResponse)
+
       setSuccess(t('cart.orderPlaced'))
       await refresh()
 
-      if (!whatsappWindow) {
-        setLocalError(t('cart.whatsappPopupBlocked'))
+      // Build the WhatsApp URL before touching the window so we only open
+      // the popup when we know it will actually navigate somewhere useful.
+      const whatsappUrl = createOrderWhatsAppUrl({
+        gallery: gallery || { name: group.galleryName },
+        order,
+        items: group.items,
+        subtotal: group.subtotal,
+        origin: window.location.origin,
+      })
+
+      if (!whatsappUrl) {
+        setLocalError(t('cart.whatsappUnavailable'))
       } else {
-        try {
-          const galleryResponse = await getGallery(galleryId, { fields: 'id,name,phone' })
-          const gallery = unwrapGallery(galleryResponse)
-          const whatsappUrl = createOrderWhatsAppUrl({
-            gallery: gallery || { name: group.galleryName },
-            order,
-            items: group.items,
-            subtotal: group.subtotal,
-            origin: window.location.origin,
-          })
-          if (!whatsappUrl) {
-            throw new Error(t('cart.whatsappUnavailable'))
-          }
-          whatsappWindow.location.replace(whatsappUrl)
-        } catch (err) {
-          whatsappWindow.close()
-          setLocalError(err.message || t('cart.whatsappUnavailable'))
+        // Open the popup as late as possible (right before navigating it) to
+        // stay as close to the user gesture as the async flow allows, giving
+        // the browser the best chance to allow the window.
+        const whatsappWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+        if (!whatsappWindow) {
+          // Popup was blocked — inform the user
+          setLocalError(t('cart.whatsappPopupBlocked'))
         }
       }
 
@@ -116,7 +126,6 @@ export default function CartPage() {
         navigate('/my-orders')
       }, 1500)
     } catch (err) {
-      whatsappWindow?.close()
       setLocalError(err.message || 'Failed to checkout')
     } finally {
       setCheckoutLoading(null)
