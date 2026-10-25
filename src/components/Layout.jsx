@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect } from 'react'
 // import RoleSelector from './RoleSelector'
 import TopNav from './TopNav'
 import Footer from './Footer'
@@ -14,6 +14,10 @@ export default function Layout(){
   const path = location.pathname
   const needsSidebar = path.startsWith('/dashboard') || path.startsWith('/admin')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+  }, [path])
 
   useEffect(()=>{ setMobileSidebarOpen(false) }, [path])
 

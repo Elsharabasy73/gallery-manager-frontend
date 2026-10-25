@@ -6,6 +6,7 @@ import { getGalleries, unwrapGalleries } from '../api/galleries'
 import { getCategories, unwrapCategories } from '../api/categories'
 import { getGalleryBannerUrl, getGalleryLogoUrl } from '../utils/image'
 import ProductCard from '../components/ProductCard'
+import CategoryScroller from '../components/CategoryScroller'
 import { useLanguage } from '../i18n/LanguageContext'
 
 const FALLBACK_CATEGORIES = [
@@ -251,27 +252,25 @@ export default function Home() {
           </div>
           <p className="max-w-md text-sm leading-6 text-[#8A8078]">{t('home.categorySub')}</p>
         </div>
-        <div className="relative">
-          <div className="flex gap-3 overflow-x-auto hide-scrollbar scroll-fade-mask py-2 pe-10">
-            {loadingCategories
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="shrink-0 w-28 h-9 rounded-full bg-[#E7DFD3]/60 animate-pulse" />
-                ))
-              : categories.map((c) => {
-                  const label = categoryLabel(c)
-                  return (
-                    <button
-                      key={c.id || c.slug || c.name}
-                      onClick={() => handleCategoryClick(c)}
-                      className="shrink-0 rounded-full border border-[#E7DFD3] bg-white px-5 py-2 text-sm shadow-xs transition hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
-                      title={c.slug}
-                    >
-                      {label}
-                    </button>
-                  )
-                })}
-          </div>
-        </div>
+        <CategoryScroller contentClassName="gap-3 py-2">
+          {loadingCategories
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="shrink-0 w-28 h-9 rounded-full bg-[#E7DFD3]/60 animate-pulse" />
+              ))
+            : categories.map((c) => {
+                const label = categoryLabel(c)
+                return (
+                  <button
+                    key={c.id || c.slug || c.name}
+                    onClick={() => handleCategoryClick(c)}
+                    className="shrink-0 rounded-full border border-[#E7DFD3] bg-white px-5 py-2 text-sm shadow-xs transition hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
+                    title={c.slug}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+        </CategoryScroller>
       </section>
 
       {/* Curated Products Showcase with Tabs & 8 items */}

@@ -1,27 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getProducts, unwrapProducts } from '../api/products'
 import { getCategories, unwrapCategories } from '../api/categories'
 import ProductCard from '../components/ProductCard'
+import ProductFilters from '../components/ProductFilters'
 import Pagination from '../components/Pagination'
 import useHideOnScroll from '../hooks/useHideOnScroll'
 import { useLanguage } from '../i18n/LanguageContext'
-
-const FALLBACK_CATEGORIES = [
-  { id: 'sofas', name: 'Sofas', arabicName: 'صوفا', slug: 'sofas' },
-  { id: 'tables', name: 'Tables', arabicName: 'طاولات', slug: 'tables' },
-  { id: 'seating', name: 'Seating', arabicName: 'مقاعد', slug: 'seating' },
-  { id: 'lighting', name: 'Lighting', arabicName: 'إضاءة', slug: 'lighting' },
-  { id: 'decor', name: 'Decor', arabicName: 'ديكور', slug: 'decor' },
-]
+import { FALLBACK_PRODUCT_CATEGORIES } from '../data/productCategories'
 
 export default function Products() {
-  const { t, categoryLabel, formatNumber } = useLanguage()
+  const { t, formatNumber } = useLanguage()
   const [wishError, setWishError] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [apiCategories, setApiCategories] = useState([])
-  const displayCategories = apiCategories.length ? apiCategories : FALLBACK_CATEGORIES
+  const displayCategories = apiCategories.length ? apiCategories : FALLBACK_PRODUCT_CATEGORIES
 
   const [activeCats, setActiveCats] = useState(['All'])
   const [input, setInput] = useState(searchParams.get('keyword') || '')
@@ -29,12 +23,6 @@ export default function Products() {
   const doSearch = () => { setQ(input.trim()); setPage(1) }
 
   const [sort, setSort] = useState(searchParams.get('sort') || '-createdAt')
-  const SORT_OPTIONS = [
-    { value: '-createdAt', label: t('products.sortNewest') },
-    { value: 'price', label: t('products.sortLowHigh') },
-    { value: '-price', label: t('products.sortHighLow') },
-  ]
-
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
   const [appliedMin, setAppliedMin] = useState('')
@@ -47,7 +35,15 @@ export default function Products() {
   const [reload, setReload] = useState(0)
   const [page, setPage] = useState(() => parseInt(searchParams.get('page') || '1', 10))
   const [pagination, setPagination] = useState(null)
+  const productListRef = useRef(null)
   const { visible: filtersVisible } = useHideOnScroll({ threshold: 8, topBuffer: 160 })
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage)
+    requestAnimationFrame(() => {
+      productListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
 
   const toggle = (c) => {
     let next
@@ -110,7 +106,7 @@ export default function Products() {
     const categorySlug = searchParams.get('category')
     if (!categoryId && !categoryIds.length && !categorySlug) return
     if (!(activeCats.length === 1 && activeCats[0] === 'All')) return
-    const cats = apiCategories.length ? apiCategories : FALLBACK_CATEGORIES
+    const cats = apiCategories.length ? apiCategories : FALLBACK_PRODUCT_CATEGORIES
     let found = null
     if (categoryId) found = cats.find((c) => String(c.id) === String(categoryId) || String(c._id) === String(categoryId))
     if (!found && categorySlug) found = cats.find((c) => c.slug === categorySlug || c.name === categorySlug || c.name?.toLowerCase() === categorySlug?.toLowerCase())
@@ -199,91 +195,61 @@ export default function Products() {
 
   return (
     <div className="space-y-6">
-      <div className={`bg-white border border-[#E7DFD3] rounded-xl p-4 sticky top-[72px] z-30 transition-all duration-300 motion-reduce:transition-none ${filtersVisible ? 'translate-y-0 opacity-100' : '-translate-y-[110%] opacity-0 pointer-events-none'}`}>
-        <div className="flex flex-col md:flex-row gap-3 items-center">
-          <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] border border-[#E7DFD3] rounded-full px-4 py-2 w-full min-w-0">
-            <span className="material-symbols-outlined text-[#8A8078]">search</span>
-            <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') doSearch() }} placeholder={t('products.searchPh')} className="bg-transparent outline-none flex-1 text-sm min-w-0" />
-          </div>
-          <div className="flex gap-2 w-full md:w-auto shrink-0">
-            <button onClick={doSearch} className="flex-1 md:flex-none bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap">{t('products.searchBtn')}</button>
-            <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(1) }} className="flex-1 md:flex-none border border-[#E7DFD3] rounded-full px-3 py-2 text-sm bg-white min-w-[140px]">
-              {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="relative">
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar scroll-fade-mask mt-3 pb-1 pe-8">
-            <button
-              key="All"
-              onClick={() => toggle('All')}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${activeCats.includes('All') ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
-            >
-              {t('products.all')}
-            </button>
-            {displayCategories.map((c) => {
-              const label = categoryLabel(c)
-              const active = activeCats.includes(c.name)
-              return (
-                <button
-                  key={c.id || c._id || c.slug || c.name}
-                  onClick={() => toggle(c.name)}
-                  className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${active ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
-                  title={c.slug}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2 mt-3">
-          <div className="flex gap-2 flex-1 min-w-0">
-            <input type="number" inputMode="numeric" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder={t('products.minPrice')} className="flex-1 min-w-0 border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2]" />
-            <input type="number" inputMode="numeric" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder={t('products.maxPrice')} className="flex-1 min-w-0 border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2]" />
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <button onClick={applyPrice} className="px-4 py-1.5 rounded-full border text-sm bg-white whitespace-nowrap">{t('products.apply')}</button>
-            <button onClick={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt'); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('categoryId[in]'); np.delete('category'); np.delete('keyword'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">{t('products.clear')}</button>
-          </div>
-        </div>
-      </div>
+      <ProductFilters
+        categories={displayCategories}
+        activeCategories={activeCats}
+        onToggleCategory={toggle}
+        input={input}
+        onInputChange={setInput}
+        onSearch={doSearch}
+        sort={sort}
+        onSortChange={(value) => { setSort(value); setPage(1) }}
+        priceMin={priceMin}
+        onPriceMinChange={setPriceMin}
+        priceMax={priceMax}
+        onPriceMaxChange={setPriceMax}
+        onApplyPrice={applyPrice}
+        onClear={() => { setPriceMin(''); setPriceMax(''); setAppliedMin(''); setAppliedMax(''); setInput(''); setQ(''); setActiveCats(['All']); setSort('-createdAt'); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('categoryId[in]'); np.delete('category'); np.delete('keyword'); np.delete('page'); setSearchParams(np, { replace: true }) }}
+        visible={filtersVisible}
+      />
 
       {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
 
-      {loading ? (
-        <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-[#E7DFD3] bg-white py-12" role="status" aria-label={t('products.loading')}>
-          <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#E7DFD3] border-t-[#C19A6B]" aria-hidden="true" />
-          <span className="text-sm text-[#8A8078]">{t('products.loading')}</span>
-        </div>
-      ) : loadError ? (
-        <div className="rounded-xl border border-[#E7DFD3] bg-white py-12 text-center">
-          <p className="text-sm text-[#8A8078]">{loadError || t('products.loadError')}</p>
-          <button onClick={() => setReload((value) => value + 1)} className="mt-3 text-sm text-[#C19A6B] underline">{t('products.retry')}</button>
-        </div>
-      ) : (
-        <>
-          <div className="flex items-center justify-between text-xs text-[#8A8078]">
-            <span>{`${t('products.count', { n: formatNumber(filtered.length) })}${pagination ? ` ${t('products.pageOf', { cur: formatNumber(pagination.currentPage || page), total: formatNumber(pagination.numberOfPages || 1) })}` : ''}`}</span>
-            {(q || appliedMin || appliedMax || activeCats[0] !== 'All' || page !== 1) && (
-              <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPriceMin(''); setPriceMax(''); setPage(1); const np = new URLSearchParams(); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button>
-            )}
+      <div ref={productListRef} className="scroll-mt-28">
+        {loading ? (
+          <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-[#E7DFD3] bg-white py-12" role="status" aria-label={t('products.loading')}>
+            <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#E7DFD3] border-t-[#C19A6B]" aria-hidden="true" />
+            <span className="text-sm text-[#8A8078]">{t('products.loading')}</span>
           </div>
+        ) : loadError ? (
+          <div className="rounded-xl border border-[#E7DFD3] bg-white py-12 text-center">
+            <p className="text-sm text-[#8A8078]">{loadError || t('products.loadError')}</p>
+            <button onClick={() => setReload((value) => value + 1)} className="mt-3 text-sm text-[#C19A6B] underline">{t('products.retry')}</button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between text-xs text-[#8A8078]">
+              <span>{`${t('products.count', { n: formatNumber(filtered.length) })}${pagination ? ` ${t('products.pageOf', { cur: formatNumber(pagination.currentPage || page), total: formatNumber(pagination.numberOfPages || 1) })}` : ''}`}</span>
+              {(q || appliedMin || appliedMax || activeCats[0] !== 'All' || page !== 1) && (
+                <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPriceMin(''); setPriceMax(''); setPage(1); const np = new URLSearchParams(); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button>
+              )}
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((p) => (
-              <ProductCard key={String(p._id || p.id)} product={p} onWishlistError={setWishError} />
-            ))}
-          </div>
-          {filtered.length === 0 && <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('products.empty')} <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('categoryId[in]'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button></div>}
-        </>
-      )}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((p) => (
+                <ProductCard key={String(p._id || p.id)} product={p} onWishlistError={setWishError} />
+              ))}
+            </div>
+            {filtered.length === 0 && <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('products.empty')} <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('categoryId[in]'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button></div>}
+          </>
+        )}
+      </div>
 
       {pagination && (
         <Pagination
           pagination={pagination}
           page={page}
-          onPageChange={(newPage) => setPage(newPage)}
+          onPageChange={handlePageChange}
           showFirstLast={true}
         />
       )}

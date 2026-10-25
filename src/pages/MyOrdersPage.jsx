@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { useRole } from '../context/RoleContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import { getMyOrders, unwrapOrders, cancelOrder, getStatusStyles, ORDER_STATUSES } from '../api/orders'
+import { getGallery, unwrapGallery } from '../api/galleries'
+import { createOrderWhatsAppUrl } from '../utils/orderWhatsApp'
 
 export default function MyOrdersPage() {
   const navigate = useNavigate()
@@ -13,6 +15,7 @@ export default function MyOrdersPage() {
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all')
   const [cancellingId, setCancellingId] = useState(null)
+  const [whatsappLoadingId, setWhatsappLoadingId] = useState(null)
   const [success, setSuccess] = useState('')
   const [localError, setLocalError] = useState('')
 
@@ -55,6 +58,45 @@ export default function MyOrdersPage() {
       setLocalError(err.message || t('orders.cancelFail'))
     } finally {
       setCancellingId(null)
+    }
+  }
+
+  const handleResendWhatsApp = async (order) => {
+    const whatsappWindow = window.open('about:blank', '_blank')
+    if (whatsappWindow) whatsappWindow.opener = null
+    setLocalError('')
+
+    if (!whatsappWindow) {
+      setLocalError(t('orders.whatsappPopupBlocked'))
+      return
+    }
+
+    setWhatsappLoadingId(order.id)
+    try {
+      let gallery = order.gallery
+      if (!gallery?.phone) {
+        const galleryId = order.galleryId || gallery?.id || gallery?._id
+        if (galleryId) {
+          const response = await getGallery(galleryId, { fields: 'id,name,phone' })
+          gallery = unwrapGallery(response)
+        }
+      }
+
+      const whatsappUrl = createOrderWhatsAppUrl({
+        gallery,
+        order,
+        items: order.items || [],
+        subtotal: order.totalPrice,
+        origin: window.location.origin,
+      })
+      if (!whatsappUrl) throw new Error(t('cart.whatsappUnavailable'))
+
+      whatsappWindow.location.replace(whatsappUrl)
+    } catch (err) {
+      whatsappWindow.close()
+      setLocalError(err.message || t('cart.whatsappUnavailable'))
+    } finally {
+      setWhatsappLoadingId(null)
     }
   }
 
@@ -148,7 +190,9 @@ export default function MyOrdersPage() {
               key={order.id}
               order={order}
               isCancelling={cancellingId === order.id}
+              isResendingWhatsApp={whatsappLoadingId === order.id}
               onCancel={handleCancelOrder}
+              onResendWhatsApp={handleResendWhatsApp}
               onViewDetails={(id) => navigate(`/orders/${id}`)}
             />
           ))}
@@ -158,7 +202,7 @@ export default function MyOrdersPage() {
   )
 }
 
-function OrderCard({ order, isCancelling, onCancel, onViewDetails }) {
+function OrderCard({ order, isCancelling, isResendingWhatsApp, onCancel, onResendWhatsApp, onViewDetails }) {
   const { t, formatDate, formatNumber, formatPrice } = useLanguage()
   const totalItems = order.items?.reduce((sum, i) => sum + i.quantity, 0) || 0
   const totalPrice = Number(order.totalPrice || 0)
@@ -191,6 +235,13 @@ function OrderCard({ order, isCancelling, onCancel, onViewDetails }) {
       </div>
 
       <div className="flex gap-2 mt-3">
+        <button
+          onClick={() => onResendWhatsApp(order)}
+          disabled={isResendingWhatsApp}
+          className="flex-1 text-xs border border-green-700 text-green-800 px-3 py-1.5 rounded-lg hover:bg-green-50 disabled:opacity-60"
+        >
+          {isResendingWhatsApp ? t('orders.resendingWhatsApp') : t('orders.resendWhatsApp')}
+        </button>
         <button
           onClick={() => onViewDetails(order.id)}
           className="flex-1 text-xs border px-3 py-1.5 rounded-lg hover:bg-[#FAF7F2]"

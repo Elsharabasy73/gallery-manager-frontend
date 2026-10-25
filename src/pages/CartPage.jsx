@@ -6,6 +6,7 @@ import { useLanguage } from '../i18n/LanguageContext'
 import { createOrder, unwrapOrder } from '../api/orders'
 import { getGallery, unwrapGallery } from '../api/galleries'
 import CartItemCard from '../components/CartItemCard'
+import { createOrderWhatsAppUrl } from '../utils/orderWhatsApp'
 
 export default function CartPage() {
   const navigate = useNavigate()
@@ -94,42 +95,16 @@ export default function CartPage() {
         try {
           const galleryResponse = await getGallery(galleryId, { fields: 'id,name,phone' })
           const gallery = unwrapGallery(galleryResponse)
-          const phoneDigits = String(gallery?.phone || '').replace(/\D/g, '')
-          const whatsappPhone = phoneDigits.startsWith('00')
-            ? phoneDigits.slice(2)
-            : phoneDigits.startsWith('0')
-              ? `20${phoneDigits.slice(1)}`
-              : phoneDigits
-
-          if (!whatsappPhone) {
+          const whatsappUrl = createOrderWhatsAppUrl({
+            gallery: gallery || { name: group.galleryName },
+            order,
+            items: group.items,
+            subtotal: group.subtotal,
+            origin: window.location.origin,
+          })
+          if (!whatsappUrl) {
             throw new Error(t('cart.whatsappUnavailable'))
           }
-
-          const orderReference = order?.orderNumber || order?.id || 'غير متاح'
-          const productLines = group.items.map((item, index) => {
-            const product = item.product || {}
-            const productId = product.id || product._id || item.productId
-            const productUrl = productId ? new URL(`/products/${productId}`, window.location.origin).href : ''
-            const arabicIndex = new Intl.NumberFormat('ar-EG').format(index + 1)
-            const arabicQuantity = new Intl.NumberFormat('ar-EG').format(item.quantity)
-            return `${arabicIndex}. ${product.name || 'منتج'} — الكمية: ${arabicQuantity}${productUrl ? `\n${productUrl}` : ''}`
-          })
-          const arabicSubtotal = new Intl.NumberFormat('ar-EG', {
-            style: 'currency',
-            currency: 'EGP',
-            maximumFractionDigits: 2,
-          }).format(group.subtotal)
-          const message = [
-            `مرحباً ${gallery.name || group.galleryName}،`,
-            `أرسلت للتو الطلب رقم ${orderReference}.`,
-            '',
-            'أرجو تأكيد توفر المنتجات التالية:',
-            ...productLines,
-            '',
-            `المجموع الفرعي: ${arabicSubtotal}`,
-            'يرجى الرد في أقرب وقت ممكن لتأكيد الطلب وترتيب الخطوات التالية. شكراً لكم!',
-          ].join('\n')
-          const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`
           whatsappWindow.location.replace(whatsappUrl)
         } catch (err) {
           whatsappWindow.close()

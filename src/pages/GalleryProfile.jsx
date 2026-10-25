@@ -1,15 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getGallery, unwrapGallery } from '../api/galleries'
 import { apiFetch } from '../api/client'
 import { unwrapProducts } from '../api/products'
+import { getCategories, unwrapCategories } from '../api/categories'
 import { getGalleryLogoUrl, getGalleryBannerUrl, STORAGE_BASE } from '../utils/image'
 import ProductCard from '../components/ProductCard'
+import ProductFilters from '../components/ProductFilters'
 import ShareGalleryModal from '../components/ShareGalleryModal'
 import ImageLightboxModal from '../components/ImageLightboxModal'
 import Pagination from '../components/Pagination'
 import useHideOnScroll from '../hooks/useHideOnScroll'
 import { useLanguage } from '../i18n/LanguageContext'
+import { FALLBACK_PRODUCT_CATEGORIES } from '../data/productCategories'
 
 function getInitials(name = '') {
   return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'GA'
@@ -40,18 +43,73 @@ export default function GalleryProfile() {
   const [productsError, setProductsError] = useState('')
   const [pagination, setPagination] = useState(null)
 
+  const [apiCategories, setApiCategories] = useState([])
+  const displayCategories = apiCategories.length ? apiCategories : FALLBACK_PRODUCT_CATEGORIES
+  const [activeCats, setActiveCats] = useState(['All'])
   const [input, setInput] = useState('')
   const [keyword, setKeyword] = useState('')
-  const doSearch = () => setKeyword(input.trim())
+  const doSearch = () => { setKeyword(input.trim()); setPage(1) }
+  const [sort, setSort] = useState('-createdAt')
+  const [priceMin, setPriceMin] = useState('')
+  const [priceMax, setPriceMax] = useState('')
+  const [appliedMin, setAppliedMin] = useState('')
+  const [appliedMax, setAppliedMax] = useState('')
 
   const [page, setPage] = useState(1)
+  const productListRef = useRef(null)
   const [view, setView] = useState('grid')
   const [wishError, setWishError] = useState('')
   const [shareOpen, setShareOpen] = useState(false)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [lightboxImages, setLightboxImages] = useState([])
-  const { visible: searchVisible } = useHideOnScroll({ threshold: 8, topBuffer: 320 })
+  const { visible: filtersVisible } = useHideOnScroll({ threshold: 8, topBuffer: 320 })
+  const hasProductFilters = Boolean(
+    keyword || appliedMin || appliedMax || activeCats[0] !== 'All' || page !== 1
+  )
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage)
+    requestAnimationFrame(() => {
+      productListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
+  const toggleCategory = (categoryName) => {
+    setActiveCats((current) => {
+      if (categoryName === 'All') return ['All']
+      const next = current.includes(categoryName)
+        ? current.filter((name) => name !== categoryName)
+        : [...current.filter((name) => name !== 'All'), categoryName]
+      return next.length ? next : ['All']
+    })
+    setPage(1)
+  }
+
+  const clearFilters = () => {
+    setInput('')
+    setKeyword('')
+    setActiveCats(['All'])
+    setSort('-createdAt')
+    setPriceMin('')
+    setPriceMax('')
+    setAppliedMin('')
+    setAppliedMax('')
+    setPage(1)
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    getCategories({ limit: 20, fields: 'id,name,arabicName,slug', sort: 'name' })
+      .then((res) => {
+        if (!cancelled) {
+          const categories = unwrapCategories(res)
+          if (categories.length) setApiCategories(categories)
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   // fetch gallery via router .route("/:id").get(getGalleryValidator, getGallery) — id only
   useEffect(() => {
@@ -84,17 +142,33 @@ export default function GalleryProfile() {
       setProductsError('')
       try {
         const params = {
-          limit: 12,
+          limit: 20,
           page,
-          sort: '-createdAt',
+          sort,
           fields: 'id,name,slug,mainImageUrl,images,price,compareAtPrice,stock,status,gallery[id,name,slug],category[id,name,slug]',
         }
         if (keyword) params.keyword = keyword
+        if (appliedMin) params['price[gte]'] = appliedMin
+        if (appliedMax) params['price[lte]'] = appliedMax
+        if (activeCats.length === 1 && activeCats[0] !== 'All') {
+          const category = displayCategories.find((item) => item.name === activeCats[0])
+          const categoryId = category?.id || category?._id
+          if (categoryId) params.categoryId = categoryId
+          else if (category?.slug) params.category = category.slug
+        } else if (activeCats.length > 1) {
+          const categoryIds = activeCats
+            .map((name) => displayCategories.find((item) => item.name === name))
+            .map((category) => category?.id || category?._id)
+            .filter(Boolean)
+          if (categoryIds.length === activeCats.length) {
+            params['categoryId[in]'] = categoryIds.join(',')
+          }
+        }
         const res = await getGalleryProducts(gallery.id, params)
         if (cancelled) return
         const data = unwrapProducts(res)
         setProducts(data)
-        setPagination(res?.paginationResult || null)
+        setPagination(res?.paginationResult || res?.pagination || null)
       } catch (err) {
         if (!cancelled) {
           setProductsError(err.message || 'Failed to load products')
@@ -106,7 +180,7 @@ export default function GalleryProfile() {
     }
     run()
     return () => { cancelled = true }
-  }, [gallery?.id, keyword, page])
+  }, [gallery?.id, keyword, sort, appliedMin, appliedMax, activeCats, apiCategories, displayCategories, page])
 
   if (loadingGallery) {
     return (
@@ -339,51 +413,67 @@ export default function GalleryProfile() {
         </div>
       )}
 
-      <div className={`bg-white border border-[#E7DFD3] rounded-full p-2 flex items-center gap-2 sticky top-[72px] z-30 transition-all duration-300 motion-reduce:transition-none ${searchVisible ? 'translate-y-0 opacity-100' : '-translate-y-[120%] opacity-0 pointer-events-none'}`}>
-        <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] rounded-full px-4 py-2 min-w-0">
-          <span className="material-symbols-outlined text-[#8A8078]">search</span>
-          <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { doSearch(); setPage(1) } }} placeholder={t('galleryProfile.searchPh')} className="bg-transparent outline-none flex-1 text-sm min-w-0" />
-        </div>
-        <button onClick={() => { doSearch(); setPage(1) }} className="hidden sm:block bg-[#4B3621] text-white px-5 py-2 rounded-full text-xs">{t('galleryProfile.searchBtn')}</button>
-        <button className="w-9 h-9 border rounded-full flex items-center justify-center shrink-0"><span className="material-symbols-outlined">tune</span></button>
+      <ProductFilters
+        categories={displayCategories}
+        activeCategories={activeCats}
+        onToggleCategory={toggleCategory}
+        input={input}
+        onInputChange={setInput}
+        onSearch={doSearch}
+        sort={sort}
+        onSortChange={(value) => { setSort(value); setPage(1) }}
+        priceMin={priceMin}
+        onPriceMinChange={setPriceMin}
+        priceMax={priceMax}
+        onPriceMaxChange={setPriceMax}
+        onApplyPrice={() => { setAppliedMin(priceMin.trim()); setAppliedMax(priceMax.trim()); setPage(1) }}
+        onClear={clearFilters}
+        visible={filtersVisible}
+      >
         <div className="hidden md:flex gap-1 shrink-0">
-          <button onClick={() => setView('grid')} className={`w-8 h-8 rounded-full flex items-center justify-center ${view === 'grid' ? 'bg-[#4B3621] text-white' : 'border'}`}><span className="material-symbols-outlined text-[18px]">grid_view</span></button>
-          <button onClick={() => setView('list')} className={`w-8 h-8 rounded-full flex items-center justify-center ${view === 'list' ? 'bg-[#4B3621] text-white' : 'border'}`}><span className="material-symbols-outlined text-[18px]">view_list</span></button>
+          <button onClick={() => setView('grid')} className={`w-8 h-8 rounded-full flex items-center justify-center ${view === 'grid' ? 'bg-[#4B3621] text-white' : 'border'}`}>
+            <span className="material-symbols-outlined text-[18px]">grid_view</span>
+          </button>
+          <button onClick={() => setView('list')} className={`w-8 h-8 rounded-full flex items-center justify-center ${view === 'list' ? 'bg-[#4B3621] text-white' : 'border'}`}>
+            <span className="material-symbols-outlined text-[18px]">view_list</span>
+          </button>
         </div>
-      </div>
+      </ProductFilters>
 
       <div className="flex items-center justify-between">
         <div className="text-xs text-[#8A8078]">{loadingProducts ? t('galleryProfile.loading') : `${t('galleryProfile.products', { n: formatNumber(products.length) })}${pagination ? ` ${t('galleryProfile.pageOf', { cur: formatNumber(pagination.currentPage), total: formatNumber(pagination.numberOfPages || 1) })}` : ''}`}</div>
-        {(keyword || page !== 1) && <button onClick={() => { setInput(''); setKeyword(''); setPage(1) }} className="text-xs text-[#C19A6B] underline">{t('galleryProfile.clearSearch')}</button>}
+        {hasProductFilters && <button onClick={clearFilters} className="text-xs text-[#C19A6B] underline">{t('products.clearFilters')}</button>}
       </div>
 
       {productsError && <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{productsError}</div>}
       {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
 
-      {loadingProducts ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden animate-pulse"><div className="aspect-[4/3] bg-[#E7DFD3]/60" /><div className="p-3"><div className="h-4 bg-[#E7DFD3]/60 rounded w-3/4" /></div></div>)}
-        </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('galleryProfile.noProducts')} {keyword ? <button onClick={() => { setInput(''); setKeyword('') }} className="text-[#C19A6B] underline">{t('galleryProfile.clearSearch')}</button> : t('galleryProfile.checkLater')}</div>
-      ) : (
-        <div className={view === 'grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'grid grid-cols-1 gap-4'}>
-          {products.map((p) => (
-            <ProductCard
-              key={p.id || p._id}
-              product={p}
-              aspect={view === 'grid' ? 'aspect-[4/3]' : 'aspect-[16/9]'}
-              onWishlistError={setWishError}
-            />
-          ))}
-        </div>
-      )}
+      <div ref={productListRef} className="scroll-mt-28">
+        {loadingProducts ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden animate-pulse"><div className="aspect-[4/3] bg-[#E7DFD3]/60" /><div className="p-3"><div className="h-4 bg-[#E7DFD3]/60 rounded w-3/4" /></div></div>)}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('galleryProfile.noProducts')} {hasProductFilters ? <button onClick={clearFilters} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button> : t('galleryProfile.checkLater')}</div>
+        ) : (
+          <div className={view === 'grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'grid grid-cols-1 gap-4'}>
+            {products.map((p) => (
+              <ProductCard
+                key={p.id || p._id}
+                product={p}
+                aspect={view === 'grid' ? 'aspect-[4/3]' : 'aspect-[16/9]'}
+                onWishlistError={setWishError}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {pagination && (
         <Pagination
           pagination={pagination}
           page={page}
-          onPageChange={(newPage) => setPage(newPage)}
+          onPageChange={handlePageChange}
           showFirstLast={true}
         />
       )}
