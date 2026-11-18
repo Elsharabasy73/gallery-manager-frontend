@@ -2,9 +2,11 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useRole } from '../context/RoleContext'
 import { useLanguage } from '../i18n/LanguageContext'
-import { getMyOrders, unwrapOrders, cancelOrder, getStatusStyles, ORDER_STATUSES } from '../api/orders'
+import { getMyOrders, unwrapOrders, cancelOrder, ORDER_STATUSES } from '../api/orders'
 import { getGallery, unwrapGallery } from '../api/galleries'
 import { createOrderWhatsAppUrl } from '../utils/orderWhatsApp'
+import StatusBadge from '../components/StatusBadge'
+import { getStatusLabel } from '../utils/orderStatus'
 
 export default function MyOrdersPage() {
   const navigate = useNavigate()
@@ -107,7 +109,7 @@ export default function MyOrdersPage() {
   }, {})
 
   const filteredOrders = filter === 'all' ? orders : orders.filter(o => o.status === filter)
-  const statusLabel = (s) => t(`status.${s}`, null) === `status.${s}` ? (ORDER_STATUSES[s]?.label || s) : t(`status.${s}`)
+  const statusLabel = (s) => getStatusLabel(t, s)
 
   const statusFilters = [
     { key: 'all', label: `${t('orders.all')} (${formatNumber(statusCounts.all || 0)})` },
@@ -219,9 +221,9 @@ function OrderCard({ order, isCancelling, isResendingWhatsApp, onCancel, onResen
           <span className="font-mono">{order.id?.substring(0, 8)}...</span>
           <span className="text-[#8A8078] ms-2">• {orderDate}</span>
         </div>
-        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusStyles(order.status)}`}>
+        <StatusBadge status={order.status} className="px-2 py-0.5 rounded-full text-[11px] font-medium">
           {label}
-        </span>
+        </StatusBadge>
       </div>
 
       <div className="flex items-center gap-2 mt-3 text-sm">

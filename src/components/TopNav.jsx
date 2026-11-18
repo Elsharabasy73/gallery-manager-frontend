@@ -6,30 +6,7 @@ import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import useHideOnScroll from '../hooks/useHideOnScroll'
-
-const NAV_LABEL_KEYS = {
-  home: 'nav.home',
-  products: 'nav.products',
-  galleries: 'nav.galleries',
-  about: 'nav.about',
-  support: 'nav.support',
-  wishlist: 'nav.wishlist',
-  cart: 'nav.cart',
-  'my-orders': 'nav.myOrders',
-  'dashboard-overview': 'nav.overview',
-  'my-gallery': 'nav.myGallery',
-  'my-products': 'nav.galleryProducts',
-  'add-product': 'nav.addProduct',
-  'gallery-orders': 'nav.galleryOrders',
-  employees: 'nav.employees',
-  'create-gallery': 'nav.createGallery',
-  'admin-overview': 'nav.adminOverview',
-  'admin-users': 'nav.users',
-  'admin-products': 'nav.adminProducts',
-  'admin-galleries': 'nav.adminGalleries',
-  'admin-orders': 'nav.allOrders',
-  'admin-categories': 'nav.categories',
-}
+import { NAV_LABEL_KEYS } from '../constants/labels'
 
 function LangSwitcher({ compact = false }) {
   const { lang, setLang, t } = useLanguage()

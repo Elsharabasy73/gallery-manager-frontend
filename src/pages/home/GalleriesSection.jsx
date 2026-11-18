@@ -1,6 +1,7 @@
 import { galleries as mockGalleries } from '../../data/mockData'
 import { getGalleryBannerUrl, getGalleryLogoUrl } from '../../utils/image'
-import { getInitials } from './helpers'
+import { getInitials } from '../../utils/getInitials'
+import Spinner from '../../components/Spinner'
 
 export default function GalleriesSection({ t, navigate, loadingGalleries, galleries, errorGalleries }) {
   return (
@@ -23,7 +24,7 @@ export default function GalleriesSection({ t, navigate, loadingGalleries, galler
 
         {loadingGalleries ? (
           <div className="flex min-h-40 flex-col items-center justify-center gap-3" role="status" aria-label={t('galleries.loading')}>
-            <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#E7DFD3] border-t-[#C19A6B]" aria-hidden="true" />
+            <Spinner />
             <span className="text-sm text-[#8A8078]">{t('galleries.loading')}</span>
           </div>
         ) : galleries.length ? (

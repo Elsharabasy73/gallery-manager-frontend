@@ -1,39 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useRole, NAV_CONFIG } from '../context/RoleContext'
 import { useLanguage } from '../i18n/LanguageContext'
-
-const NAV_LABEL_KEYS = {
-  home: 'nav.home',
-  products: 'nav.products',
-  galleries: 'nav.galleries',
-  about: 'nav.about',
-  wishlist: 'nav.wishlist',
-  cart: 'nav.cart',
-  'my-orders': 'nav.myOrders',
-  'dashboard-overview': 'nav.overview',
-  'my-gallery': 'nav.myGallery',
-  'my-products': 'nav.galleryProducts',
-  'add-product': 'nav.addProduct',
-  'gallery-orders': 'nav.galleryOrders',
-  employees: 'nav.employees',
-  'create-gallery': 'nav.createGallery',
-  'admin-overview': 'nav.adminOverview',
-  'admin-users': 'nav.users',
-  'admin-products': 'nav.adminProducts',
-  'admin-galleries': 'nav.adminGalleries',
-  'admin-orders': 'nav.allOrders',
-  'admin-categories': 'nav.categories',
-  'admin-support': 'nav.support',
-}
-
-const ROLE_LABEL_KEYS = {
-  customer: 'roles.customer',
-  gallery_owner: 'roles.gallery_owner',
-  employee: 'roles.employee',
-  admin: 'roles.admin',
-  craftsman: 'roles.craftsman',
-  guest: 'roles.guest',
-}
+import { NAV_LABEL_KEYS, ROLE_LABEL_KEYS } from '../constants/labels'
 
 export default function Sidebar(){
   const { role } = useRole()

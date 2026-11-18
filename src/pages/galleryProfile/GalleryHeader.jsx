@@ -1,4 +1,4 @@
-import { getInitials } from './helpers'
+import { getInitials } from '../../utils/getInitials'
 
 export default function GalleryHeader({ bannerSrc, openBannerLightbox, t, logoSrc, openLogoLightbox, gallery, pagination, formatNumber, products, memberYear, setShareOpen }) {
   return (

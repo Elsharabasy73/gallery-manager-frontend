@@ -3,14 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useRole } from '../context/RoleContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import { getMe, updateMe, updatePassword, deleteMe, unwrapUser } from '../api/users'
-
-const ROLE_LABEL_KEYS = {
-  customer: 'roles.customer',
-  gallery_owner: 'roles.gallery_owner',
-  employee: 'roles.employee',
-  admin: 'roles.admin',
-  user: 'roles.customer',
-}
+import { ROLE_LABEL_KEYS } from '../constants/labels'
 
 export default function Profile(){
   const { role, user, logout, setUser } = useRole()

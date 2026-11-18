@@ -4,6 +4,7 @@ import { forgotPassword, verifyResetOtp, resetPassword } from "../../api/auth";
 import { useLanguage } from "../../i18n/LanguageContext";
 import SplitLayout from './SplitLayout';
 import StepIndicator from './components/StepIndicator';
+import OtpInput from './components/OtpInput';
 
 export function ForgotPassword() {
   const navigate = useNavigate();
@@ -69,31 +70,6 @@ export function ForgotPassword() {
     } finally {
       setResending(false);
     }
-  };
-  const handleChangeOtp = (idx, val) => {
-    if (!/^\d*$/.test(val)) return;
-    const d = val.slice(-1);
-    const next = [...otp];
-    next[idx] = d;
-    setOtp(next);
-    setError("");
-    if (d && idx < 5) inputsRef.current[idx + 1]?.focus();
-  };
-  const handleKeyDown = (idx, e) => {
-    if (e.key === "Backspace" && !otp[idx] && idx > 0)
-      inputsRef.current[idx - 1]?.focus();
-  };
-  const handlePaste = (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, 6);
-    if (!pasted) return;
-    const next = Array(6).fill("");
-    pasted.split("").forEach((d, i) => (next[i] = d));
-    setOtp(next);
-    inputsRef.current[Math.min(pasted.length, 5)]?.focus();
   };
   const handleVerifyOtp = async () => {
     const code = otp.join("");
@@ -212,24 +188,14 @@ export function ForgotPassword() {
               {t("auth.change")}
             </button>
           </p>
-          <div
-            className="flex gap-2 justify-center my-4"
-            onPaste={handlePaste}
-            dir="ltr"
-          >
-            {Array.from({ length: 6 }).map((_, i) => (
-              <input
-                key={i}
-                ref={(el) => (inputsRef.current[i] = el)}
-                value={otp[i]}
-                onChange={(e) => handleChangeOtp(i, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(i, e)}
-                maxLength={1}
-                inputMode="numeric"
-                className="w-10 h-12 border border-[#E7DFD3] rounded-lg text-center text-lg focus:ring-2 focus:ring-[#C19A6B] outline-none"
-              />
-            ))}
-          </div>
+          <OtpInput
+            value={otp}
+            onChange={setOtp}
+            onClearError={() => setError("")}
+            inputsRef={inputsRef}
+            containerClassName="flex gap-2 justify-center my-4"
+            inputClassName="w-10 h-12 border border-[#E7DFD3] rounded-lg text-center text-lg focus:ring-2 focus:ring-[#C19A6B] outline-none"
+          />
           <button
             onClick={handleVerifyOtp}
             disabled={loading}

@@ -4,12 +4,14 @@ import { getOrder, acceptOrder, updateOrderStatus, cancelOrder, unwrapOrder, get
 import { useGallery } from '../../context/GalleryContext';
 import { useRole } from '../../context/RoleContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import StatusBadge from '../../components/StatusBadge';
+import { getStatusLabel } from '../../utils/orderStatus';
 import OrderStatusTimeline from './components/OrderStatusTimeline';
 
 export function OrderDetails(){
   const navigate = useNavigate()
   const { t, formatPrice, formatNumber, formatDate } = useLanguage()
-  const statusLabel = (st) => t(`status.${st}`, null) === `status.${st}` ? (ORDER_STATUSES[st]?.label || st) : t(`status.${st}`)
+  const statusLabel = (s) => getStatusLabel(t, s)
   const { id: orderId } = useParams()
   const { role, user } = useRole()
   const { galleryId: ctxGalleryId, gallery: ctxGallery } = useGallery()
@@ -163,9 +165,9 @@ export function OrderDetails(){
 
       <div className="flex justify-between items-start">
         <h2 className="font-serif text-2xl">{t('orderDetails.title')}</h2>
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusStyles(order.status)}`}>
+        <StatusBadge status={order.status} className="px-3 py-1 rounded-full text-xs font-medium">
           {statusLabel(order.status)}
-        </span>
+        </StatusBadge>
       </div>
 
       {success && <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg">{success}</div>}

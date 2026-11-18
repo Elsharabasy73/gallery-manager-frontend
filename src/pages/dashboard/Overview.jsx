@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { getGalleryOrders, unwrapOrders, getStatusStyles, ORDER_STATUSES } from '../../api/orders';
+import { getGalleryOrders, unwrapOrders } from '../../api/orders';
 import { useGallery } from '../../context/GalleryContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import StatusBadge from '../../components/StatusBadge';
+import { getStatusLabel } from '../../utils/orderStatus';
 
 export function Overview(){
   const { t, formatNumber, formatPrice } = useLanguage()
+  const statusLabel = (s) => getStatusLabel(t, s)
   const { gallery, galleryId, loading, error } = useGallery()
   const [recentOrders, setRecentOrders] = useState([])
   const [recentOrdersLoading, setRecentOrdersLoading] = useState(true)
@@ -69,13 +72,11 @@ export function Overview(){
           ) : recentOrders.map((o) => {
             const orderRef = o.orderNumber || (o.id ? o.id.slice(0, 8) : t('orders.na'))
             const galleryName = o.gallery?.name || gallery?.name || t('orders.unknownGallery')
-            const status = t(`status.${o.status}`, null) === `status.${o.status}`
-              ? (ORDER_STATUSES[o.status]?.label || o.status)
-              : t(`status.${o.status}`)
+            const status = statusLabel(o.status)
             return (
               <div key={o.id} className="flex justify-between items-center gap-3 text-sm border-b py-2">
                 <span className="truncate">{orderRef} • {galleryName}</span>
-                <span className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusStyles(o.status)}`}>{status}</span>
+                <StatusBadge status={o.status} className="shrink-0 px-2 py-0.5 rounded-full text-[11px] font-medium">{status}</StatusBadge>
                 <span className="shrink-0">{formatPrice(o.totalPrice)}</span>
               </div>
             )

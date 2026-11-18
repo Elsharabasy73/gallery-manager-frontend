@@ -1,10 +1,10 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRole } from '../context/RoleContext'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import { getProductImageUrl } from '../utils/image'
+import { useProductActions } from '../hooks/useProductActions'
 
 /**
  * Reusable ProductCard — single source of truth for product presentation.
@@ -16,10 +16,22 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
   const { isWishlisted, toggle } = useWishlist()
   const { addItem: addToCart, canAccessCart } = useCart()
   const { t, formatPrice, categoryLabel } = useLanguage()
-  const [toggling, setToggling] = useState(false)
-  const [addingToCart, setAddingToCart] = useState(false)
-
   const pid = String(p?.id ?? p?._id ?? '')
+  const { handleWishlist, handleAddToCart, wishlistLoading: toggling, cartLoading: addingToCart } = useProductActions({
+    getProductId: () => pid,
+    isAuthenticated,
+    role,
+    canAccessCart,
+    toggleWishlist: toggle,
+    addToCart,
+    navigate,
+    onWishlistError: (err) => {
+      const msg = err?.message || t('card.wishlistFailed')
+      if (onWishlistError) onWishlistError(msg)
+    },
+    onCartError: (err) => console.error('Add to cart failed:', err.message),
+    stopPropagation: true,
+  })
   const img =
     getProductImageUrl(p) ||
     p?.image ||
@@ -36,41 +48,6 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
   const showWishlist = role === 'customer'
   const showAdminBadge = role === 'admin'
   const showAddToCart = role === 'customer' && Number(stock) > 0 && p?.status === 'active'
-
-  const handleWishlist = async (e) => {
-    e.stopPropagation()
-    if (!isAuthenticated || role !== 'customer') {
-      navigate('/login')
-      return
-    }
-    if (!pid) return
-    setToggling(true)
-    try {
-      await toggle(pid)
-    } catch (err) {
-      const msg = err?.message || t('card.wishlistFailed')
-      if (onWishlistError) onWishlistError(msg)
-    } finally {
-      setToggling(false)
-    }
-  }
-
-  const handleAddToCart = async (e) => {
-    e?.stopPropagation()
-    if (!canAccessCart) {
-      navigate('/login')
-      return
-    }
-    if (!pid) return
-    setAddingToCart(true)
-    try {
-      await addToCart(pid, 1)
-    } catch (err) {
-      console.error('Add to cart failed:', err.message)
-    } finally {
-      setAddingToCart(false)
-    }
-  }
 
   const handleNavigate = () => {
     if (pid) navigate(`/products/${pid}`)

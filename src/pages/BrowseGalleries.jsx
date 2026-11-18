@@ -6,10 +6,8 @@ import { getGalleryLogoUrl, getGalleryBannerUrl } from '../utils/image'
 import useHideOnScroll from '../hooks/useHideOnScroll'
 import Pagination from '../components/Pagination'
 import { useLanguage } from '../i18n/LanguageContext'
-
-function getInitials(name = '') {
-  return name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'GA'
-}
+import { getInitials } from '../utils/getInitials'
+import Spinner from '../components/Spinner'
 
 export default function BrowseGalleries() {
   const { role } = useRole()
@@ -95,7 +93,7 @@ export default function BrowseGalleries() {
 
       {loading ? (
         <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-[#E7DFD3] bg-white py-12" role="status" aria-label={t('galleries.loading')}>
-          <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#E7DFD3] border-t-[#C19A6B]" aria-hidden="true" />
+          <Spinner />
           <span className="text-sm text-[#8A8078]">{t('galleries.loading')}</span>
         </div>
       ) : (

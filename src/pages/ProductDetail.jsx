@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext'
 import { useRole } from '../context/RoleContext'
 import { useLanguage } from '../i18n/LanguageContext'
 import ImageLightboxModal from '../components/ImageLightboxModal'
+import { useProductActions } from '../hooks/useProductActions'
 
 export default function ProductDetail(){
   const { t, formatPrice, formatNumber } = useLanguage()
@@ -19,9 +20,23 @@ export default function ProductDetail(){
   const [p, setP] = useState(null)
   const [loading, setLoading] = useState(true)
   const [qty,setQty]=useState(1)
-  const [wishLoading, setWishLoading]=useState(false)
+  const { handleWishlist, handleAddToCart, wishlistLoading: wishLoading, cartLoading } = useProductActions({
+    getProductId: () => p?._id || p?.id || id,
+    isAuthenticated,
+    role,
+    canAccessCart,
+    toggleWishlist: toggle,
+    addToCart,
+    quantity: qty,
+    navigate,
+    onWishlistStart: () => setWishError(null),
+    onWishlistError: (e) => setWishError(e.message || t('card.wishlistFailed')),
+    onCartStart: () => setCartSuccess(null),
+    onCartSuccess: () => setCartSuccess(t('detail.added', { n: formatNumber(qty), s: '' })),
+    onCartError: (e) => alert(e.message || t('card.wishlistFailed')),
+    requireWishlistId: false,
+  })
   const [wishError, setWishError]=useState(null)
-  const [cartLoading, setCartLoading] = useState(false)
   const [cartSuccess, setCartSuccess] = useState(null)
 
   // Image gallery state — hooks must be before any early return.
@@ -55,42 +70,6 @@ export default function ProductDetail(){
     const first = getProductImageUrl(p) || p.image || null
     if (first) setActiveSrc(first)
   },[p])
-
-  const handleWishlist = async () => {
-    setWishError(null)
-    if (!isAuthenticated || role !== 'customer') {
-      navigate('/login')
-      return
-    }
-    const pid = p?._id || p?.id || id
-    setWishLoading(true)
-    try {
-      await toggle(String(pid))
-    } catch (e) {
-      setWishError(e.message || t('card.wishlistFailed'))
-    } finally {
-      setWishLoading(false)
-    }
-  }
-
-  const handleAddToCart = async () => {
-    setCartSuccess(null)
-    if (!canAccessCart) {
-      navigate('/login')
-      return
-    }
-    const pid = p?._id || p?.id || id
-    if (!pid) return
-    setCartLoading(true)
-    try {
-      await addToCart(String(pid), qty)
-      setCartSuccess(t('detail.added', { n: formatNumber(qty), s: '' }))
-    } catch (e) {
-      alert(e.message || t('card.wishlistFailed'))
-    } finally {
-      setCartLoading(false)
-    }
-  }
 
   if (loading) return <div className="text-center py-12 text-sm text-[#8A8078]">{t('detail.loading')}</div>
   if (!p) return <div className="text-center py-12 bg-white border rounded-xl">{t('detail.notFound')}</div>

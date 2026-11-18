@@ -6,15 +6,6 @@ export const FALLBACK_CATEGORIES = [
   { id: 'decor', name: 'Decor', arabicName: 'ديكور', slug: 'decor' },
 ]
 
-export function getInitials(name = '') {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase())
-    .join('') || 'GA'
-}
-
 function getProductCategoryKey(product) {
   const category = product?.category
   const value = typeof category === 'string'

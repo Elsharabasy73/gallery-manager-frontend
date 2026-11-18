@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import { login as loginApi, googleLogin as googleLoginApi, sendVerificationOtp } from "../../api/auth";
+import { login as loginApi, sendVerificationOtp } from "../../api/auth";
 import { getMyGallery } from "../../api/galleries";
 import { useRole } from "../../context/RoleContext";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { isTokenExpired } from "../../utils/auth";
 import SplitLayout from './SplitLayout';
+import { useGoogleAuth } from "./useGoogleAuth";
 
 export function Login() {
   const navigate = useNavigate();
@@ -18,7 +19,14 @@ export function Login() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleRole, setGoogleRole] = useState("customer");
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const { handleGoogle, googleLoading } = useGoogleAuth({
+    role: googleRole,
+    setError: (...args) => setError(...args),
+    setAuth,
+    navigate,
+    redirectTo: location.state?.from || "/",
+    googleFailedMessage: t("auth.googleFailed"),
+  });
   const [error, setError] = useState(
     location.state?.justVerified
       ? ""
@@ -87,30 +95,6 @@ export function Login() {
       setError(e.message || t("auth.loginFailed"));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGoogle = async (credentialResponse) => {
-    setError("");
-    const idToken = credentialResponse?.credential;
-    if (!idToken) {
-      setError(t("auth.googleFailed"));
-      return;
-    }
-    setGoogleLoading(true);
-    try {
-      // Role applies only if this Google account is brand-new.
-      // Existing users log in with their real role.
-      const res = await googleLoginApi({ idToken, role: googleRole });
-      if (res?.token) localStorage.setItem("token", res.token);
-      if (res?.data) localStorage.setItem("user", JSON.stringify(res.data));
-      if (setAuth && res?.data) setAuth(res.data, res.token);
-      const redirectTo = location.state?.from || "/";
-      navigate(redirectTo, { replace: true });
-    } catch (e) {
-      setError(e.message || t("auth.googleFailed"));
-    } finally {
-      setGoogleLoading(false);
     }
   };
 

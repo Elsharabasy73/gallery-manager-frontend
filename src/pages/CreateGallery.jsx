@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createGallery } from '../api/galleries'
-import { compressImage, prepareImages, IMAGE_PRESETS } from '../utils/compressImage'
+import { compressImageUpload, prepareImageUploads, IMAGE_PRESETS } from '../hooks/useImageUploads'
 import { useLanguage } from '../i18n/LanguageContext'
 import BrandIdentity from './createGallery/BrandIdentity'
 import LocationSection from './createGallery/LocationSection'
@@ -44,10 +44,7 @@ export default function CreateGallery() {
     setPhotoError('')
     setOptimizing(true)
     try {
-      const { file } = await compressImage(f, IMAGE_PRESETS.logo)
-      if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview)
-      setLogoFile(file)
-      setLogoPreview(URL.createObjectURL(file))
+      await compressImageUpload(f, IMAGE_PRESETS.logo, logoPreview, setLogoFile, setLogoPreview)
     } catch (err) {
       setPhotoError(err.message || t('createGallery.imgFail'))
     } finally {
@@ -61,10 +58,7 @@ export default function CreateGallery() {
     setPhotoError('')
     setOptimizing(true)
     try {
-      const { file } = await compressImage(f, IMAGE_PRESETS.banner)
-      if (bannerPreview?.startsWith('blob:')) URL.revokeObjectURL(bannerPreview)
-      setBannerFile(file)
-      setBannerPreview(URL.createObjectURL(file))
+      await compressImageUpload(f, IMAGE_PRESETS.banner, bannerPreview, setBannerFile, setBannerPreview)
     } catch (err) {
       setPhotoError(err.message || t('createGallery.bannerFail'))
     } finally {
@@ -78,12 +72,11 @@ export default function CreateGallery() {
     setPhotoError('')
     setOptimizing(true)
     try {
-      const { files: ready, skipped } = await prepareImages(files, IMAGE_PRESETS.gallery)
-      if (skipped.length) setPhotoError(t('dashboard.skipped', { n: formatNumber(skipped.length), names: skipped.join(', ') }))
-      if (!ready.length) return
-      setImagesFiles((prev) => [...prev, ...ready].slice(0, 8))
-      const previews = ready.map((f) => URL.createObjectURL(f))
-      setImagesPreviews((prev) => [...prev, ...previews].slice(0, 8))
+      await prepareImageUploads(files, IMAGE_PRESETS.gallery, {
+        onSkipped: (skipped) => setPhotoError(t('dashboard.skipped', { n: formatNumber(skipped.length), names: skipped.join(', ') })),
+        onFiles: (ready) => setImagesFiles((prev) => [...prev, ...ready].slice(0, 8)),
+        onPreviews: (previews) => setImagesPreviews((prev) => [...prev, ...previews].slice(0, 8)),
+      })
     } finally {
       setOptimizing(false)
     }

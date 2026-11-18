@@ -1,14 +1,6 @@
 import { useRole, PERMISSIONS } from '../context/RoleContext'
 import { useLanguage } from '../i18n/LanguageContext'
-
-const ROLE_LABEL_KEYS = {
-  customer: 'roles.customer',
-  gallery_owner: 'roles.gallery_owner',
-  employee: 'roles.employee',
-  admin: 'roles.admin',
-  craftsman: 'roles.craftsman',
-  user: 'roles.customer',
-}
+import { ROLE_LABEL_KEYS } from '../constants/labels'
 
 export default function AccessDenied({ pageId }){
   const { role } = useRole()

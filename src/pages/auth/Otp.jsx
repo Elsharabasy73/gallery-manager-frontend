@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { sendVerificationOtp, verifyEmail as verifyEmailApi } from "../../api/auth";
 import { useLanguage } from "../../i18n/LanguageContext";
 import SplitLayout from './SplitLayout';
+import OtpInput from './components/OtpInput';
 
 export function Otp() {
   const navigate = useNavigate();
@@ -32,34 +33,6 @@ export function Otp() {
     if (initialEmail && !editingEmail) inputsRef.current[0]?.focus();
   }, [initialEmail, editingEmail]);
 
-  const handleChange = (idx, val) => {
-    if (!/^\d*$/.test(val)) return;
-    const digit = val.slice(-1);
-    const next = [...otp];
-    next[idx] = digit;
-    setOtp(next);
-    setError("");
-    if (digit && idx < 5) inputsRef.current[idx + 1]?.focus();
-  };
-  const handleKeyDown = (idx, e) => {
-    if (e.key === "Backspace" && !otp[idx] && idx > 0)
-      inputsRef.current[idx - 1]?.focus();
-    if (e.key === "ArrowLeft" && idx > 0) inputsRef.current[idx - 1]?.focus();
-    if (e.key === "ArrowRight" && idx < 5) inputsRef.current[idx + 1]?.focus();
-  };
-  const handlePaste = (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, 6);
-    if (!pasted) return;
-    const next = Array(6).fill("");
-    pasted.split("").forEach((d, i) => (next[i] = d));
-    setOtp(next);
-    const focusIdx = Math.min(pasted.length, 5);
-    inputsRef.current[focusIdx]?.focus();
-  };
   const handleResend = async () => {
     if (!email.trim()) {
       setError(t("auth.enterEmailFirst"));
@@ -169,24 +142,15 @@ export function Otp() {
           {info}
         </div>
       )}
-      <div
-        className="flex gap-2 justify-center my-6"
-        onPaste={handlePaste}
-        dir="ltr"
-      >
-        {Array.from({ length: 6 }).map((_, i) => (
-          <input
-            key={i}
-            ref={(el) => (inputsRef.current[i] = el)}
-            value={otp[i]}
-            onChange={(e) => handleChange(i, e.target.value)}
-            onKeyDown={(e) => handleKeyDown(i, e)}
-            maxLength={1}
-            inputMode="numeric"
-            className="w-10 h-12 border border-[#E7DFD3] rounded-lg text-center text-lg font-medium focus:ring-2 focus:ring-[#C19A6B] outline-none"
-          />
-        ))}
-      </div>
+      <OtpInput
+        value={otp}
+        onChange={setOtp}
+        onClearError={() => setError("")}
+        inputsRef={inputsRef}
+        containerClassName="flex gap-2 justify-center my-6"
+        inputClassName="w-10 h-12 border border-[#E7DFD3] rounded-lg text-center text-lg font-medium focus:ring-2 focus:ring-[#C19A6B] outline-none"
+        allowArrowNavigation
+      />
       <button
         onClick={handleVerify}
         disabled={loading}

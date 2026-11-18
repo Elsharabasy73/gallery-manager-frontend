@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getMyGallery, updateGallery } from '../../api/galleries';
 import { getGalleryLogoUrl, getGalleryBannerUrl, STORAGE_BASE } from '../../utils/image';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { compressImage, prepareImages, IMAGE_PRESETS } from '../../utils/compressImage';
+import { compressImageUpload, prepareImageUploads, IMAGE_PRESETS } from '../../hooks/useImageUploads';
 
 export function MyGallery(){
   const navigate = useNavigate()
@@ -94,10 +94,7 @@ export function MyGallery(){
     setPhotoError('')
     setOptimizing(true)
     try {
-      const { file } = await compressImage(f, IMAGE_PRESETS.logo)
-      if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview)
-      setLogoFile(file)
-      setLogoPreview(URL.createObjectURL(file))
+      await compressImageUpload(f, IMAGE_PRESETS.logo, logoPreview, setLogoFile, setLogoPreview)
     } catch (err) {
       setPhotoError(err.message || 'Could not process logo image.')
     } finally {
@@ -111,9 +108,7 @@ export function MyGallery(){
     setPhotoError('')
     setOptimizing(true)
     try {
-      const { file } = await compressImage(f, IMAGE_PRESETS.banner)
-      if (bannerPreview?.startsWith('blob:')) URL.revokeObjectURL(bannerPreview)
-      setBannerFile(file); setBannerPreview(URL.createObjectURL(file))
+      await compressImageUpload(f, IMAGE_PRESETS.banner, bannerPreview, setBannerFile, setBannerPreview)
     } catch (err) {
       setPhotoError(err.message || 'Could not process banner image.')
     } finally {
@@ -127,12 +122,11 @@ export function MyGallery(){
     setPhotoError('')
     setOptimizing(true)
     try {
-      const { files: ready, skipped } = await prepareImages(files, IMAGE_PRESETS.gallery)
-      if (skipped.length) setPhotoError(`${skipped.length} image(s) skipped — over 12MB each: ${skipped.join(', ')}`)
-      if (!ready.length) return
-      setImagesFiles(prev => [...prev, ...ready].slice(0,8))
-      const previews = ready.map(f => URL.createObjectURL(f))
-      setImagesPreviews(prev => [...prev, ...previews].slice(0,8))
+      await prepareImageUploads(files, IMAGE_PRESETS.gallery, {
+        onSkipped: (skipped) => setPhotoError(`${skipped.length} image(s) skipped — over 12MB each: ${skipped.join(', ')}`),
+        onFiles: (ready) => setImagesFiles(prev => [...prev, ...ready].slice(0,8)),
+        onPreviews: (previews) => setImagesPreviews(prev => [...prev, ...previews].slice(0,8)),
+      })
     } finally {
       setOptimizing(false)
     }

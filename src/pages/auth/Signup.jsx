@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
-import { signup as signupApi, googleLogin as googleLoginApi, sendVerificationOtp } from "../../api/auth";
+import { signup as signupApi, sendVerificationOtp } from "../../api/auth";
 import { useRole } from "../../context/RoleContext";
 import { useLanguage } from "../../i18n/LanguageContext";
 import SplitLayout from './SplitLayout';
+import { useGoogleAuth } from "./useGoogleAuth";
 
 export function Signup() {
   const navigate = useNavigate();
@@ -18,9 +19,16 @@ export function Signup() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const { handleGoogle, googleLoading } = useGoogleAuth({
+    role,
+    setError,
+    setAuth,
+    navigate,
+    redirectTo: location.state?.from || "/",
+    googleFailedMessage: t("auth.googleFailed"),
+  });
 
   const handleSubmit = async () => {
     setError("");
@@ -89,27 +97,6 @@ export function Signup() {
     fieldErrors[f] ? (
       <div className="text-[11px] text-red-600 mt-1">{fieldErrors[f]}</div>
     ) : null;
-
-  const handleGoogle = async (credentialResponse) => {
-    setError("");
-    const idToken = credentialResponse?.credential;
-    if (!idToken) {
-      setError(t("auth.googleFailed"));
-      return;
-    }
-    setGoogleLoading(true);
-    try {
-      const res = await googleLoginApi({ idToken, role });
-      if (res?.token) localStorage.setItem("token", res.token);
-      if (res?.data) localStorage.setItem("user", JSON.stringify(res.data));
-      if (setAuth && res?.data) setAuth(res.data, res.token);
-      navigate(location.state?.from || "/", { replace: true });
-    } catch (e) {
-      setError(e.message || t("auth.googleFailed"));
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
 
   return (
     <SplitLayout>

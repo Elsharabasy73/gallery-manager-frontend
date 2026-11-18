@@ -1,4 +1,5 @@
 import ProductCard from '../../components/ProductCard'
+import Spinner from '../../components/Spinner'
 
 export default function ProductsSection({ t, activeTab, setActiveTab, wishError, loadingProducts, products, setWishError, navigate, errorProducts }) {
   return (
@@ -39,7 +40,7 @@ export default function ProductsSection({ t, activeTab, setActiveTab, wishError,
 
         {loadingProducts ? (
           <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-[#E7DFD3] bg-white py-12" role="status" aria-label={t('products.loading')}>
-            <span className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#E7DFD3] border-t-[#C19A6B]" aria-hidden="true" />
+            <Spinner />
             <span className="text-sm text-[#8A8078]">{t('products.loading')}</span>
           </div>
         ) : products.length ? (

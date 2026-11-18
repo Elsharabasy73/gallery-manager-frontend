@@ -1,8 +1,9 @@
-import { orders } from '../../data/mockData';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getMyOrders, unwrapOrders, updateOrderStatus, cancelOrder, acceptOrder, getStatusStyles, ORDER_STATUSES } from '../../api/orders';
+import { getMyOrders, unwrapOrders, updateOrderStatus, cancelOrder, acceptOrder, ORDER_STATUSES } from '../../api/orders';
 import { useLanguage } from '../../i18n/LanguageContext';
+import StatusBadge from '../../components/StatusBadge';
+import { getStatusLabel } from '../../utils/orderStatus';
 
 export function AdminOrders(){
   const navigate = useNavigate()
@@ -49,7 +50,7 @@ export function AdminOrders(){
     }
   }
 
-  const statusLabel = (s) => t(`status.${s}`) === `status.${s}` ? (ORDER_STATUSES[s]?.label || s) : t(`status.${s}`)
+  const statusLabel = (s) => getStatusLabel(t, s)
 
   const handleStatusChange = async (orderId, newStatus) => {
     const label = statusLabel(newStatus)
@@ -180,9 +181,9 @@ export function AdminOrders(){
                       <td className="text-center">{formatNumber(totalItems)}</td>
                       <td className="text-center text-xs">{formatPrice(totalPrice)}</td>
                       <td>
-                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusStyles(o.status)}`}>
+                        <StatusBadge status={o.status} className="px-2 py-0.5 rounded-full text-[11px] font-medium">
                           {statusLabel(o.status)}
-                        </span>
+                        </StatusBadge>
                       </td>
                       <td className="text-center">
                         <button
@@ -217,9 +218,9 @@ export function AdminOrders(){
           {['pending', 'accepted', 'paid', 'delivered'].map(status => (
             <div key={status} className="bg-white border border-[#E7DFD3] rounded-xl p-3">
               <div className="text-xs font-semibold mb-2 flex justify-between items-center">
-                <span className={`px-2 py-0.5 rounded-full ${getStatusStyles(status)}`}>
+                <StatusBadge status={status} className="px-2 py-0.5 rounded-full">
                   {statusLabel(status)}
-                </span>
+                </StatusBadge>
                 <span className="bg-[#FAF7F2] px-2 rounded-full text-[#8A8078]">
                   {formatNumber(ordersList.filter(o => o.status === status).length)}
                 </span>

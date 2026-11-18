@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getGalleryOrders, acceptOrder, unwrapOrders, getStatusStyles, ORDER_STATUSES } from '../../api/orders';
+import { getGalleryOrders, acceptOrder, unwrapOrders, ORDER_STATUSES } from '../../api/orders';
 import { useGallery } from '../../context/GalleryContext';
 import { useRole } from '../../context/RoleContext';
 import { useLanguage } from '../../i18n/LanguageContext';
+import StatusBadge from '../../components/StatusBadge';
+import { getStatusLabel } from '../../utils/orderStatus';
 
 export function GalleryOrders(){
   const navigate = useNavigate()
   const { t, formatPrice, formatNumber, formatDate } = useLanguage()
-  const statusLabel = (st) => t(`status.${st}`, null) === `status.${st}` ? (ORDER_STATUSES[st]?.label || st) : t(`status.${st}`)
-  const { galleryId: ctxGalleryId, gallery: ctxGallery } = useGallery()
-  const { role, user } = useRole()
+  const statusLabel = (s) => getStatusLabel(t, s)
+  const { galleryId: ctxGalleryId } = useGallery()
+  const { role } = useRole()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -172,9 +174,9 @@ export function GalleryOrders(){
                       <td className="text-center">{totalItems}</td>
                       <td className="text-center">{formatPrice(totalPrice)}</td>
                       <td>
-                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${getStatusStyles(o.status)}`}>
+                        <StatusBadge status={o.status} className="px-2 py-0.5 rounded-full text-[11px] font-medium">
                           {statusLabel(o.status)}
-                        </span>
+                        </StatusBadge>
                       </td>
                       <td className="text-center">
                         <button
