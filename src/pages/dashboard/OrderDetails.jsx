@@ -238,7 +238,7 @@ export function OrderDetails(){
                   <img src={displayImg} className="w-16 h-16 rounded object-cover bg-[#FAF7F2]" alt="" onError={e => e.target.src = 'https://via.placeholder.com/64'} />
                   <div className="flex-1">
                     <div className="text-sm font-medium">{item.productName || 'Product'}</div>
-                    <div className="text-xs text-[#8A8078]">{formatNumber(itemPrice)} {t('common.currency')} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â {formatNumber(item.quantity)}</div>
+                    <div className="text-xs text-[#8A8078]">{formatNumber(itemPrice)} {t('common.currency')} × {formatNumber(item.quantity)}</div>
                   </div>
                   <div className="text-sm font-medium">{formatPrice(itemTotal)}</div>
                 </div>

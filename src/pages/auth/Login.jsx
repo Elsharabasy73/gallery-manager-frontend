@@ -54,7 +54,7 @@ export function Login() {
       if (res?.data) localStorage.setItem("user", JSON.stringify(res.data));
       if (setAuth && res?.data) setAuth(res.data, res.token);
 
-      // If gallery_owner, check if they have a gallery â€” redirect to create if not
+      // If gallery_owner, check if they have a gallery — redirect to create if not
       const userRole = res?.data?.role;
       if (userRole === "gallery_owner") {
         try {
@@ -200,7 +200,7 @@ export function Login() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2 mt-1 text-sm pe-10"
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
             />
             <button
               type="button"

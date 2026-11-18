@@ -1,9 +1,9 @@
 export const FALLBACK_CATEGORIES = [
-  { id: 'sofas', name: 'Sofas', arabicName: '\u0635\u0648\u0641\u0627', slug: 'sofas' },
-  { id: 'tables', name: 'Tables', arabicName: '\u0637\u0627\u0648\u0644\u0627\u062a', slug: 'tables' },
-  { id: 'seating', name: 'Seating', arabicName: '\u0645\u0642\u0627\u0639\u062f', slug: 'seating' },
-  { id: 'lighting', name: 'Lighting', arabicName: '\u0625\u0636\u0627\u0621\u0629', slug: 'lighting' },
-  { id: 'decor', name: 'Decor', arabicName: '\u062f\u064a\u0643\u0648\u0631', slug: 'decor' },
+  { id: 'sofas', name: 'Sofas', arabicName: 'صوفا', slug: 'sofas' },
+  { id: 'tables', name: 'Tables', arabicName: 'طاولات', slug: 'tables' },
+  { id: 'seating', name: 'Seating', arabicName: 'مقاعد', slug: 'seating' },
+  { id: 'lighting', name: 'Lighting', arabicName: 'إضاءة', slug: 'lighting' },
+  { id: 'decor', name: 'Decor', arabicName: 'ديكور', slug: 'decor' },
 ]
 
 export function getInitials(name = '') {

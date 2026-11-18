@@ -121,7 +121,7 @@ export function AdminCategories(){
                   <>
                     <span className="material-symbols-outlined text-[#C19A6B] text-[20px]">sell</span>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium truncate">{c.name}{c.arabicName ? <span className="text-[#8A8078] font-normal"> ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ {c.arabicName}</span> : null}</div>
+                      <div className="text-sm font-medium truncate">{c.name}{c.arabicName ? <span className="text-[#8A8078] font-normal"> • {c.arabicName}</span> : null}</div>
                       {c.slug && <div className="text-[11px] text-[#8A8078] truncate">/{c.slug}</div>}
                     </div>
                     <button onClick={()=>startEdit(c)} className="px-3 py-1.5 border rounded-full text-xs bg-white hover:bg-[#FAF7F2]">{t('common.edit')}</button>
