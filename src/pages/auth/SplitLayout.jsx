@@ -3,7 +3,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 export function SplitLayout({ children }) {
   const { t } = useLanguage();
   return (
-    <div className="grid md:grid-cols-2 bg-white border border-[#E7DFD3] rounded-xl overflow-hidden max-w-5xl mx-auto">
+    <div className="grid md:grid-cols-2 bg-white border border-[#E7DFD3] rounded-xl overflow-hidden max-w-5xl mx-auto shadow-sm">
       <div
         className="hidden md:block bg-cover bg-center p-8 flex flex-col justify-end text-white"
         style={{
@@ -16,7 +16,7 @@ export function SplitLayout({ children }) {
           <p className="text-sm text-white/80">{t("brandTagline")}</p>
         </div>
       </div>
-      <div className="p-8">{children}</div>
+      <div className="min-w-0 p-5 sm:p-8">{children}</div>
     </div>
   );
 }

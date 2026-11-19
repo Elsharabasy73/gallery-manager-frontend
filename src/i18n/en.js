@@ -278,6 +278,8 @@ export default {
   'auth.loginSub': 'Log in to continue',
   'auth.email': 'Email',
   'auth.password': 'Password',
+  'auth.showPassword': 'Show password',
+  'auth.hidePassword': 'Hide password',
   'auth.login': 'Log in',
   'auth.loggingIn': 'Logging in...',
   'auth.orContinueWith': 'or continue with',

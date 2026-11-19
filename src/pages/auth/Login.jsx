@@ -108,7 +108,7 @@ export function Login() {
         </div>
       )}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">
           {error}
         </div>
       )}
@@ -167,29 +167,35 @@ export function Login() {
       </div>
       <div className="space-y-3">
         <div>
-          <label className="text-xs font-medium">{t("auth.email")}</label>
+          <label htmlFor="login-email" className="text-xs font-medium">{t("auth.email")}</label>
           <input
+            id="login-email"
+            type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2 mt-1 text-sm"
+            className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2.5 mt-1 text-sm outline-none transition focus-visible:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/30"
             placeholder="you@example.com"
           />
         </div>
         <div>
-          <label className="text-xs font-medium">{t("auth.password")}</label>
+          <label htmlFor="login-password" className="text-xs font-medium">{t("auth.password")}</label>
           <div className="relative">
             <input
+              id="login-password"
               type={showPw ? "text" : "password"}
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-              className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2 mt-1 text-sm pe-10"
+              className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2.5 mt-1 text-sm pe-10 outline-none transition focus-visible:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/30"
               placeholder="••••••••"
             />
             <button
               type="button"
+              aria-label={showPw ? t("auth.hidePassword") : t("auth.showPassword")}
               onClick={() => setShowPw((v) => !v)}
-              className="material-symbols-outlined absolute end-2 top-3 text-[18px] text-[#8A8078]"
+              className="material-symbols-outlined absolute end-1 top-1/2 -translate-y-1/2 min-h-10 min-w-10 rounded-md text-[18px] text-[#8A8078] transition hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C19A6B]"
             >
               {showPw ? "visibility_off" : "visibility"}
             </button>

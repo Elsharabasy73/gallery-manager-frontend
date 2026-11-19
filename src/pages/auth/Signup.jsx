@@ -126,56 +126,67 @@ export function Signup() {
         ))}
       </div>
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">
+        <div role="alert" className="bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg px-3 py-2 mb-3">
           {error}
         </div>
       )}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs">{t("auth.firstName")}</label>
+          <label htmlFor="signup-first-name" className="text-xs">{t("auth.firstName")}</label>
           <input
+            id="signup-first-name"
+            autoComplete="given-name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 mt-1 text-sm"
+            className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2.5 mt-1 text-sm outline-none transition focus-visible:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/30"
           />
           {errFor("firstName")}
         </div>
         <div>
-          <label className="text-xs">{t("auth.lastName")}</label>
+          <label htmlFor="signup-last-name" className="text-xs">{t("auth.lastName")}</label>
           <input
+            id="signup-last-name"
+            autoComplete="family-name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 mt-1 text-sm"
+            className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2.5 mt-1 text-sm outline-none transition focus-visible:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/30"
           />
           {errFor("lastName")}
         </div>
         <div className="col-span-2">
-          <label className="text-xs">{t("auth.emailReq")}</label>
+          <label htmlFor="signup-email" className="text-xs">{t("auth.emailReq")}</label>
           <input
+            id="signup-email"
+            type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 mt-1 text-sm"
+            className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2.5 mt-1 text-sm outline-none transition focus-visible:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/30"
             placeholder="you@example.com"
           />
           {errFor("email")}
         </div>
         <div className="col-span-2">
-          <label className="text-xs">{t("auth.passReq")}</label>
+          <label htmlFor="signup-password" className="text-xs">{t("auth.passReq")}</label>
           <input
+            id="signup-password"
             type="password"
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 mt-1 text-sm"
+            className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2.5 mt-1 text-sm outline-none transition focus-visible:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/30"
           />
           {errFor("password")}
         </div>
         <div className="col-span-2">
-          <label className="text-xs">{t("auth.confirmPassReq")}</label>
+          <label htmlFor="signup-confirm-password" className="text-xs">{t("auth.confirmPassReq")}</label>
           <input
+            id="signup-confirm-password"
             type="password"
+            autoComplete="new-password"
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 mt-1 text-sm"
+            className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2.5 mt-1 text-sm outline-none transition focus-visible:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/30"
           />
           {errFor("passwordConfirm")}
           {errFor("role")}

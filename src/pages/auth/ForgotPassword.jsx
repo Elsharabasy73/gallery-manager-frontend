@@ -151,12 +151,15 @@ export function ForgotPassword() {
       {step === 1 && (
         <>
           <h2 className="font-serif text-xl mb-3">{t("auth.resetTitle")}</h2>
-          <label className="text-xs">{t("auth.email")}</label>
+          <label htmlFor="reset-email" className="text-xs">{t("auth.email")}</label>
           <input
+            id="reset-email"
+            type="email"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendCode()}
-            className="w-full border rounded-lg px-3 py-2 mt-1 text-sm"
+            className="w-full border border-[#E7DFD3] rounded-lg px-3 py-2.5 mt-1 text-sm outline-none transition focus-visible:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/30"
             placeholder="you@example.com"
           />
           <button

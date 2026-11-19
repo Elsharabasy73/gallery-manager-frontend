@@ -278,6 +278,8 @@ export default {
   'auth.loginSub': 'سجل الدخول للمتابعة',
   'auth.email': 'البريد الإلكتروني',
   'auth.password': 'كلمة المرور',
+  'auth.showPassword': 'إظهار كلمة المرور',
+  'auth.hidePassword': 'إخفاء كلمة المرور',
   'auth.login': 'تسجيل الدخول',
   'auth.loggingIn': 'جارٍ تسجيل الدخول...',
   'auth.orContinueWith': 'أو تابع عبر',

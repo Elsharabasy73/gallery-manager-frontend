@@ -93,13 +93,16 @@ export function Otp() {
       <h2 className="font-serif text-xl mb-1">{t("auth.verifyTitle")}</h2>
       {editingEmail ? (
         <div className="mb-4">
-          <label className="text-xs font-medium">{t("auth.email")}</label>
+          <label htmlFor="verification-email" className="text-xs font-medium">{t("auth.email")}</label>
           <div className="flex gap-2 mt-1">
             <input
+              id="verification-email"
+              type="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="flex-1 border border-[#E7DFD3] rounded-lg px-3 py-2 text-sm"
+              className="min-w-0 flex-1 border border-[#E7DFD3] rounded-lg px-3 py-2.5 text-sm outline-none transition focus-visible:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/30"
             />
             <button
               onClick={() => {
