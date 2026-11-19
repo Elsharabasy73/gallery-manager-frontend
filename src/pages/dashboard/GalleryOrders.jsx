@@ -108,17 +108,18 @@ export function GalleryOrders(){
   return (
     <div className="space-y-4">
       <h2 className="font-serif text-2xl">{t('galleryOrders.title')}</h2>
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('galleryOrders.searchPh')}
-          className="border rounded-full px-3 py-1.5 text-sm flex-1"
+          aria-label={t('galleryOrders.searchPh')}
+          className="min-h-10 w-full border rounded-full px-3 py-2 text-sm flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
         />
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          className="border rounded-full px-3 py-1.5 text-sm bg-white"
+          className="min-h-10 w-full sm:w-auto max-w-full border rounded-full px-3 py-2 text-sm bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
         >
           <option value="all">{t('galleryOrders.all')} ({formatNumber(statusCounts.all || 0)})</option>
           {Object.keys(ORDER_STATUSES).map(status => (

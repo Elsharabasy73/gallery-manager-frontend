@@ -100,16 +100,16 @@ export function MyProducts(){
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-3">
         <h2 className="font-serif text-xl">{t('myProducts.title')}</h2>
-        <button onClick={()=>navigate('/dashboard/add-product')} className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-sm">{t('myProducts.add')}</button>
+        <button onClick={()=>navigate('/dashboard/add-product')} className="min-h-10 bg-[#4B3621] text-white px-4 py-2 rounded-full text-sm hover:bg-[#3b2a19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2">{t('myProducts.add')}</button>
       </div>
       {actionMsg && <div className={`text-sm px-4 py-2 rounded-lg ${actionError?'bg-[#ffdad6] text-[#93000a]':'bg-green-50 text-green-800'}`}>{actionMsg}</div>}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {['All','Active','Draft','Archived'].map(f=>(
-          <button key={f} onClick={()=>setFilter(f)} className={`px-3 py-1 rounded-full text-xs border ${filter===f?'bg-[#4B3621] text-white':'bg-white'}`}>{f}</button>
+          <button key={f} onClick={()=>setFilter(f)} className={`min-h-10 px-3 py-2 rounded-full text-xs border hover:border-[#C19A6B] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] ${filter===f?'bg-[#4B3621] text-white':'bg-white'}`}>{f}</button>
         ))}
-        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t('myProducts.searchPh')} className="ms-auto border rounded-full px-3 py-1 text-xs" />
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder={t('myProducts.searchPh')} aria-label={t('myProducts.searchPh')} className="min-h-10 w-full sm:w-auto sm:ms-auto border rounded-full px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]" />
       </div>
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
       {loading ? <div className="text-center py-12 text-sm text-[#8A8078]">{t('myProducts.loading')}</div> : filtered.length===0 ? <div className="text-center py-12 bg-white border border-dashed rounded-xl text-sm text-[#8A8078]">{t('myProducts.empty')} {search?t('myProducts.forSearch', { q: search }):''} — <button onClick={()=>navigate('/dashboard/add-product')} className="text-[#C19A6B] underline">{t('myProducts.addFirst')}</button></div> : (
