@@ -67,19 +67,20 @@ export default function BrowseGalleries() {
   return (
     <div className="space-y-6">
       <div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sticky top-[72px] z-30 bg-[#FAF7F2]/95 backdrop-blur py-2 transition-all duration-300 motion-reduce:transition-none ${searchVisible ? 'translate-y-0 opacity-100' : '-translate-y-[120%] opacity-0 pointer-events-none'}`}>
-        <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2.5 min-w-0">
+        <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2.5 min-w-0 focus-within:border-[#C19A6B] focus-within:ring-2 focus-within:ring-[#C19A6B]/20">
           <span className="material-symbols-outlined text-[#8A8078]">search</span>
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { doSearch(); setPage(1) } }}
             placeholder={t('galleries.searchPh')}
-            className="bg-transparent outline-none flex-1 text-sm min-w-0"
+            aria-label={t('galleries.searchPh')}
+            className="bg-transparent outline-none flex-1 text-sm min-w-0 py-1"
           />
         </div>
         <div className="flex gap-2 shrink-0">
-          <button onClick={() => { doSearch(); setPage(1) }} className="bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap">{t('galleries.searchBtn')}</button>
-          <select value={city} onChange={(e) => { setCity(e.target.value); setPage(1) }} className="border rounded-full px-3 py-2 text-sm bg-white min-w-[130px]">
+          <button onClick={() => { doSearch(); setPage(1) }} className="bg-[#4B3621] hover:bg-[#33210d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2 text-white px-5 min-h-11 rounded-full text-sm font-medium whitespace-nowrap transition-colors">{t('galleries.searchBtn')}</button>
+          <select aria-label={t('galleries.allCities')} value={city} onChange={(e) => { setCity(e.target.value); setPage(1) }} className="border border-[#E7DFD3] rounded-full px-3 min-h-11 text-sm bg-white min-w-[130px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2">
             <option value="All">{t('galleries.allCities')}</option>
             <option>New York</option>
             <option>Stockholm</option>
@@ -105,8 +106,8 @@ export default function BrowseGalleries() {
           // gallery api does not return products count; use images.length as hint or mock
           const productsCount = g.products ?? g._count?.products ?? (Array.isArray(g.images) ? g.images.length : null)
           return (
-            <div key={g.id} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
-              <div className="h-28 bg-cover bg-center" style={{ backgroundImage: bannerSrc ? `url(${bannerSrc})` : `url(https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80)` }} />
+            <article key={g.id} className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-[#D8C6AD] transition-all duration-200">
+              <div className="h-28 bg-cover bg-center" aria-hidden="true" style={{ backgroundImage: bannerSrc ? `url(${bannerSrc})` : `url(https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80)` }} />
               <div className="p-4">
                 <div className="flex gap-3 -mt-8">
                   <div className="w-14 h-14 rounded-full bg-white border-2 border-white flex items-center justify-center font-serif shadow overflow-hidden">
@@ -122,18 +123,18 @@ export default function BrowseGalleries() {
                 </div>
                 <p className="text-xs text-[#8A8078] mt-3 line-clamp-2">{g.description || t('galleries.fallbackDesc')}</p>
                 <div className="flex gap-2 mt-3">
-                  <button onClick={() => navigate(`/galleries/${g.id}`)} className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">{t('galleries.viewShowroom')}</button>
+                  <button onClick={() => navigate(`/galleries/${g.id}`)} className="flex-1 bg-[#4B3621] hover:bg-[#33210d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2 text-white min-h-10 rounded-lg text-xs transition-colors">{t('galleries.viewShowroom')}</button>
                   {role === 'admin' && <><button className="px-3 border rounded-lg text-xs">{t('common.edit')}</button><button className="px-3 bg-[#B3402E] text-white rounded-lg text-xs">{t('common.delete')}</button></>}
                 </div>
               </div>
-            </div>
+            </article>
           )
         })}
         </div>
       )}
 
       {!loading && galleries.length === 0 && (
-        <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('galleries.empty')} <button onClick={() => { setInput(''); setKeyword(''); setCity('All'); setPage(1) }} className="text-[#C19A6B] underline">{t('galleries.clearFilters')}</button></div>
+        <div className="text-center py-12 px-4 bg-white border border-dashed border-[#D8C6AD] rounded-xl text-[#6F6257]">{t('galleries.empty')} <button onClick={() => { setInput(''); setKeyword(''); setCity('All'); setPage(1) }} className="text-[#8A6033] underline underline-offset-2 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]">{t('galleries.clearFilters')}</button></div>
       )}
 
       {pagination && (

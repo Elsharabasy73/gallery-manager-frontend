@@ -237,6 +237,8 @@ export default {
   'galleryProfile.clickToExpand': 'اضغط للتكبير',
   'galleryProfile.viewCover': 'عرض صورة الغلاف',
   'galleryProfile.viewLogo': 'عرض الشعار',
+  'galleryProfile.openMap': 'افتح موقع المعرض على خرائط جوجل',
+  'galleryProfile.share': 'مشاركة المعرض',
   'lightbox.close': 'إغلاق المعاينة',
   'lightbox.next': 'الصورة التالية',
   'lightbox.prev': 'الصورة السابقة',

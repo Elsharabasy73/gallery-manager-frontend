@@ -4,12 +4,13 @@ export default function GalleryHeader({ bannerSrc, openBannerLightbox, t, logoSr
   return (
     <div className="bg-white border border-[#E7DFD3] rounded-2xl overflow-hidden shadow-sm">
       <div
-        className={`h-[280px] bg-cover bg-center relative group ${bannerSrc ? 'cursor-pointer' : ''}`}
+        className={`h-40 sm:h-56 lg:h-[280px] bg-cover bg-center relative group ${bannerSrc ? 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C19A6B]' : ''}`}
         style={{ backgroundImage: bannerSrc ? `url(${bannerSrc})` : `url('https://images.unsplash.com/photo-1618221469555-7f3ad97540d6?auto=format&fit=crop&w=1400&q=80')` }}
         onClick={bannerSrc ? openBannerLightbox : undefined}
         title={bannerSrc ? t('galleryProfile.viewCover') : undefined}
         role={bannerSrc ? 'button' : undefined}
         tabIndex={bannerSrc ? 0 : undefined}
+        aria-label={bannerSrc ? t('galleryProfile.viewCover') : undefined}
         onKeyDown={(e) => {
           if (bannerSrc && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault()
@@ -27,12 +28,10 @@ export default function GalleryHeader({ bannerSrc, openBannerLightbox, t, logoSr
           </div>
         )}
       </div>
-      <div className="p-6">
-        <div className="flex gap-4 -mt-12 relative">
+      <div className="p-4 sm:p-6">
+        <div className="flex gap-3 sm:gap-4 -mt-10 sm:-mt-12 relative items-start">
           <div
-            className={`w-[100px] h-[100px] rounded-full bg-white border-4 border-white flex items-center justify-center font-serif text-xl shadow-md overflow-hidden shrink-0 group relative ${
-              logoSrc ? 'cursor-pointer' : ''
-            }`}
+            className={`w-[76px] h-[76px] sm:w-[100px] sm:h-[100px] rounded-full bg-white border-4 border-white flex items-center justify-center font-serif text-xl shadow-md overflow-hidden shrink-0 group relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] ${logoSrc ? 'cursor-pointer' : ''}`}
             onClick={logoSrc ? openLogoLightbox : undefined}
             title={logoSrc ? t('galleryProfile.viewLogo') : undefined}
             role={logoSrc ? 'button' : undefined}
@@ -66,8 +65,8 @@ export default function GalleryHeader({ bannerSrc, openBannerLightbox, t, logoSr
               {getInitials(gallery.name)}
             </span>
           </div>
-          <div className="pt-10 min-w-0">
-            <h1 className="font-serif text-2xl flex items-center gap-2 truncate text-[#4B3621]">
+          <div className="pt-7 sm:pt-10 min-w-0 flex-1">
+            <h1 className="font-serif text-xl sm:text-2xl flex items-center gap-2 truncate text-[#4B3621]">
               {gallery.name} <span className="w-2 h-2 rounded-full bg-[#4C7A4C] shrink-0"></span>
             </h1>
             <div className="text-xs text-[#8A8078] flex items-center gap-1 truncate">
@@ -88,9 +87,9 @@ export default function GalleryHeader({ bannerSrc, openBannerLightbox, t, logoSr
                 href={gallery.mapAddressUrl}
                 target="_blank"
                 rel="noreferrer"
-                title="Open location in Google Maps"
-                aria-label="Open gallery location in Google Maps"
-                className="w-10 h-10 bg-[#4B3621] text-white hover:bg-[#33210d] rounded-full flex items-center justify-center transition-colors shadow-sm"
+                title={t('galleryProfile.openMap')}
+                aria-label={t('galleryProfile.openMap')}
+                className="w-10 h-10 min-w-10 bg-[#4B3621] text-white hover:bg-[#33210d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2 rounded-full flex items-center justify-center transition-colors shadow-sm"
               >
                 <span className="material-symbols-outlined text-[20px]">location_on</span>
               </a>
@@ -98,16 +97,16 @@ export default function GalleryHeader({ bannerSrc, openBannerLightbox, t, logoSr
             {gallery.phone && (
               <a
                 href={`tel:${gallery.phone}`}
-                className="border border-[#E7DFD3] hover:border-[#4B3621] px-4 py-1.5 rounded-full text-xs flex items-center gap-1 text-[#4B3621] transition-colors"
+                className="border border-[#E7DFD3] hover:border-[#4B3621] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] px-4 min-h-10 rounded-full text-xs flex items-center gap-1 text-[#4B3621] transition-colors"
               >
                 <span className="material-symbols-outlined text-[16px]">call</span> {t('galleryProfile.call')}
               </a>
             )}
             <button
               onClick={() => setShareOpen(true)}
-              aria-label="Share gallery"
-              title="Share gallery"
-              className="w-10 h-10 border border-[#E7DFD3] rounded-full flex items-center justify-center hover:bg-[#FAF7F2] transition-colors"
+              aria-label={t('galleryProfile.share')}
+              title={t('galleryProfile.share')}
+              className="w-10 h-10 border border-[#E7DFD3] rounded-full flex items-center justify-center hover:bg-[#FAF7F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] transition-colors"
             >
               <span className="material-symbols-outlined text-[20px]">share</span>
             </button>
@@ -119,9 +118,9 @@ export default function GalleryHeader({ bannerSrc, openBannerLightbox, t, logoSr
               href={gallery.mapAddressUrl}
               target="_blank"
               rel="noreferrer"
-              title="Open location in Google Maps"
-              aria-label="Open gallery location in Google Maps"
-              className="w-11 h-11 bg-[#4B3621] text-white rounded-full flex items-center justify-center shrink-0 shadow-sm"
+              title={t('galleryProfile.openMap')}
+              aria-label={t('galleryProfile.openMap')}
+              className="w-11 h-11 bg-[#4B3621] text-white rounded-full flex items-center justify-center shrink-0 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2"
             >
               <span className="material-symbols-outlined text-[22px]">location_on</span>
             </a>
@@ -129,15 +128,15 @@ export default function GalleryHeader({ bannerSrc, openBannerLightbox, t, logoSr
           {gallery.phone && (
             <a
               href={`tel:${gallery.phone}`}
-              className="flex-1 border border-[#E7DFD3] px-4 py-2 rounded-full text-xs flex items-center justify-center gap-1 text-[#4B3621]"
+                className="flex-1 border border-[#E7DFD3] px-4 min-h-11 rounded-full text-xs flex items-center justify-center gap-1 text-[#4B3621] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
             >
               <span className="material-symbols-outlined text-[16px]">call</span> {t('galleryProfile.call')}
             </a>
           )}
           <button
             onClick={() => setShareOpen(true)}
-            aria-label="Share gallery"
-            className="w-11 h-11 border border-[#E7DFD3] rounded-full flex items-center justify-center shrink-0"
+            aria-label={t('galleryProfile.share')}
+            className="w-11 h-11 border border-[#E7DFD3] rounded-full flex items-center justify-center shrink-0 hover:bg-[#FAF7F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] transition-colors"
           >
             <span className="material-symbols-outlined text-[22px]">share</span>
           </button>

@@ -237,6 +237,8 @@ export default {
   'galleryProfile.clickToExpand': 'Click to expand',
   'galleryProfile.viewCover': 'View cover photo',
   'galleryProfile.viewLogo': 'View logo',
+  'galleryProfile.openMap': 'Open gallery location in Google Maps',
+  'galleryProfile.share': 'Share gallery',
   'lightbox.close': 'Close preview',
   'lightbox.next': 'Next image',
   'lightbox.prev': 'Previous image',
