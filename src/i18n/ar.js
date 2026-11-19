@@ -160,6 +160,10 @@ export default {
   'detail.zoomHint': 'اضغط على الصورة للتكبير • اضغط على الصورة المصغرة لتغيير الصورة الرئيسية',
   'detail.zoomHintMobile': 'اضغط على الصورة للتكبير • اضغط على الصورة المصغرة لتغيير الصورة الرئيسية',
   'detail.openImage': 'فتح معرض صور المنتج',
+  'detail.noImage': 'لا تتوفر صورة للمنتج',
+  'detail.viewImage': 'عرض الصورة {n}',
+  'detail.decreaseQuantity': 'تقليل الكمية',
+  'detail.increaseQuantity': 'زيادة الكمية',
   'detail.home': 'الرئيسية',
 
   'card.outOfStock': 'نفد المخزون',

@@ -102,7 +102,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
   // —— WISHLIST VARIANT ——
   if (variant === 'wishlist') {
     return (
-      <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden group">
+        <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden shadow-sm transition duration-300 group hover:shadow-md">
         <div className={`relative ${aspect} overflow-hidden cursor-pointer`} onClick={handleNavigate}>
           <img src={img} alt={p?.name} className="w-full h-full object-cover group-hover:scale-[1.02] transition" loading="lazy" />
           {Number(stock) === 0 && (
@@ -121,11 +121,11 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
             <button
               onClick={handleWishlist}
               disabled={toggling}
-              className="flex-1 border py-1.5 rounded-lg text-xs flex items-center justify-center gap-1 bg-white hover:bg-[#FAF7F2] disabled:opacity-60"
+              className="flex-1 min-h-10 border py-2 rounded-lg text-xs flex items-center justify-center gap-1 bg-white hover:bg-[#FAF7F2] disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621]"
             >
               <span className="material-symbols-outlined text-[16px] icon-fill text-[#C19A6B]">favorite</span> {toggling ? t('card.removing') : t('card.remove')}
             </button>
-            <button onClick={handleNavigate} className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs">
+            <button onClick={handleNavigate} className="flex-1 min-h-10 bg-[#4B3621] text-white py-2 rounded-lg text-xs transition hover:bg-[#33210d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621]">
               {t('card.viewProduct')}
             </button>
           </div>
@@ -136,7 +136,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
 
   // —— DEFAULT VARIANT ——
   return (
-    <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden group">
+        <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden shadow-sm transition duration-300 group hover:shadow-md">
       <div className={`relative ${aspect} overflow-hidden cursor-pointer`} onClick={handleNavigate}>
         <img src={img} alt={p?.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" />
         {Number(stock) === 0 && (
@@ -153,7 +153,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
           <button
             onClick={handleWishlist}
             disabled={toggling}
-            className={`absolute top-2 end-2 w-8 h-8 rounded-full flex items-center justify-center transition ${
+            className={`absolute top-2 end-2 w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621] ${
               wished ? 'bg-[#C19A6B] text-white' : 'bg-white/90 hover:bg-white'
             }`}
             aria-label={wished ? t('card.removeWishlist') : t('card.addWishlist')}
@@ -188,15 +188,15 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
             </span>
           )}
         </div>
-        <div className="flex gap-2 mt-3">
-          <button onClick={handleNavigate} className="flex-1 border py-1.5 rounded-lg text-xs">
+        <div className="flex flex-wrap gap-2 mt-3">
+          <button onClick={handleNavigate} className="flex-1 min-h-10 border py-2 rounded-lg text-xs transition hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621]">
             {t('card.view')}
           </button>
           {showAddToCart && (
             <button
               onClick={handleAddToCart}
               disabled={addingToCart}
-              className="flex-1 bg-[#4B3621] text-white py-1.5 rounded-lg text-xs disabled:opacity-60 flex items-center justify-center gap-1"
+              className="flex-1 min-h-10 bg-[#4B3621] text-white py-2 rounded-lg text-xs disabled:opacity-60 flex items-center justify-center gap-1 transition hover:bg-[#33210d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621]"
             >
               <span className="material-symbols-outlined text-[14px]">shopping_cart</span>
               {addingToCart ? t('card.adding') : t('card.addToCart')}
@@ -206,7 +206,7 @@ export default function ProductCard({ product: p, variant = 'default', aspect = 
             <button
               onClick={handleWishlist}
               disabled={toggling}
-              className={`px-3 py-1.5 rounded-lg border text-xs flex items-center gap-1 ${
+              className={`min-h-10 px-3 py-2 rounded-lg border text-xs flex items-center gap-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621] ${
                 wished ? 'bg-[#C19A6B] text-white border-[#C19A6B]' : 'bg-white'
               }`}
             >

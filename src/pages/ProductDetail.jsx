@@ -71,8 +71,8 @@ export default function ProductDetail(){
     if (first) setActiveSrc(first)
   },[p])
 
-  if (loading) return <div className="text-center py-12 text-sm text-[#8A8078]">{t('detail.loading')}</div>
-  if (!p) return <div className="text-center py-12 bg-white border rounded-xl">{t('detail.notFound')}</div>
+  if (loading) return <div role="status" className="text-center py-12 text-sm text-[#8A8078]">{t('detail.loading')}</div>
+  if (!p) return <div role="status" className="text-center py-12 bg-white border border-[#E7DFD3] rounded-xl text-[#6B4D2E]">{t('detail.notFound')}</div>
 
   const pid = p._id || p.id || id
   const wish = isWishlisted(String(pid))
@@ -123,7 +123,7 @@ export default function ProductDetail(){
             {displaySrc ? (
               <img src={displaySrc} alt={p.name} className="w-full h-full object-cover" draggable={false} />
             ) : (
-              <div className="flex h-full items-center justify-center text-[#C19A6B]" aria-label="No product image">
+              <div className="flex h-full items-center justify-center text-[#C19A6B]" role="img" aria-label={t('detail.noImage')}>
                 <span className="material-symbols-outlined text-5xl" aria-hidden="true">image</span>
               </div>
             )}
@@ -137,8 +137,9 @@ export default function ProductDetail(){
               <button
                 key={src + i}
                 onClick={()=>setActiveSrc(src)}
-                className={`rounded-lg overflow-hidden border-2 h-20 bg-white ${isActive ? 'border-[#4B3621] ring-1 ring-[#4B3621]' : 'border-[#E7DFD3] hover:border-[#C19A6B]/60'} transition`}
-                aria-label={`View image ${i+1}`}
+                className={`rounded-lg overflow-hidden border-2 h-20 bg-white ${isActive ? 'border-[#4B3621] ring-1 ring-[#4B3621]' : 'border-[#E7DFD3] hover:border-[#C19A6B]/60'} transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621]`}
+                aria-label={t('detail.viewImage', { n: i + 1 })}
+                aria-pressed={isActive}
               >
                 <img src={src} className="w-full h-full object-cover" alt="" loading="lazy" />
               </button>
@@ -157,7 +158,7 @@ export default function ProductDetail(){
       />
       <div className="space-y-4">
         <div className="text-xs text-[#8A8078]">{t('detail.home')} / {p.category?.name || t('products.title')} / {p.name}</div>
-        <h1 className="font-serif text-3xl text-[#4B3621]">{p.name}</h1>
+        <h1 className="font-serif text-3xl leading-tight text-[#4B3621]">{p.name}</h1>
         {hasPrice && (
           <div className="flex items-baseline gap-3">
             <span className="text-xl font-semibold">{formatPrice(price)}</span>
@@ -178,20 +179,20 @@ export default function ProductDetail(){
         </div>
         {role === 'customer' && Number(stock) > 0 && p?.status === 'active' && (
           <div className="flex items-center gap-3 pt-2">
-            <div className="flex items-center border rounded-lg">
-              <button onClick={()=>setQty(Math.max(1,qty-1))} className="px-3 py-1.5">−</button>
+          <div className="flex h-10 items-center border border-[#E7DFD3] rounded-lg">
+              <button onClick={()=>setQty(Math.max(1,qty-1))} aria-label={t('detail.decreaseQuantity')} className="h-10 min-w-10 px-3 rounded-s-lg transition hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#4B3621]">−</button>
               <span className="px-3 text-sm">{qty}</span>
-              <button onClick={()=>setQty(Math.min(Number(stock) || 99, qty+1))} className="px-3 py-1.5">+</button>
+              <button onClick={()=>setQty(Math.min(Number(stock) || 99, qty+1))} aria-label={t('detail.increaseQuantity')} className="h-10 min-w-10 px-3 rounded-e-lg transition hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#4B3621]">+</button>
             </div>
             <button
               onClick={handleAddToCart}
               disabled={cartLoading || Number(stock) === 0}
-              className="flex-1 bg-[#4B3621] text-white py-2.5 rounded-lg text-sm font-medium disabled:opacity-60 flex items-center justify-center gap-2"
+              className="flex-1 min-w-40 min-h-10 bg-[#4B3621] text-white py-2.5 rounded-lg text-sm font-medium disabled:opacity-60 flex items-center justify-center gap-2 transition hover:bg-[#33210d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621]"
             >
               <span className="material-symbols-outlined text-[16px]">shopping_cart</span>
               {cartLoading ? t('detail.adding') : t('detail.addToCart')}
             </button>
-            <button onClick={handleWishlist} disabled={wishLoading} className={`w-10 h-10 rounded-lg border flex items-center justify-center disabled:opacity-60 ${wish?'bg-[#C19A6B] text-white border-[#C19A6B]': 'bg-white hover:bg-[#FAF7F2]'}`} title={wish ? t('card.removeWishlist') : t('card.addWishlist')}>
+            <button onClick={handleWishlist} disabled={wishLoading} aria-label={wish ? t('card.removeWishlist') : t('card.addWishlist')} className={`w-10 h-10 rounded-lg border flex items-center justify-center disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B3621] ${wish?'bg-[#C19A6B] text-white border-[#C19A6B]': 'bg-white hover:bg-[#FAF7F2]'}`}>
               <span className={`material-symbols-outlined ${wish?'icon-fill':''}`}>favorite</span>
             </button>
           </div>

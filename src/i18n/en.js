@@ -160,6 +160,10 @@ export default {
   'detail.zoomHint': 'Click the image to zoom • Click a thumbnail to change the main image',
   'detail.zoomHintMobile': 'Tap the image to zoom • Tap a thumbnail to change the main image',
   'detail.openImage': 'Open product image gallery',
+  'detail.noImage': 'No product image available',
+  'detail.viewImage': 'View image {n}',
+  'detail.decreaseQuantity': 'Decrease quantity',
+  'detail.increaseQuantity': 'Increase quantity',
   'detail.home': 'Home',
 
   'card.outOfStock': 'Out of stock',
