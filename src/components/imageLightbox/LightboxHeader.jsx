@@ -14,7 +14,7 @@ export default function LightboxHeader({
   return (
     <>
       {/* Header bar */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 bg-black/40 border-b border-white/10 z-20">
+      <div className="flex items-center justify-between gap-2 px-3 sm:px-6 py-3.5 bg-black/40 border-b border-white/10 z-20">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-8 h-8 rounded-full bg-[#C19A6B]/20 border border-[#C19A6B]/40 flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-[#C19A6B] text-[18px]">photo_library</span>
@@ -43,7 +43,7 @@ export default function LightboxHeader({
           <button
             onClick={handleZoomOut}
             disabled={scale <= 1}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none text-white flex items-center justify-center transition"
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none text-white flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
             title={t('lightbox.zoomOut')}
             aria-label={t('lightbox.zoomOut')}
           >
@@ -53,7 +53,7 @@ export default function LightboxHeader({
           <button
             onClick={handleZoomIn}
             disabled={scale >= 3}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none text-white flex items-center justify-center transition"
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none text-white flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
             title={t('lightbox.zoomIn')}
             aria-label={t('lightbox.zoomIn')}
           >
@@ -63,7 +63,7 @@ export default function LightboxHeader({
           {scale > 1 && (
             <button
               onClick={handleResetZoom}
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
               title={t('lightbox.resetZoom')}
               aria-label={t('lightbox.resetZoom')}
             >
@@ -77,7 +77,7 @@ export default function LightboxHeader({
               target="_blank"
               rel="noreferrer"
               download
-              className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
               title={t('lightbox.openOriginal')}
               aria-label={t('lightbox.openOriginal')}
             >
@@ -87,7 +87,7 @@ export default function LightboxHeader({
 
           <button
             onClick={onClose}
-            className="w-9 h-9 ms-1 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition hover:scale-105 active:scale-95"
+            className="w-10 h-10 ms-1 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
             title={t('lightbox.close')}
             aria-label={t('lightbox.close')}
           >

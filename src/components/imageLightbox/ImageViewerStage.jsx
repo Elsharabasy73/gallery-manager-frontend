@@ -37,7 +37,7 @@ export default function ImageViewerStage({
         {/* Loading Spinner */}
         {imageLoading && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-            <div className="w-10 h-10 border-2 border-[#C19A6B] border-t-transparent rounded-full animate-spin" />
+            <div role="status" aria-label={t('common.loading')} className="w-10 h-10 border-2 border-[#C19A6B] border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
@@ -63,7 +63,7 @@ export default function ImageViewerStage({
                 e.stopPropagation()
                 handlePrev()
               }}
-              className="absolute start-3 sm:start-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-[#4B3621] border border-white/20 hover:border-[#C19A6B] text-white flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 z-20 backdrop-blur-sm"
+              className="absolute start-3 sm:start-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-[#4B3621] border border-white/20 hover:border-[#C19A6B] text-white flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 z-20 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
               title={t('lightbox.prev')}
               aria-label={t('lightbox.prev')}
             >
@@ -77,7 +77,7 @@ export default function ImageViewerStage({
                 e.stopPropagation()
                 handleNext()
               }}
-              className="absolute end-3 sm:end-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-[#4B3621] border border-white/20 hover:border-[#C19A6B] text-white flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 z-20 backdrop-blur-sm"
+              className="absolute end-3 sm:end-6 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black/60 hover:bg-[#4B3621] border border-white/20 hover:border-[#C19A6B] text-white flex items-center justify-center shadow-lg transition-all hover:scale-110 active:scale-95 z-20 backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
               title={t('lightbox.next')}
               aria-label={t('lightbox.next')}
             >

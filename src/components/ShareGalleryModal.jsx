@@ -77,15 +77,15 @@ export default function ShareGalleryModal({ open, onClose, url = '', title = 'Ga
   }
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={`${t('share.title')} ${title}`}>
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl border border-[#E7DFD3] shadow-xl w-full max-w-sm p-5 space-y-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4" role="dialog" aria-modal="true" aria-label={`${t('share.title')} ${title}`}>
+      <button type="button" className="absolute inset-0 bg-black/55" onClick={onClose} aria-label={t('share.close')} />
+      <div className="relative bg-white rounded-2xl border border-[#E7DFD3] shadow-2xl w-full max-w-sm max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-4 sm:p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="font-serif text-lg text-[#4B3621] truncate">{t('share.title')}</h2>
             <p className="text-xs text-[#8A8078] truncate">{title}</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 shrink-0 border rounded-full flex items-center justify-center hover:bg-[#FAF7F2]" aria-label={t('share.close')}>
+          <button onClick={onClose} className="w-10 h-10 shrink-0 border border-[#E7DFD3] rounded-full flex items-center justify-center text-[#4B3621] hover:bg-[#FAF7F2] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]" aria-label={t('share.close')}>
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
@@ -93,7 +93,7 @@ export default function ShareGalleryModal({ open, onClose, url = '', title = 'Ga
         <div className="flex items-center gap-2 bg-[#FAF7F2] border border-[#E7DFD3] rounded-full ps-4 pe-1.5 py-1.5">
           <span className="material-symbols-outlined text-[#8A8078] text-[18px] shrink-0">link</span>
           <input value={url} readOnly onFocus={(e) => e.target.select()} className="bg-transparent outline-none flex-1 text-xs min-w-0 text-[#4B3621]" aria-label={t('share.urlLabel')} />
-          <button onClick={doCopy} className={`px-4 py-1.5 rounded-full text-xs font-medium shrink-0 transition-colors ${copied ? 'bg-[#4C7A4C] text-white' : 'bg-[#4B3621] text-white'}`}>
+          <button onClick={doCopy} className={`min-h-10 px-4 rounded-full text-xs font-medium shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#C19A6B] ${copied ? 'bg-[#4C7A4C] text-white' : 'bg-[#4B3621] text-white'}`}>
             {copied ? t('common.copied') : t('common.copy')}
           </button>
         </div>
@@ -102,20 +102,20 @@ export default function ShareGalleryModal({ open, onClose, url = '', title = 'Ga
           <div ref={qrBoxRef} className="bg-white p-2 rounded-lg border border-[#E7DFD3]">
             <QRCodeCanvas value={url || window.location.href} size={180} level="M" includeMargin={true} />
           </div>
-          <p className="text-[11px] text-[#8A8078]">{t('share.scan')}</p>
+          <p className="text-[11px] text-[#6F6258]">{t('share.scan')}</p>
           <div className="flex gap-2 w-full">
-            <button onClick={doDownload} className="flex-1 border border-[#E7DFD3] bg-white px-3 py-2 rounded-full text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-[#FAF7F2]">
+            <button onClick={doDownload} className="min-h-10 flex-1 border border-[#E7DFD3] bg-white px-3 py-2 rounded-full text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-[#FAF7F2] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]">
               <span className="material-symbols-outlined text-[16px]">download</span> {t('share.saveQr')}
             </button>
             {canNativeShare && (
-              <button onClick={doNativeShare} className="flex-1 bg-[#4B3621] text-white px-3 py-2 rounded-full text-xs font-medium flex items-center justify-center gap-1.5">
+              <button onClick={doNativeShare} className="min-h-10 flex-1 bg-[#4B3621] text-white px-3 py-2 rounded-full text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-[#352516] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#C19A6B]">
                 <span className="material-symbols-outlined text-[16px]">ios_share</span> {t('share.share')}
               </button>
             )}
           </div>
         </div>
 
-        {shareError && <div className="text-xs text-[#B3402E] bg-[#fff1f0] border border-[#ffdad6] rounded-lg px-3 py-2">{shareError}</div>}
+        {shareError && <div role="alert" className="text-xs text-[#B3402E] bg-[#fff1f0] border border-[#ffdad6] rounded-lg px-3 py-2">{shareError}</div>}
       </div>
     </div>
   )

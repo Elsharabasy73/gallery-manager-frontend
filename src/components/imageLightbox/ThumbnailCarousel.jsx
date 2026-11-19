@@ -15,7 +15,7 @@ export default function ThumbnailCarousel({ images, thumbsRef, currentIndex, set
                 <button
                   key={idx}
                   onClick={() => setCurrentIndex(idx)}
-                  className={`relative shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                  className={`relative shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] ${
                     isActive
                       ? 'border-[#C19A6B] ring-2 ring-[#C19A6B] scale-105 opacity-100 shadow-md'
                       : 'border-transparent opacity-50 hover:opacity-90 hover:border-white/40'
