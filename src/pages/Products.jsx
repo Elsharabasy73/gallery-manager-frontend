@@ -214,7 +214,7 @@ export default function Products() {
         visible={filtersVisible}
       />
 
-      {wishError && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
+      {wishError && <div role="alert" className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
 
       <div ref={productListRef} className="scroll-mt-28">
         {loading ? (
@@ -223,16 +223,16 @@ export default function Products() {
             <span className="text-sm text-[#8A8078]">{t('products.loading')}</span>
           </div>
         ) : loadError ? (
-          <div className="rounded-xl border border-[#E7DFD3] bg-white py-12 text-center">
+          <div role="alert" className="rounded-xl border border-[#E7DFD3] bg-white px-5 py-12 text-center shadow-sm">
             <p className="text-sm text-[#8A8078]">{loadError || t('products.loadError')}</p>
-            <button onClick={() => setReload((value) => value + 1)} className="mt-3 text-sm text-[#C19A6B] underline">{t('products.retry')}</button>
+            <button onClick={() => setReload((value) => value + 1)} className="mt-3 min-h-[40px] rounded-full px-4 text-sm font-medium text-[#4B3621] underline underline-offset-4 hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]">{t('products.retry')}</button>
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between text-xs text-[#8A8078]">
-              <span>{`${t('products.count', { n: formatNumber(filtered.length) })}${pagination ? ` ${t('products.pageOf', { cur: formatNumber(pagination.currentPage || page), total: formatNumber(pagination.numberOfPages || 1) })}` : ''}`}</span>
+            <div aria-live="polite" className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-[#6f655c]">
+              <span className="min-w-0">{`${t('products.count', { n: formatNumber(filtered.length) })}${pagination ? ` ${t('products.pageOf', { cur: formatNumber(pagination.currentPage || page), total: formatNumber(pagination.numberOfPages || 1) })}` : ''}`}</span>
               {(q || appliedMin || appliedMax || activeCats[0] !== 'All' || page !== 1) && (
-                <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPriceMin(''); setPriceMax(''); setPage(1); const np = new URLSearchParams(); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button>
+                <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPriceMin(''); setPriceMax(''); setPage(1); const np = new URLSearchParams(); setSearchParams(np, { replace: true }) }} className="min-h-[40px] shrink-0 text-[#78582f] underline underline-offset-4 hover:text-[#4B3621] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]">{t('products.clearFilters')}</button>
               )}
             </div>
 
@@ -241,7 +241,7 @@ export default function Products() {
                 <ProductCard key={String(p._id || p.id)} product={p} onWishlistError={setWishError} />
               ))}
             </div>
-            {filtered.length === 0 && <div className="text-center py-12 bg-white border border-dashed rounded-xl">{t('products.empty')} <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('categoryId[in]'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="text-[#C19A6B] underline">{t('products.clearFilters')}</button></div>}
+            {filtered.length === 0 && <div className="mt-2 rounded-xl border border-dashed border-[#D8CBBB] bg-white px-5 py-12 text-center text-sm text-[#6f655c]">{t('products.empty')} <button onClick={() => { setActiveCats(['All']); setInput(''); setQ(''); setAppliedMin(''); setAppliedMax(''); setPage(1); const np = new URLSearchParams(searchParams); np.delete('categoryId'); np.delete('categoryId[in]'); np.delete('category'); np.delete('page'); setSearchParams(np, { replace: true }) }} className="min-h-[40px] px-2 font-medium text-[#78582f] underline underline-offset-4 hover:text-[#4B3621] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]">{t('products.clearFilters')}</button></div>}
           </>
         )}
       </div>

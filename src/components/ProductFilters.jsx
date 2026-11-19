@@ -52,7 +52,7 @@ export default function ProductFilters({
       <button
         onClick={() => onToggleCategory('All')}
         aria-pressed={activeCategories.includes('All')}
-        className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${activeCategories.includes('All') ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
+        className={`min-h-[40px] shrink-0 px-4 rounded-full text-sm border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f] ${activeCategories.includes('All') ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3] text-[#4B3621] hover:bg-[#FAF7F2]'}`}
       >
         {t('products.all')}
       </button>
@@ -63,7 +63,7 @@ export default function ProductFilters({
             key={category.id || category._id || category.slug || category.name}
             onClick={() => onToggleCategory(category.name)}
             aria-pressed={active}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-sm border ${active ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3]'}`}
+            className={`min-h-[40px] shrink-0 px-4 rounded-full text-sm border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f] ${active ? 'bg-[#4B3621] text-white border-[#4B3621]' : 'bg-white border-[#E7DFD3] text-[#4B3621] hover:bg-[#FAF7F2]'}`}
             title={category.slug}
           >
             {categoryLabel(category)}
@@ -192,7 +192,7 @@ export default function ProductFilters({
               <button
                 type="submit"
                 aria-label={t('products.searchBtn')}
-                className="w-9 h-9 shrink-0 rounded-full bg-[#4B3621] text-white flex items-center justify-center active:scale-95 transition"
+                className="w-10 h-10 shrink-0 rounded-full bg-[#4B3621] text-white flex items-center justify-center active:scale-95 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
               >
                 <span className="material-symbols-outlined text-[20px]">search</span>
               </button>
@@ -202,7 +202,7 @@ export default function ProductFilters({
               onClick={() => setSheetOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={sheetOpen}
-              className="relative shrink-0 min-h-[42px] flex items-center gap-1.5 px-3.5 rounded-full border border-[#E7DFD3] bg-white text-sm font-medium text-[#4B3621] active:scale-95 transition"
+              className="relative shrink-0 min-h-[44px] flex items-center gap-1.5 px-3.5 rounded-full border border-[#E7DFD3] bg-white text-sm font-medium text-[#4B3621] hover:bg-[#FAF7F2] active:scale-95 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
             >
               <span className="material-symbols-outlined text-[20px]">tune</span>
               {t('products.filters')}
@@ -222,23 +222,25 @@ export default function ProductFilters({
         <div className="hidden md:block">
           <div className="flex flex-col md:flex-row gap-3 items-center">
             <div className="flex-1 flex items-center gap-2 bg-[#FAF7F2] border border-[#E7DFD3] rounded-full px-4 py-2 w-full min-w-0">
-              <span className="material-symbols-outlined text-[#8A8078]">search</span>
+              <span className="material-symbols-outlined text-[#8A8078]" aria-hidden="true">search</span>
               <input
                 value={input}
                 onChange={(event) => onInputChange(event.target.value)}
                 onKeyDown={(event) => { if (event.key === 'Enter') onSearch() }}
                 placeholder={t('products.searchPh')}
+                aria-label={t('products.searchPh')}
                 className="bg-transparent outline-none flex-1 text-sm min-w-0"
               />
             </div>
             <div className="flex gap-2 w-full md:w-auto shrink-0">
-              <button onClick={onSearch} className="flex-1 md:flex-none bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+              <button onClick={onSearch} className="min-h-[40px] flex-1 md:flex-none bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap hover:bg-[#33210d] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]">
                 {t('products.searchBtn')}
               </button>
               <select
                 value={sort}
                 onChange={(event) => onSortChange(event.target.value)}
-                className="flex-1 md:flex-none border border-[#E7DFD3] rounded-full px-3 py-2 text-sm bg-white min-w-[140px]"
+                aria-label={t('products.sortBy')}
+                className="min-h-[40px] flex-1 md:flex-none border border-[#E7DFD3] rounded-full px-3 py-2 text-sm bg-white min-w-[140px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
               >
                 {sortOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
               </select>
@@ -256,7 +258,8 @@ export default function ProductFilters({
                 value={priceMin}
                 onChange={(event) => onPriceMinChange(event.target.value)}
                 placeholder={t('products.minPrice')}
-                className="flex-1 min-w-0 border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2]"
+                aria-label={t('products.minPrice')}
+                className="flex-1 min-w-0 min-h-[40px] border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2] focus:outline-none focus:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/40"
               />
               <input
                 type="number"
@@ -264,14 +267,15 @@ export default function ProductFilters({
                 value={priceMax}
                 onChange={(event) => onPriceMaxChange(event.target.value)}
                 placeholder={t('products.maxPrice')}
-                className="flex-1 min-w-0 border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2]"
+                aria-label={t('products.maxPrice')}
+                className="flex-1 min-w-0 min-h-[40px] border border-[#E7DFD3] rounded-full px-4 py-1.5 text-sm bg-[#FAF7F2] focus:outline-none focus:border-[#C19A6B] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/40"
               />
             </div>
             <div className="flex gap-2 shrink-0">
-              <button onClick={onApplyPrice} className="px-4 py-1.5 rounded-full border text-sm bg-white whitespace-nowrap">
+              <button onClick={onApplyPrice} className="min-h-[40px] px-4 rounded-full border border-[#E7DFD3] text-sm bg-white whitespace-nowrap hover:bg-[#FAF7F2] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]">
                 {t('products.apply')}
               </button>
-              <button onClick={onClear} className="px-3 py-1.5 text-sm text-[#8A8078] whitespace-nowrap">
+              <button onClick={onClear} className="min-h-[40px] px-3 text-sm text-[#8A8078] whitespace-nowrap underline-offset-4 hover:text-[#4B3621] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]">
                 {t('products.clear')}
               </button>
             </div>

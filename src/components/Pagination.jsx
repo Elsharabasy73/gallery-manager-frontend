@@ -40,7 +40,7 @@ export default function Pagination({
   }
 
   return (
-    <div className={`space-y-3 pt-3 ${className}`}>
+    <nav aria-label={t('common.page')} className={`space-y-3 pt-3 ${className}`}>
       {/* Main Prev / Page / Next controls */}
       <div className="flex justify-center items-center gap-2 flex-wrap">
         {showFirstLast && (
@@ -48,7 +48,7 @@ export default function Pagination({
             type="button"
             disabled={currentPage <= 1}
             onClick={() => onPageChange(1)}
-            className="px-3 py-1.5 rounded-lg border border-[#E7DFD3] text-sm bg-white hover:bg-[#FAF7F2] transition disabled:opacity-40 disabled:hover:bg-white"
+            className="min-h-[40px] min-w-[40px] px-3 rounded-lg border border-[#E7DFD3] text-sm bg-white hover:bg-[#FAF7F2] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f] disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed"
           >
             {t('common.first')}
           </button>
@@ -58,7 +58,7 @@ export default function Pagination({
           type="button"
           disabled={!hasPrev}
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
-          className="px-3 py-1.5 rounded-lg border border-[#E7DFD3] text-sm bg-white hover:bg-[#FAF7F2] transition disabled:opacity-40 disabled:hover:bg-white"
+          className="min-h-[40px] min-w-[40px] px-3 rounded-lg border border-[#E7DFD3] text-sm bg-white hover:bg-[#FAF7F2] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f] disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed"
         >
           {t('common.prev')}
         </button>
@@ -71,7 +71,7 @@ export default function Pagination({
           type="button"
           disabled={!hasNext}
           onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-1.5 rounded-lg border border-[#E7DFD3] text-sm bg-white hover:bg-[#FAF7F2] transition disabled:opacity-40 disabled:hover:bg-white"
+          className="min-h-[40px] min-w-[40px] px-3 rounded-lg border border-[#E7DFD3] text-sm bg-white hover:bg-[#FAF7F2] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f] disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed"
         >
           {t('common.next')}
         </button>
@@ -81,7 +81,7 @@ export default function Pagination({
             type="button"
             disabled={currentPage >= totalPages}
             onClick={() => onPageChange(totalPages)}
-            className="px-3 py-1.5 rounded-lg border border-[#E7DFD3] text-sm bg-white hover:bg-[#FAF7F2] transition disabled:opacity-40 disabled:hover:bg-white"
+            className="min-h-[40px] min-w-[40px] px-3 rounded-lg border border-[#E7DFD3] text-sm bg-white hover:bg-[#FAF7F2] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f] disabled:opacity-40 disabled:hover:bg-white disabled:cursor-not-allowed"
           >
             {t('common.last')}
           </button>
@@ -101,18 +101,18 @@ export default function Pagination({
             onChange={(e) => setJumpInput(e.target.value)}
             placeholder={`${currentPage}`}
             aria-label={t('pagination.goToPage') || 'Go to page'}
-            className="w-16 px-2.5 py-1 text-center text-xs text-[#201a17] bg-white border border-[#E7DFD3] rounded-lg outline-none focus:border-[#4B3621] transition"
+            className="w-16 min-h-[40px] px-2.5 text-center text-xs text-[#201a17] bg-white border border-[#E7DFD3] rounded-lg outline-none focus:border-[#4B3621] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/40 transition"
           />
           <button
             type="submit"
             disabled={!jumpInput || isNaN(parseInt(jumpInput, 10)) || parseInt(jumpInput, 10) < 1 || parseInt(jumpInput, 10) > totalPages}
-            className="px-3 py-1 bg-[#4B3621] text-white rounded-lg text-xs font-medium hover:bg-[#33210d] transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="min-h-[40px] px-3 bg-[#4B3621] text-white rounded-lg text-xs font-medium hover:bg-[#33210d] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f] disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t('pagination.go') || 'Go'}
           </button>
         </form>
       )}
-    </div>
+    </nav>
   )
 }
 
