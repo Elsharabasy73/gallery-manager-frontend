@@ -27,21 +27,21 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="min-w-0 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <h2 className="font-serif text-2xl">
           {t('wishlist.title')} <span className="text-sm text-[#8A8078]">{t('wishlist.saved', { n: formatNumber(count) })}</span>
         </h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={refresh}
-            className="border px-4 py-1.5 rounded-full text-xs bg-white hover:bg-[#FAF7F2]"
+            className="min-h-10 border border-[#E7DFD3] px-4 rounded-full text-xs bg-white hover:bg-[#FAF7F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
           >
             {t('common.refresh')}
           </button>
           <button
             onClick={() => navigate('/products')}
-            className="border px-4 py-1.5 rounded-full text-xs bg-white hover:bg-[#FAF7F2]"
+            className="min-h-10 border border-[#E7DFD3] px-4 rounded-full text-xs bg-white hover:bg-[#FAF7F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
           >
             {t('wishlist.discover')}
           </button>
@@ -72,7 +72,7 @@ export default function WishlistPage() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-12 bg-white border border-dashed rounded-xl">
+        <div className="text-center py-12 bg-white border border-dashed border-[#E7DFD3] rounded-xl">
           <p className="text-sm text-[#8A8078]">{t('wishlist.empty')}</p>
           <button
             onClick={() => navigate('/products')}

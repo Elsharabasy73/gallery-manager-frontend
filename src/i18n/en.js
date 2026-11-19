@@ -207,6 +207,9 @@ export default {
   'cartItem.unknown': 'Unknown Product',
   'cartItem.product': 'Product',
   'cartItem.onlyLeft': 'Only {n} left',
+  'cartItem.decreaseQty': 'Decrease quantity',
+  'cartItem.increaseQty': 'Increase quantity',
+  'cartItem.remove': 'Remove item from cart',
 
   'galleries.searchPh': 'Search galleries...',
   'galleries.searchBtn': 'Search',

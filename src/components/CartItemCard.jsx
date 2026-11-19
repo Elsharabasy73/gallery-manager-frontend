@@ -13,9 +13,9 @@ export default function CartItemCard({ item, isLoading, onUpdateQty, onRemove })
   const qty = item.quantity
 
   return (
-    <div className="flex gap-3 py-3 border-t">
+    <div className="flex min-w-0 items-center gap-2 sm:gap-3 py-3 border-t border-[#E7DFD3]">
       {productUrl ? (
-        <Link to={productUrl} className="shrink-0 block rounded-lg overflow-hidden hover:opacity-80 transition">
+        <Link to={productUrl} className="shrink-0 block rounded-lg overflow-hidden hover:opacity-80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]">
           {displayImg ? (
             <img
               src={displayImg}
@@ -60,20 +60,22 @@ export default function CartItemCard({ item, isLoading, onUpdateQty, onRemove })
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="flex items-center border rounded-lg">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex items-center border border-[#E7DFD3] rounded-lg">
           <button
             onClick={() => onUpdateQty(item.productId, qty - 1)}
             disabled={isLoading || qty <= 1}
-            className="px-2 text-xs disabled:opacity-40"
+            aria-label={t('cartItem.decreaseQty')}
+            className="min-h-10 min-w-10 rounded-s-lg text-base hover:bg-[#FAF7F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C19A6B] disabled:opacity-40"
           >
             −
           </button>
-          <span className="px-2 text-xs min-w-[24px] text-center">{formatNumber(qty)}</span>
+          <span className="min-w-[24px] text-xs text-center" aria-live="polite">{formatNumber(qty)}</span>
           <button
             onClick={() => onUpdateQty(item.productId, qty + 1)}
             disabled={isLoading || (product.stock && qty >= product.stock)}
-            className="px-2 text-xs disabled:opacity-40"
+            aria-label={t('cartItem.increaseQty')}
+            className="min-h-10 min-w-10 rounded-e-lg text-base hover:bg-[#FAF7F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C19A6B] disabled:opacity-40"
           >
             +
           </button>
@@ -81,7 +83,8 @@ export default function CartItemCard({ item, isLoading, onUpdateQty, onRemove })
         <button
           onClick={() => onRemove(item.productId)}
           disabled={isLoading}
-          className="w-7 h-7 border rounded flex items-center justify-center hover:bg-red-50 disabled:opacity-40"
+          aria-label={t('cartItem.remove')}
+          className="min-h-10 min-w-10 border border-[#E7DFD3] rounded-lg flex items-center justify-center hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] disabled:opacity-40"
         >
           <span className="material-symbols-outlined text-[16px]">delete</span>
         </button>

@@ -207,6 +207,9 @@ export default {
   'cartItem.unknown': 'منتج غير معروف',
   'cartItem.product': 'منتج',
   'cartItem.onlyLeft': 'متبقٍ {n} فقط',
+  'cartItem.decreaseQty': 'تقليل الكمية',
+  'cartItem.increaseQty': 'زيادة الكمية',
+  'cartItem.remove': 'إزالة المنتج من السلة',
 
   'galleries.searchPh': 'ابحث عن المعارض...',
   'galleries.searchBtn': 'بحث',

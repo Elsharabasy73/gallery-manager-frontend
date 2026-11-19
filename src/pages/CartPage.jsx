@@ -147,14 +147,14 @@ export default function CartPage() {
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_300px] gap-6">
+    <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-3">
           <h2 className="font-serif text-2xl">{t('cart.title', { n: formatNumber(itemCount) })}</h2>
           {items.length > 0 && (
             <button
               onClick={handleClearCart}
-              className="text-xs text-[#B3402E] border border-[#B3402E] px-3 py-1 rounded-full hover:bg-red-50"
+              className="min-h-10 text-xs text-[#B3402E] border border-[#B3402E] px-4 rounded-full hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
             >
               {t('cart.clearAll')}
             </button>
@@ -180,7 +180,7 @@ export default function CartPage() {
         {loading ? (
           <div className="text-center py-12 text-sm text-[#8A8078]">{t('cart.loading')}</div>
         ) : items.length === 0 ? (
-          <div className="text-center py-12 bg-white border border-dashed rounded-xl">
+          <div className="text-center py-12 bg-white border border-dashed border-[#E7DFD3] rounded-xl">
             <span className="material-symbols-outlined text-4xl text-[#8A8078]">shopping_cart</span>
             <p className="text-sm text-[#8A8078] mt-2">{t('cart.empty')}</p>
             <button
@@ -205,7 +205,7 @@ export default function CartPage() {
         )}
       </div>
 
-      <div className="bg-white border border-[#E7DFD3] rounded-xl p-4 h-fit sticky top-[88px]">
+      <div className="bg-white border border-[#E7DFD3] rounded-xl p-4 h-fit lg:sticky lg:top-[88px]">
         <h3 className="font-medium text-sm mb-3">{t('cart.summary')}</h3>
         <div className="text-xs space-y-2 text-[#8A8078]">
           <div className="flex justify-between">
@@ -230,7 +230,7 @@ export default function CartPage() {
 function GalleryGroup({ group, actionLoading, checkoutLoading, onUpdateQty, onRemove, onCheckout }) {
   const { t, formatPrice } = useLanguage()
   return (
-    <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
+    <div className="min-w-0 bg-white border border-[#E7DFD3] rounded-xl p-3 sm:p-4">
       <div className="flex items-center gap-2 font-medium text-sm mb-3">
         <div className="w-7 h-7 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xs">
           {group.galleryName.substring(0, 2).toUpperCase()}
@@ -248,14 +248,14 @@ function GalleryGroup({ group, actionLoading, checkoutLoading, onUpdateQty, onRe
         />
       ))}
 
-      <div className="flex justify-between items-center pt-3">
+      <div className="flex flex-wrap justify-between items-center gap-3 pt-3 border-t border-[#E7DFD3] mt-3">
         <span className="text-sm">
           {t('cart.subtotal')}: <b>{formatPrice(group.subtotal)}</b>
         </span>
         <button
           onClick={() => onCheckout(group.galleryId)}
           disabled={checkoutLoading === group.galleryId}
-          className="bg-[#4B3621] text-white px-4 py-1.5 rounded-full text-xs disabled:opacity-60"
+          className="min-h-10 bg-[#4B3621] text-white px-4 rounded-full text-xs hover:bg-[#60472c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2 disabled:opacity-60"
         >
           {checkoutLoading === group.galleryId ? t('cart.processing') : t('cart.checkout')}
         </button>
