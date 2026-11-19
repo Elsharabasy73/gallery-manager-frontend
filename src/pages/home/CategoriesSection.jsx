@@ -23,7 +23,7 @@ export default function CategoriesSection({ t, categoryLabel, loadingCategories,
                   <button
                     key={c.id || c.slug || c.name}
                     onClick={() => handleCategoryClick(c)}
-                    className="shrink-0 rounded-full border border-[#E7DFD3] bg-white px-5 py-2 text-sm shadow-xs transition hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
+                    className="min-h-10 shrink-0 rounded-full border border-[#E7DFD3] bg-white px-5 py-2 text-sm text-[#4B3621] shadow-xs transition hover:border-[#C7B69F] hover:bg-[#FAF7F2] active:bg-[#F1EADF] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
                     title={c.slug}
                   >
                     {label}

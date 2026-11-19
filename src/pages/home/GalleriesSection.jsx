@@ -8,7 +8,7 @@ export default function GalleriesSection({ t, navigate, loadingGalleries, galler
     <>
       {/* Galleries section */}
       <section>
-        <div className="mb-6 flex items-end justify-between gap-4 sm:mb-8">
+        <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:mb-8 sm:flex-row sm:items-end sm:gap-4">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#9A754B]">{t('home.galleriesEyebrow')}</p>
             <h2 className="font-serif text-2xl text-[#4B3621] sm:text-3xl">{t('home.galleries')}</h2>
@@ -16,7 +16,7 @@ export default function GalleriesSection({ t, navigate, loadingGalleries, galler
           </div>
           <button
             onClick={() => navigate('/galleries')}
-            className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-sm text-[#78582f] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#78582f]"
+            className="flex min-h-10 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-[#68491f] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#78582f]"
           >
             {t('home.viewAll')} <span className="material-symbols-outlined text-[18px] rtl:rotate-180" aria-hidden="true">arrow_forward</span>
           </button>
@@ -74,7 +74,7 @@ export default function GalleriesSection({ t, navigate, loadingGalleries, galler
             })}
           </div>
         ) : (
-          <p className="py-8 text-sm text-[#8A8078]">{errorGalleries || t('galleries.empty')}</p>
+          <p role={errorGalleries ? 'alert' : undefined} className="rounded-xl border border-[#E7DFD3] bg-white px-4 py-8 text-center text-sm text-[#74695f]">{errorGalleries || t('galleries.empty')}</p>
         )}
       </section>
     </>

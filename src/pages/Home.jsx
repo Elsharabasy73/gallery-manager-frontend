@@ -136,7 +136,7 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="space-y-16 sm:space-y-20 lg:space-y-28">
+    <div className="space-y-12 sm:space-y-16 lg:space-y-20">
       <HeroSection t={t} search={search} setSearch={setSearch} handleSearch={handleSearch} />
       <CategoriesSection t={t} categoryLabel={categoryLabel} loadingCategories={loadingCategories} categories={categories} handleCategoryClick={handleCategoryClick} />
       <ProductsSection t={t} activeTab={activeTab} setActiveTab={setActiveTab} wishError={wishError} loadingProducts={loadingProducts} products={products} setWishError={setWishError} navigate={navigate} errorProducts={errorProducts} />

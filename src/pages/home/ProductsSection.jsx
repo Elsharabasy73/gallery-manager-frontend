@@ -14,7 +14,7 @@ export default function ProductsSection({ t, activeTab, setActiveTab, wishError,
           </div>
 
           {/* Interactive filter tabs */}
-          <div className="flex items-center gap-1.5 rounded-full border border-[#E7DFD3] bg-white p-1 shadow-xs overflow-x-auto hide-scrollbar self-start sm:self-auto">
+          <div className="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-full border border-[#E7DFD3] bg-white p-1 shadow-xs hide-scrollbar self-start sm:self-auto" role="group" aria-label={t('home.curated')}>
             {[
               { id: 'curated', label: t('home.tabCurated') },
               { id: 'new', label: t('home.tabNew') },
@@ -24,7 +24,8 @@ export default function ProductsSection({ t, activeTab, setActiveTab, wishError,
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition whitespace-nowrap ${
+                aria-pressed={activeTab === tab.id}
+                className={`min-h-10 rounded-full px-3.5 py-2 text-xs font-medium transition whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#78582f] ${
                   activeTab === tab.id
                     ? 'bg-[#4B3621] text-white shadow-xs'
                     : 'text-[#8A8078] hover:text-[#4B3621]'
@@ -36,7 +37,7 @@ export default function ProductsSection({ t, activeTab, setActiveTab, wishError,
           </div>
         </div>
 
-        {wishError && <div className="mb-3 bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{wishError}</div>}
+        {wishError && <div role="alert" className="mb-3 rounded-lg border border-[#ffdad6] bg-[#fff1f0] px-3 py-2 text-xs text-[#8F2F22]">{wishError}</div>}
 
         {loadingProducts ? (
           <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-[#E7DFD3] bg-white py-12" role="status" aria-label={t('products.loading')}>
