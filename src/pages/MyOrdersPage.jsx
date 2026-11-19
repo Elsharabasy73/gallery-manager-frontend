@@ -121,11 +121,11 @@ export default function MyOrdersPage() {
 
   if (!isAuthenticated || role !== 'customer') {
     return (
-      <div className="text-center py-12 bg-white border border-[#E7DFD3] rounded-xl">
+      <div className="text-center py-12 bg-white border border-[#E7DFD3] rounded-2xl shadow-sm">
         <p className="text-sm text-[#8A8078]">{t('orders.onlyCustomer')}</p>
         <button
           onClick={() => navigate('/login')}
-          className="mt-3 bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm"
+          className="mt-4 min-h-10 bg-[#4B3621] text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-[#382818] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C19A6B]"
         >
           {t('common.goLogin')}
         </button>
@@ -134,18 +134,19 @@ export default function MyOrdersPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="font-serif text-2xl">{t('orders.title')}</h2>
+    <div className="space-y-5">
+      <h2 className="font-serif text-2xl text-[#4B3621]">{t('orders.title')}</h2>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1" role="group" aria-label={t('orders.title')}>
         {statusFilters.map(f => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`shrink-0 px-3 py-1 rounded-full text-xs border ${
+            aria-pressed={filter === f.key}
+            className={`shrink-0 min-h-10 px-4 rounded-full text-xs font-medium border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C19A6B] ${
               filter === f.key
                 ? 'bg-[#4B3621] text-white border-[#4B3621]'
-                : 'bg-white hover:bg-[#FAF7F2]'
+                : 'bg-white text-[#5C5147] border-[#E7DFD3] hover:bg-[#FAF7F2]'
             }`}
           >
             {f.label}
@@ -154,33 +155,33 @@ export default function MyOrdersPage() {
       </div>
 
       {success && (
-        <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg flex items-center justify-between">
+        <div role="status" aria-live="polite" className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-xl flex items-center justify-between gap-3">
           {success}
-          <button onClick={() => setSuccess('')} className="text-green-600 hover:text-green-800">×</button>
+          <button onClick={() => setSuccess('')} aria-label={t('common.close')} className="shrink-0 min-w-10 min-h-10 text-green-700 hover:text-green-900 rounded-lg hover:bg-green-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700">×</button>
         </div>
       )}
       {localError && (
-        <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-sm px-4 py-3 rounded-lg flex items-center justify-between">
+        <div role="alert" className="bg-[#fff1f0] border border-[#ffdad6] text-[#8f3024] text-sm px-4 py-3 rounded-xl flex items-center justify-between gap-3">
           {localError}
-          <button onClick={() => setLocalError('')} className="text-[#B3402E] hover:text-[#93000a]">×</button>
+          <button onClick={() => setLocalError('')} aria-label={t('common.close')} className="shrink-0 min-w-10 min-h-10 text-[#8f3024] hover:text-[#70251c] rounded-lg hover:bg-[#ffe3df] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B3402E]">×</button>
         </div>
       )}
       {error && (
-        <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">
+        <div role="alert" className="bg-[#fff1f0] border border-[#ffdad6] text-[#8f3024] text-sm px-4 py-3 rounded-xl">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-sm text-[#8A8078]">{t('orders.loading')}</div>
+        <div role="status" aria-live="polite" className="text-center py-14 text-sm text-[#6D6258] bg-white border border-[#E7DFD3] rounded-2xl">{t('orders.loading')}</div>
       ) : filteredOrders.length === 0 ? (
-        <div className="text-center py-12 bg-white border border-dashed rounded-xl">
-          <p className="text-sm text-[#8A8078]">
+        <div className="text-center py-12 px-5 bg-white border border-dashed border-[#D8C9B5] rounded-2xl">
+          <p className="text-base font-medium text-[#4B3621]">
             {filter === 'all' ? t('orders.noOrders') : t('orders.noStatusOrders', { label: statusLabel(filter) })}
           </p>
           <button
             onClick={() => navigate('/products')}
-            className="mt-3 text-[#C19A6B] text-sm underline"
+            className="mt-4 inline-flex min-h-10 items-center justify-center px-4 text-[#795A37] text-sm font-medium underline underline-offset-4 rounded-lg hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C19A6B]"
           >
             {t('orders.browse')}
           </button>
@@ -215,38 +216,38 @@ function OrderCard({ order, isCancelling, isResendingWhatsApp, onCancel, onResen
   const canCancel = ['pending', 'accepted'].includes(order.status)
 
   return (
-    <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
-      <div className="flex justify-between items-start text-xs">
-        <div>
-          <span className="font-mono">{order.id?.substring(0, 8)}...</span>
-          <span className="text-[#8A8078] ms-2">• {orderDate}</span>
+    <article className="bg-white border border-[#E7DFD3] rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex flex-wrap justify-between items-center gap-x-3 gap-y-2 text-xs">
+        <div className="min-w-0">
+          <span className="font-mono text-[#4B3621]">{order.id?.substring(0, 8)}...</span>
+          <span className="text-[#6D6258] ms-2">• {orderDate}</span>
         </div>
         <StatusBadge status={order.status} className="px-2 py-0.5 rounded-full text-[11px] font-medium">
           {label}
         </StatusBadge>
       </div>
 
-      <div className="flex items-center gap-2 mt-3 text-sm">
-        <div className="w-8 h-8 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-[10px] font-medium">
+      <div className="flex items-center gap-3 mt-4 text-sm">
+        <div aria-hidden="true" className="shrink-0 w-10 h-10 rounded-full bg-[#FAF7F2] border border-[#E7DFD3] flex items-center justify-center text-xs font-semibold text-[#795A37]">
           {galleryName.substring(0, 2).toUpperCase()}
         </div>
-        <div className="flex-1">
-          <div className="font-medium">{galleryName}</div>
-          <div className="text-xs text-[#8A8078]">{t('orders.items', { n: formatNumber(totalItems) })} • {formatPrice(totalPrice)}</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-[#34291F] break-words">{galleryName}</div>
+          <div className="mt-1 text-xs text-[#6D6258]">{t('orders.items', { n: formatNumber(totalItems) })} • <span className="font-semibold text-[#4B3621]">{formatPrice(totalPrice)}</span></div>
         </div>
       </div>
 
-      <div className="flex gap-2 mt-3">
+      <div className="flex flex-col sm:flex-row gap-2 mt-4">
         <button
           onClick={() => onResendWhatsApp(order)}
           disabled={isResendingWhatsApp}
-          className="flex-1 text-xs border border-green-700 text-green-800 px-3 py-1.5 rounded-lg hover:bg-green-50 disabled:opacity-60"
+          className="flex-1 min-h-10 text-xs font-medium border border-green-700 text-green-800 px-3 py-2 rounded-lg hover:bg-green-50 disabled:opacity-60 disabled:cursor-wait focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
         >
           {isResendingWhatsApp ? t('orders.resendingWhatsApp') : t('orders.resendWhatsApp')}
         </button>
         <button
           onClick={() => onViewDetails(order.id)}
-          className="flex-1 text-xs border px-3 py-1.5 rounded-lg hover:bg-[#FAF7F2]"
+          className="flex-1 min-h-10 text-xs font-medium text-[#4B3621] border border-[#D8C9B5] px-3 py-2 rounded-lg hover:bg-[#FAF7F2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C19A6B]"
         >
           {t('orders.viewDetails')}
         </button>
@@ -254,13 +255,13 @@ function OrderCard({ order, isCancelling, isResendingWhatsApp, onCancel, onResen
           <button
             onClick={() => onCancel(order.id)}
             disabled={isCancelling}
-            className="text-xs border border-[#B3402E] text-[#B3402E] px-3 py-1.5 rounded-lg hover:bg-red-50 disabled:opacity-60"
+            className="min-h-10 text-xs font-medium border border-[#B3402E] text-[#9A3023] px-4 py-2 rounded-lg hover:bg-red-50 disabled:opacity-60 disabled:cursor-wait focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B3402E]"
           >
             {isCancelling ? t('orders.cancelling') : t('orders.cancel')}
           </button>
         )}
       </div>
-    </div>
+    </article>
   )
 }
 
