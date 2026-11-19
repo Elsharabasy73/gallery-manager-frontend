@@ -42,17 +42,17 @@ export default function Terms() {
   const content = copy[lang] || copy.en
 
   return (
-    <article className="max-w-4xl mx-auto bg-white border border-[#E7DFD3] rounded-2xl p-6 md:p-10">
+    <article className="max-w-4xl mx-auto bg-white border border-[#E7DFD3] rounded-2xl p-5 sm:p-7 md:p-10 shadow-sm">
       <header className="mb-8 border-b border-[#E7DFD3] pb-6">
         <h1 className="font-serif text-3xl md:text-4xl text-[#4B3621]">{content.title}</h1>
         <p className="text-sm text-[#8A8078] mt-2">{content.updated}</p>
       </header>
-      <p className="leading-7 text-[#51483F] mb-8">{content.intro}</p>
-      <div className="space-y-7">
+      <p className="leading-7 text-[#51483F] mb-8 text-[15px]">{content.intro}</p>
+      <div className="space-y-8">
         {content.sections.map(([heading, body]) => (
           <section key={heading}>
             <h2 className="font-semibold text-lg text-[#4B3621] mb-2">{heading}</h2>
-            <p className="leading-7 text-[#51483F]">{body}</p>
+            <p className="leading-7 text-[#51483F] text-[15px]">{body}</p>
           </section>
         ))}
       </div>

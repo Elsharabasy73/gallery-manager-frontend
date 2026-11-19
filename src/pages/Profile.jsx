@@ -143,30 +143,30 @@ export default function Profile(){
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-4">
-      <h2 className="font-serif text-2xl">{t('profile.title')}</h2>
+    <div className="max-w-3xl mx-auto space-y-5">
+      <h2 className="font-serif text-2xl md:text-3xl text-[#4B3621]">{t('profile.title')}</h2>
 
       <div className="bg-white border border-[#E7DFD3] rounded-xl p-6 grid md:grid-cols-[140px_1fr] gap-6">
         <div className="flex flex-col items-center gap-2">
-          <div className="w-24 h-24 rounded-full bg-[#FAF7F2] border flex items-center justify-center text-xl">{user ? `${(user.firstName||'')[0]||''}${(user.lastName||'')[0]||''}`.toUpperCase() || 'U' : 'G'}</div>
+          <div className="w-24 h-24 rounded-full bg-[#FAF7F2] border border-[#E7DFD3] flex items-center justify-center text-xl text-[#4B3621] font-medium" aria-hidden="true">{user ? `${(user.firstName||'')[0]||''}${(user.lastName||'')[0]||''}`.toUpperCase() || 'U' : 'G'}</div>
           <button className="text-xs border px-3 py-1 rounded-full opacity-60 cursor-not-allowed" title={t('profile.avatarHint')}>{t('profile.changeAvatar')}</button>
           <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-100 capitalize">{t(ROLE_LABEL_KEYS[role] || 'roles.guest')}</span>
         </div>
         <div className="space-y-3">
           {profileErr && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg">{profileErr}</div>}
           {profileMsg && <div className="bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-lg">{profileMsg}</div>}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-xs">{t('profile.firstName')}</label>
-              <input value={firstName} onChange={e=>setFirstName(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+              <label htmlFor="profile-first-name" className="text-xs font-medium text-[#51483F]">{t('profile.firstName')}</label>
+              <input id="profile-first-name" value={firstName} onChange={e=>setFirstName(e.target.value)} className="w-full min-h-11 border border-[#D8CEC0] rounded-lg px-3 py-2 text-sm mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f]" />
             </div>
             <div>
-              <label className="text-xs">{t('profile.lastName')}</label>
-              <input value={lastName} onChange={e=>setLastName(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" />
+              <label htmlFor="profile-last-name" className="text-xs font-medium text-[#51483F]">{t('profile.lastName')}</label>
+              <input id="profile-last-name" value={lastName} onChange={e=>setLastName(e.target.value)} className="w-full min-h-11 border border-[#D8CEC0] rounded-lg px-3 py-2 text-sm mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f]" />
             </div>
           </div>
-          <div><label className="text-xs">{t('profile.email')}</label><input value={user?.email || ''} disabled className="w-full border rounded-lg px-3 py-2 text-sm mt-1 bg-[#FAF7F2]" /></div>
-          <div><label className="text-xs">{t('profile.phone')}</label><input placeholder={t('profile.phonePh')} value={phone} onChange={e=>setPhone(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
+          <div><label htmlFor="profile-email" className="text-xs font-medium text-[#51483F]">{t('profile.email')}</label><input id="profile-email" value={user?.email || ''} disabled className="w-full min-h-11 border border-[#D8CEC0] rounded-lg px-3 py-2 text-sm mt-1 bg-[#FAF7F2] disabled:text-[#62584E]" /></div>
+          <div><label htmlFor="profile-phone" className="text-xs font-medium text-[#51483F]">{t('profile.phone')}</label><input id="profile-phone" placeholder={t('profile.phonePh')} value={phone} onChange={e=>setPhone(e.target.value)} className="w-full min-h-11 border border-[#D8CEC0] rounded-lg px-3 py-2 text-sm mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f]" /></div>
           <div className="flex gap-2">
             <button onClick={handleSaveProfile} disabled={savingProfile} className="bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm disabled:opacity-60">
               {savingProfile ? t('profile.saving') : t('profile.save')}
@@ -181,9 +181,9 @@ export default function Profile(){
         {passwordErr && <div className="bg-[#fff1f0] border border-[#ffdad6] text-[#B3402E] text-xs px-3 py-2 rounded-lg whitespace-pre-wrap">{passwordErr}</div>}
         {passwordMsg && <div className="bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-lg">{passwordMsg}</div>}
         <div className="grid gap-3">
-          <input type="password" placeholder={t('profile.curPassPh')} value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
-          <input type="password" placeholder={t('profile.newPassPh')} value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
-          <input type="password" placeholder={t('profile.confirmPh')} value={passwordConfirm} onChange={e=>setPasswordConfirm(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />
+          <input aria-label={t('profile.curPassPh')} type="password" placeholder={t('profile.curPassPh')} value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="min-h-11 border border-[#D8CEC0] rounded-lg px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f]" />
+          <input aria-label={t('profile.newPassPh')} type="password" placeholder={t('profile.newPassPh')} value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="min-h-11 border border-[#D8CEC0] rounded-lg px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f]" />
+          <input aria-label={t('profile.confirmPh')} type="password" placeholder={t('profile.confirmPh')} value={passwordConfirm} onChange={e=>setPasswordConfirm(e.target.value)} className="min-h-11 border border-[#D8CEC0] rounded-lg px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f]" />
         </div>
         <button onClick={handleUpdatePassword} disabled={savingPassword} className="bg-[#4B3621] text-white px-4 py-2 rounded-lg text-sm disabled:opacity-60">
           {savingPassword ? t('profile.updating') : t('profile.updatePass')}
