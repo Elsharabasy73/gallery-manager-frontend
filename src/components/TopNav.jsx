@@ -14,7 +14,7 @@ function LangSwitcher({ compact = false }) {
     <button
       key={code}
       onClick={() => setLang(code)}
-      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+      className={`min-h-9 px-3 rounded-full text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2 ${
         lang === code ? 'bg-[#4B3621] text-white' : 'text-[#8A8078] hover:text-[#4B3621]'
       }`}
       aria-pressed={lang === code}
@@ -104,18 +104,18 @@ export default function TopNav(){
         </nav>
         <div className="flex items-center gap-2 text-[#4B3621]">
           <div className="hidden md:block"><LangSwitcher /></div>
-          <button onClick={()=>navigate('/products')} className="hidden md:flex p-2 rounded-full hover:bg-white transition-colors" aria-label={t('common.search')}><span className="material-symbols-outlined">search</span></button>
+          <button onClick={()=>navigate('/products')} className="hidden md:flex min-h-10 min-w-10 items-center justify-center rounded-full hover:bg-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]" aria-label={t('common.search')}><span className="material-symbols-outlined">search</span></button>
           {isCustomer && (
             <>
-              <button onClick={()=>navigate('/wishlist')} className={`hidden md:flex relative p-2 rounded-full hover:bg-white transition-colors ${isActive('/wishlist')?'bg-white':''}`}>
+              <button onClick={()=>navigate('/wishlist')} aria-label={t('nav.wishlist')} className={`hidden md:flex relative min-h-10 min-w-10 items-center justify-center rounded-full hover:bg-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] ${isActive('/wishlist')?'bg-white':''}`}>
                 <span className={`material-symbols-outlined ${isActive('/wishlist')?'icon-fill text-[#C19A6B]':''}`}>favorite</span>
                 {wishlistCount > 0 && <span className="absolute -top-0.5 -end-0.5 bg-[#C19A6B] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{wishlistCount > 99 ? '99+' : wishlistCount}</span>}
               </button>
-              <button onClick={()=>navigate('/cart')} className={`hidden md:flex relative p-2 rounded-full hover:bg-white transition-colors ${isActive('/cart')?'bg-white':''}`}>
+              <button onClick={()=>navigate('/cart')} aria-label={t('nav.cart')} className={`hidden md:flex relative min-h-10 min-w-10 items-center justify-center rounded-full hover:bg-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] ${isActive('/cart')?'bg-white':''}`}>
                 <span className={`material-symbols-outlined ${isActive('/cart')?'icon-fill text-[#4B3621]':''}`}>shopping_cart</span>
                 {cartCount > 0 && <span className="absolute -top-0.5 -end-0.5 bg-[#4B3621] text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">{cartCount > 99 ? '99+' : cartCount}</span>}
               </button>
-              <button onClick={()=>navigate('/my-orders')} className={`hidden md:flex relative p-2 rounded-full hover:bg-white transition-colors ${isActive('/my-orders')?'bg-white':''}`}>
+              <button onClick={()=>navigate('/my-orders')} aria-label={t('nav.myOrders')} className={`hidden md:flex relative min-h-10 min-w-10 items-center justify-center rounded-full hover:bg-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] ${isActive('/my-orders')?'bg-white':''}`}>
                 <span className={`material-symbols-outlined ${isActive('/my-orders')?'icon-fill text-[#4B3621]':''}`}>receipt_long</span>
               </button>
             </>
@@ -151,7 +151,7 @@ export default function TopNav(){
             </>
           )}
           {/* Mobile hamburger */}
-          <button onClick={()=>setMenuOpen(o=>!o)} className="md:hidden p-2 rounded-lg hover:bg-white" aria-label="Open menu" aria-expanded={menuOpen}>
+          <button onClick={()=>setMenuOpen(o=>!o)} className="md:hidden min-h-11 min-w-11 flex items-center justify-center rounded-lg hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]" aria-label={menuOpen ? t('common.close') : t('nav.menu')} aria-expanded={menuOpen}>
             <span className="material-symbols-outlined">{menuOpen ? 'close' : 'menu'}</span>
           </button>
         </div>
@@ -161,11 +161,11 @@ export default function TopNav(){
           transform can't hijack its `fixed` positioning or stacking */}
       {menuOpen && createPortal((
         <div className="md:hidden fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/40" onClick={()=>setMenuOpen(false)} />
+          <button type="button" className="absolute inset-0 w-full bg-black/40" onClick={()=>setMenuOpen(false)} aria-label={t('common.close')} />
           <div className="absolute end-0 top-0 h-full w-[86%] max-w-[320px] bg-[#FAF7F2] border-s border-[#E7DFD3] shadow-xl flex flex-col overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#E7DFD3] bg-white sticky top-0">
               <span className="font-serif text-lg text-[#4B3621]">{t('nav.menu')}</span>
-              <button onClick={()=>setMenuOpen(false)} className="p-2 rounded-full hover:bg-[#FAF7F2]"><span className="material-symbols-outlined">close</span></button>
+              <button onClick={()=>setMenuOpen(false)} aria-label={t('common.close')} className="min-h-11 min-w-11 flex items-center justify-center rounded-full hover:bg-[#FAF7F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"><span className="material-symbols-outlined">close</span></button>
             </div>
 
             <div className="p-4 space-y-4">
@@ -176,8 +176,8 @@ export default function TopNav(){
                 <div className="text-[10px] uppercase tracking-widest text-[#8A8078]">{t('nav.searchSection')}</div>
                 <div className="flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full ps-3 pe-1.5 py-1.5">
                   <span className="material-symbols-outlined text-[#8A8078] text-[18px] shrink-0">search</span>
-                  <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder={t('nav.searchProductsPh')} className="flex-1 outline-none text-sm bg-transparent min-w-0" />
-                  <button onClick={handleSearch} aria-label={t('common.search')} className="w-8 h-8 shrink-0 bg-[#4B3621] text-white rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[18px] rtl:rotate-180">arrow_forward</span></button>
+                  <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder={t('nav.searchProductsPh')} aria-label={t('common.search')} className="flex-1 outline-none text-sm bg-transparent min-w-0 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C19A6B] rounded-md" />
+                  <button onClick={handleSearch} aria-label={t('common.search')} className="min-h-10 min-w-10 shrink-0 bg-[#4B3621] text-white rounded-full flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2"><span className="material-symbols-outlined text-[18px] rtl:rotate-180">arrow_forward</span></button>
                 </div>
               </div>
 
@@ -185,7 +185,7 @@ export default function TopNav(){
               <div className="space-y-1">
                 <div className="text-[10px] uppercase tracking-widest text-[#8A8078] px-1">{t('nav.explore')}</div>
                 {NAV_CONFIG.storefront.map(link=>(
-                  <button key={link.id} onClick={()=>handleNav(link.path)} className={`w-full text-start flex items-center justify-between px-3 py-2.5 rounded-lg text-sm ${location.pathname===link.path?'bg-[#4B3621] text-white':'bg-white border border-[#E7DFD3] text-[#4B3621]'}`}>
+                  <button key={link.id} onClick={()=>handleNav(link.path)} className={`w-full min-h-11 text-start flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] ${location.pathname===link.path?'bg-[#4B3621] text-white':'bg-white border border-[#E7DFD3] text-[#4B3621]'}`}>
                     {navLabel(link)}<span className="material-symbols-outlined text-[18px] opacity-60 rtl:rotate-180">chevron_right</span>
                   </button>
                 ))}
