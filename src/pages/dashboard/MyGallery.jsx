@@ -200,8 +200,8 @@ export function MyGallery(){
         <p className="text-sm text-[#8A8078]">{t('dashboard.myGallerySub')}</p>
       </div>
 
-      {saveError && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-3 rounded-lg">{saveError}</div>}
-      {saveSuccess && <div className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg">{saveSuccess}</div>}
+      {saveError && <div role="alert" className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-3 rounded-lg">{saveError}</div>}
+      {saveSuccess && <div role="status" className="bg-green-50 border border-green-200 text-green-800 text-sm px-4 py-3 rounded-lg">{saveSuccess}</div>}
 
       <section className="bg-white rounded-xl shadow-[0_4px_20px_rgba(75,54,33,0.08)] p-6 md:p-10 border border-[#d2c4ba]/30">
         <h2 className="font-serif text-lg font-semibold text-[#33210d] mb-6 pb-4 border-b border-[#d2c4ba]/50 flex items-center gap-2">
@@ -210,15 +210,15 @@ export function MyGallery(){
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           <div className="flex flex-col items-center gap-3">
             <label className="text-sm font-medium text-[#201a17]">{t('dashboard.galleryLogo')}</label>
-            <label className="relative w-32 h-32 rounded-full border-2 border-dashed border-[#d2c4ba] hover:border-[#78582f] flex items-center justify-center bg-[#fdf1eb] cursor-pointer overflow-hidden group">
-              <input accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" type="file" onChange={handleLogo} />
+            <label className="relative w-32 h-32 rounded-full border-2 border-dashed border-[#d2c4ba] hover:border-[#78582f] focus-within:ring-2 focus-within:ring-[#78582f]/30 focus-within:border-[#78582f] flex items-center justify-center bg-[#fdf1eb] cursor-pointer overflow-hidden group">
+              <input aria-label={t('dashboard.galleryLogo')} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" type="file" onChange={handleLogo} />
               {logoPreview ? <img src={logoPreview} alt="logo" className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-3xl">add_photo_alternate</span>}
             </label>
           </div>
           <div className="md:col-span-2 flex flex-col gap-2">
             <label className="text-sm font-medium text-[#201a17]">{t('dashboard.coverBanner')}</label>
-            <label className="relative w-full h-32 rounded-lg border-2 border-dashed border-[#d2c4ba] hover:border-[#78582f] flex items-center justify-center bg-[#fdf1eb] cursor-pointer overflow-hidden">
-              <input accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" type="file" onChange={handleBanner} />
+            <label className="relative w-full h-32 rounded-lg border-2 border-dashed border-[#d2c4ba] hover:border-[#78582f] focus-within:ring-2 focus-within:ring-[#78582f]/30 focus-within:border-[#78582f] flex items-center justify-center bg-[#fdf1eb] cursor-pointer overflow-hidden">
+              <input aria-label={t('dashboard.coverBanner')} accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" type="file" onChange={handleBanner} />
               {bannerPreview ? <img src={bannerPreview} alt="banner" className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-3xl">panorama</span>}
             </label>
           </div>
@@ -254,8 +254,8 @@ export function MyGallery(){
       <section className="bg-white rounded-xl shadow-[0_4px_20px_rgba(75,54,33,0.08)] p-6 md:p-10 border border-[#d2c4ba]/30">
         <h2 className="font-serif text-lg font-semibold text-[#33210d] mb-2 flex items-center gap-2"><span className="material-symbols-outlined text-[#78582f]">photo_library</span> {t('dashboard.galleryImages')} <span className="text-xs font-normal bg-[#fdf1eb] border px-2 py-0.5 rounded-full">{t('common.optional')}</span></h2>
         <p className="text-sm text-[#8A8078] mb-4">{t('dashboard.galleryImagesSub')}</p>
-        <label className="relative w-full min-h-[120px] rounded-lg border-2 border-dashed border-[#d2c4ba] hover:border-[#78582f] flex flex-col items-center justify-center bg-[#fdf1eb] cursor-pointer p-4">
-          <input accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" type="file" onChange={handleImages} />
+        <label className="relative w-full min-h-[120px] rounded-lg border-2 border-dashed border-[#d2c4ba] hover:border-[#78582f] focus-within:ring-2 focus-within:ring-[#78582f]/30 focus-within:border-[#78582f] flex flex-col items-center justify-center bg-[#fdf1eb] cursor-pointer p-4">
+          <input aria-label={t('dashboard.uploadImages')} accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" type="file" onChange={handleImages} />
           <span className="material-symbols-outlined text-[#78582f] text-3xl">add_a_photo</span>
           <span className="text-sm font-medium">{t('dashboard.uploadImages')}</span>
           <span className="text-xs text-[#8A8078]">{t('dashboard.uploadHint')}</span>
@@ -265,7 +265,7 @@ export function MyGallery(){
             {imagesPreviews.map((src,i)=>(
               <div key={i} className="relative h-28 rounded-lg overflow-hidden border">
                 <img src={src} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={()=>removeNewImage(i)} className="absolute top-1 end-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                <button type="button" aria-label={t('common.removeImage')} onClick={()=>removeNewImage(i)} className="absolute top-1 end-1 w-10 h-10 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f]"><span className="material-symbols-outlined text-[16px]">close</span></button>
               </div>
             ))}
           </div>
@@ -275,12 +275,12 @@ export function MyGallery(){
       </section>
 
       <div className="flex justify-end gap-3">
-        <button onClick={()=>navigate('/galleries/'+ (gallery.id || gallery._id))} className="border px-6 py-2.5 rounded-lg text-sm bg-white">{t('dashboard.viewPublic')}</button>
+        <button onClick={()=>navigate('/galleries/'+ (gallery.id || gallery._id))} className="border border-[#d2c4ba] px-6 py-3 min-h-11 rounded-lg text-sm bg-white hover:bg-[#fdf1eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f]">{t('dashboard.viewPublic')}</button>
         <button
           onClick={handleSave}
           disabled={saving || optimizing || !hasChanges}
           title={!hasChanges ? t('dashboard.noChanges') : ''}
-          className={`px-8 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition ${hasChanges && !saving && !optimizing ? 'bg-[#33210d] text-white hover:opacity-90' : 'bg-[#33210d]/40 text-white/80 cursor-not-allowed'}`}
+          className={`px-8 py-3 min-h-11 rounded-lg text-sm font-medium flex items-center gap-2 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f] focus-visible:ring-offset-2 ${hasChanges && !saving && !optimizing ? 'bg-[#33210d] text-white hover:bg-[#4a3219]' : 'bg-[#33210d]/40 text-white/80 cursor-not-allowed'}`}
         >
           {saving?t('common.saving'):optimizing?t('dashboard.optimizing'):t('common.saveChanges')} <span className="material-symbols-outlined text-[18px]">save</span>
         </button>

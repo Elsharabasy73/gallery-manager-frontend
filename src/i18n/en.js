@@ -15,6 +15,7 @@ export default {
   'common.deleting': 'Deleting...',
   'common.view': 'View',
   'common.retry': 'Retry',
+  'common.removeImage': 'Remove image',
   'common.close': 'Close',
   'common.copy': 'Copy',
   'common.copied': 'Copied ✓',

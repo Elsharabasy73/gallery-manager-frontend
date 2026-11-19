@@ -7,8 +7,8 @@ export default function AdditionalImages({ t, imagesPreviews, removeImage, forma
             </h2>
             <p className="text-sm text-[#8A8078] mb-6">{t('createGallery.imagesSub')}</p>
 
-            <label className="relative w-full min-h-[120px] rounded-lg border-2 border-dashed border-[#d2c4ba] hover:border-[#78582f] flex flex-col items-center justify-center bg-[#fdf1eb] cursor-pointer transition-colors p-4">
-              <input accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" type="file" onChange={handleImages} />
+            <label className="relative w-full min-h-[120px] rounded-lg border-2 border-dashed border-[#d2c4ba] hover:border-[#78582f] focus-within:ring-2 focus-within:ring-[#78582f]/30 focus-within:border-[#78582f] flex flex-col items-center justify-center bg-[#fdf1eb] cursor-pointer transition-colors p-4">
+              <input aria-label={t('createGallery.uploadImages')} accept="image/*" multiple className="absolute inset-0 opacity-0 cursor-pointer" type="file" onChange={handleImages} />
               <span className="material-symbols-outlined text-[#78582f] text-3xl mb-1">add_a_photo</span>
               <span className="text-sm font-medium text-[#33210d]">{t('createGallery.uploadImages')}</span>
               <span className="text-xs text-[#8A8078]">{t('createGallery.uploadHint')}</span>
@@ -22,7 +22,8 @@ export default function AdditionalImages({ t, imagesPreviews, removeImage, forma
                     <button
                       type="button"
                       onClick={() => removeImage(idx)}
-                      className="absolute top-1 end-1 w-6 h-6 rounded-full bg-white/90 hover:bg-white flex items-center justify-center shadow-sm"
+                      aria-label={t('common.removeImage')}
+                      className="absolute top-1 end-1 w-10 h-10 rounded-full bg-white/95 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78582f] flex items-center justify-center shadow-sm"
                     >
                       <span className="material-symbols-outlined text-[16px]">close</span>
                     </button>

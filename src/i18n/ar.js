@@ -15,6 +15,7 @@ export default {
   'common.deleting': 'جارٍ الحذف...',
   'common.view': 'عرض',
   'common.retry': 'إعادة المحاولة',
+  'common.removeImage': 'إزالة الصورة',
   'common.close': 'إغلاق',
   'common.copy': 'نسخ',
   'common.copied': 'تم النسخ ✓',

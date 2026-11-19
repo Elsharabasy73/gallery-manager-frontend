@@ -49,7 +49,7 @@ export function Overview(){
   return (
     <div className="space-y-6">
       <h2 className="font-serif text-2xl">{t('dashboard.overview')}</h2>
-      {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
+      {error && <div role="alert" className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-3 rounded-lg">{error}</div>}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           {k: t('dashboard.totalProducts'), v: loading ? '…' : (productCount ?? '—'), c:'bg-white', sub: gallery ? `${gallery.name}` : t('dashboard.fromGallery')},
@@ -57,7 +57,7 @@ export function Overview(){
           {k: t('dashboard.employees'), v: loading ? '…' : (employeeCount ?? '—'), c:'bg-white', sub: gallery ? t('dashboard.inGallery') : t('dashboard.fromGallery')},
           {k: t('dashboard.revenue'), v: formatPrice(48200), c:'bg-green-50', sub: t('dashboard.mock')},
         ].map(s=>(
-          <div key={s.k} className={`border border-[#E7DFD3] rounded-xl p-4 ${s.c}`}><div className="text-xs text-[#8A8078]">{s.k}</div><div className="text-xl font-semibold">{s.v}</div>{s.sub && <div className="text-[11px] text-[#8A8078]">{s.sub}</div>}</div>
+          <div key={s.k} className={`min-w-0 border border-[#E7DFD3] rounded-xl p-4 md:p-5 shadow-[0_2px_10px_rgba(75,54,33,0.04)] ${s.c}`}><div className="text-xs font-medium text-[#6f6257] mb-2">{s.k}</div><div className="text-2xl font-semibold leading-tight text-[#33210d] truncate">{s.v}</div>{s.sub && <div className="text-[11px] text-[#8A8078] mt-2 truncate">{s.sub}</div>}</div>
         ))}
       </div>
       <div className="bg-white border border-[#E7DFD3] rounded-xl p-4">
@@ -74,10 +74,10 @@ export function Overview(){
             const galleryName = o.gallery?.name || gallery?.name || t('orders.unknownGallery')
             const status = statusLabel(o.status)
             return (
-              <div key={o.id} className="flex justify-between items-center gap-3 text-sm border-b py-2">
-                <span className="truncate">{orderRef} • {galleryName}</span>
+              <div key={o.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 text-sm border-b border-[#E7DFD3] py-3 last:border-b-0">
+                <span className="min-w-0 truncate">{orderRef} • {galleryName}</span>
                 <StatusBadge status={o.status} className="shrink-0 px-2 py-0.5 rounded-full text-[11px] font-medium">{status}</StatusBadge>
-                <span className="shrink-0">{formatPrice(o.totalPrice)}</span>
+                <span className="col-start-1 text-xs text-[#6f6257]">{formatPrice(o.totalPrice)}</span>
               </div>
             )
           })}
