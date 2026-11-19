@@ -82,29 +82,29 @@ export function AdminOverview(){
     <div className="space-y-4">
       <h2 className="font-serif text-2xl">{t('admin.overview')}</h2>
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-busy={loading}>
         {items.map(s=>(
-          <div key={s.k} className="bg-white border border-[#E7DFD3] rounded-xl p-4 text-center">
-            <div className="text-xs text-[#8A8078]">{s.k}</div>
-            <div className="text-xl font-semibold">{loading ? '…' : (s.v != null ? formatNumber(s.v) : '—')}</div>
+          <div key={s.k} className="bg-white border border-[#E7DFD3] rounded-xl p-4 text-center shadow-sm">
+            <div className="text-xs font-medium text-[#6F6257]">{s.k}</div>
+            <div className="text-2xl font-semibold tabular-nums text-[#4B3621] mt-1">{loading ? '…' : (s.v != null ? formatNumber(s.v) : '—')}</div>
           </div>
         ))}
       </div>
 
       <div className="flex items-center justify-between pt-2">
         <h3 className="font-serif text-lg">{t('admin.traffic')}</h3>
-        <div className="flex gap-1 text-xs">
+        <div className="flex gap-1 text-xs" role="group">
           {TRAFFIC_RANGES.map(r=>(
-            <button key={r.id} onClick={()=>setRange(r.id)} className={`px-3 py-1 rounded-full border ${range===r.id?'bg-[#4B3621] text-white border-[#4B3621]':'bg-white'}`}>{r.label}</button>
+            <button key={r.id} type="button" aria-pressed={range===r.id} onClick={()=>setRange(r.id)} className={`min-h-10 min-w-10 px-3 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2 ${range===r.id?'bg-[#4B3621] text-white border-[#4B3621]':'bg-white hover:bg-[#FAF7F2]'}`}>{r.label}</button>
           ))}
         </div>
       </div>
       {trafficError && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{trafficError}</div>}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" aria-busy={trafficLoading}>
         {trafficItems.map(s=>(
-          <div key={s.k} className="bg-white border border-[#E7DFD3] rounded-xl p-4 text-center">
-            <div className="text-xs text-[#8A8078]">{s.k}</div>
-            <div className="text-xl font-semibold">{trafficLoading ? '…' : (s.v != null ? formatNumber(s.v) : '—')}</div>
+          <div key={s.k} className="bg-white border border-[#E7DFD3] rounded-xl p-4 text-center shadow-sm">
+            <div className="text-xs font-medium text-[#6F6257]">{s.k}</div>
+            <div className="text-2xl font-semibold tabular-nums text-[#4B3621] mt-1">{trafficLoading ? '…' : (s.v != null ? formatNumber(s.v) : '—')}</div>
             <div className="text-[11px] text-[#8A8078]">{s.hint}</div>
           </div>
         ))}

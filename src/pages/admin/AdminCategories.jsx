@@ -95,9 +95,9 @@ export function AdminCategories(){
     <div className="space-y-4">
       <div className="flex justify-between"><h2 className="font-serif text-xl">{t('admin.categories')}</h2></div>
       <form onSubmit={handleCreate} className="bg-white border border-[#E7DFD3] rounded-xl p-4 flex flex-col sm:flex-row gap-2">
-        <input value={form.name} onChange={e=>setForm(s=>({...s, name:e.target.value}))} placeholder={t('admin.catNamePh')} className="flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f]" />
-        <input value={form.arabicName} onChange={e=>setForm(s=>({...s, arabicName:e.target.value}))} placeholder={t('admin.catArPh')} className="flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f]" />
-        <button type="submit" disabled={creating} className="bg-[#4B3621] text-white px-5 py-2 rounded-full text-sm font-medium disabled:opacity-60 whitespace-nowrap">{creating?t('admin.adding'):t('admin.addCategory')}</button>
+        <input value={form.name} onChange={e=>setForm(s=>({...s, name:e.target.value}))} placeholder={t('admin.catNamePh')} className="min-h-10 min-w-0 flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/40" />
+        <input value={form.arabicName} onChange={e=>setForm(s=>({...s, arabicName:e.target.value}))} placeholder={t('admin.catArPh')} className="min-h-10 min-w-0 flex-1 border border-[#E7DFD3] rounded-full px-4 py-2 text-sm outline-none focus:border-[#78582f] focus-visible:ring-2 focus-visible:ring-[#C19A6B]/40" />
+        <button type="submit" disabled={creating} className="min-h-10 bg-[#4B3621] text-white px-5 rounded-full text-sm font-medium transition-colors hover:bg-[#60482f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2 disabled:opacity-60 whitespace-nowrap">{creating?t('admin.adding'):t('admin.addCategory')}</button>
       </form>
       {actionMsg && <div className="text-xs px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">{actionMsg}</div>}
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
@@ -124,8 +124,8 @@ export function AdminCategories(){
                       <div className="text-sm font-medium truncate">{c.name}{c.arabicName ? <span className="text-[#8A8078] font-normal"> • {c.arabicName}</span> : null}</div>
                       {c.slug && <div className="text-[11px] text-[#8A8078] truncate">/{c.slug}</div>}
                     </div>
-                    <button onClick={()=>startEdit(c)} className="px-3 py-1.5 border rounded-full text-xs bg-white hover:bg-[#FAF7F2]">{t('common.edit')}</button>
-                    <button onClick={()=>handleDelete(cid)} disabled={deletingId===cid} className="px-3 py-1.5 rounded-full text-xs bg-[#B3402E] text-white disabled:opacity-60">{deletingId===cid?t('common.deleting'):t('common.delete')}</button>
+                    <button onClick={()=>startEdit(c)} className="min-h-10 px-3 border border-[#E7DFD3] rounded-full text-xs bg-white transition-colors hover:bg-[#FAF7F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]">{t('common.edit')}</button>
+                    <button onClick={()=>handleDelete(cid)} disabled={deletingId===cid} className="min-h-10 px-3 rounded-full text-xs bg-[#B3402E] text-white transition-colors hover:bg-[#963524] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B3402E] focus-visible:ring-offset-2 disabled:opacity-60">{deletingId===cid?t('common.deleting'):t('common.delete')}</button>
                   </>
                 )}
               </div>

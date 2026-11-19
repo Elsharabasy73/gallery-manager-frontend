@@ -104,13 +104,13 @@ export function AdminProducts(){
   return (
     <div className="space-y-4">
       <div className="flex justify-between"><h2 className="font-serif text-xl">{t('admin.products')}</h2></div>
-      <div className="flex gap-2">
-        <div className="flex-1 flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2">
+      <div className="flex flex-wrap sm:flex-nowrap gap-2">
+        <div className="min-w-0 flex-1 basis-full sm:basis-auto flex items-center gap-2 bg-white border border-[#E7DFD3] rounded-full px-4 py-2 focus-within:border-[#78582f] focus-within:ring-2 focus-within:ring-[#C19A6B]/30">
           <span className="material-symbols-outlined text-[#8A8078] text-[18px]">search</span>
-          <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder={t('admin.searchProductsPh')} className="flex-1 outline-none text-sm" />
+          <input value={searchInput} onChange={e=>setSearchInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && handleSearch()} placeholder={t('admin.searchProductsPh')} className="min-w-0 flex-1 outline-none text-sm" />
         </div>
-        <button onClick={handleSearch} className="bg-[#4B3621] text-white px-4 py-2 rounded-full text-sm">{t('common.search')}</button>
-        <button onClick={()=>{setSearch(''); setSearchInput(''); setPage(1)}} className="border px-3 py-2 rounded-full text-sm bg-white">{t('common.clear')}</button>
+        <button onClick={handleSearch} className="min-h-10 bg-[#4B3621] text-white px-4 rounded-full text-sm transition-colors hover:bg-[#60482f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2">{t('common.search')}</button>
+        <button onClick={()=>{setSearch(''); setSearchInput(''); setPage(1)}} className="min-h-10 border border-[#E7DFD3] px-3 rounded-full text-sm bg-white transition-colors hover:bg-[#FAF7F2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2">{t('common.clear')}</button>
       </div>
       {actionMsg && <div className="text-xs px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">{actionMsg}</div>}
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
@@ -136,7 +136,7 @@ export function AdminProducts(){
       )}
       {editing && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={()=>setEditing(null)}>
-          <form onClick={e=>e.stopPropagation()} onSubmit={handleUpdate} className="bg-white rounded-xl p-6 w-full max-w-md space-y-4">
+          <form onClick={e=>e.stopPropagation()} onSubmit={handleUpdate} className="bg-white rounded-xl p-5 sm:p-6 w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto shadow-xl space-y-4">
             <h3 className="font-medium">{t('admin.editProduct')} {editing.id || editing._id}</h3>
             <div><label className="text-xs">Name*</label><input value={editForm.name} onChange={e=>setEditForm(s=>({...s,name:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div>
             <div className="grid grid-cols-2 gap-3"><div><label className="text-xs">{t('admin.price')}</label><input type="number" value={editForm.price} onChange={e=>setEditForm(s=>({...s,price:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div><div><label className="text-xs">{t('admin.stock')}</label><input type="number" value={editForm.stock} onChange={e=>setEditForm(s=>({...s,stock:e.target.value}))} className="w-full border rounded-lg px-3 py-2 text-sm mt-1" /></div></div>

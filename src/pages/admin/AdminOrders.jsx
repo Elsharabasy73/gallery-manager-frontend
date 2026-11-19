@@ -95,20 +95,20 @@ export function AdminOrders(){
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <h2 className="font-serif text-xl">{t('admin.allOrders')}</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select 
             value={galleryFilter} 
             onChange={e => setGalleryFilter(e.target.value)} 
-            className="border rounded-full px-3 py-1 text-xs bg-white"
+            className="min-h-10 max-w-full border border-[#E7DFD3] rounded-full px-3 text-xs bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B]"
           >
             <option value="All">{t('common.all')}</option>
             {galleries.map(g => <option key={g}>{g}</option>)}
           </select>
-          <div className="flex border rounded-full overflow-hidden text-xs">
-            <button onClick={() => setView('table')} className={`px-3 py-1 ${view === 'table' ? 'bg-[#4B3621] text-white' : ''}`}>{t('admin.table')}</button>
-            <button onClick={() => setView('board')} className={`px-3 py-1 ${view === 'board' ? 'bg-[#4B3621] text-white' : ''}`}>{t('admin.board')}</button>
+          <div className="flex border border-[#E7DFD3] rounded-full overflow-hidden text-xs">
+            <button onClick={() => setView('table')} aria-pressed={view === 'table'} className={`min-h-10 px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C19A6B] ${view === 'table' ? 'bg-[#4B3621] text-white' : 'hover:bg-[#FAF7F2]'}`}>{t('admin.table')}</button>
+            <button onClick={() => setView('board')} aria-pressed={view === 'board'} className={`min-h-10 px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#C19A6B] ${view === 'board' ? 'bg-[#4B3621] text-white' : 'hover:bg-[#FAF7F2]'}`}>{t('admin.board')}</button>
           </div>
         </div>
       </div>
@@ -117,10 +117,11 @@ export function AdminOrders(){
       {localError && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{localError}</div>}
       {error && <div className="bg-[#ffdad6] border border-[#B3402E]/20 text-[#93000a] text-sm px-4 py-2 rounded-lg">{error}</div>}
 
-      <div className="flex gap-2 text-xs overflow-x-auto pb-1">
+      <div className="flex gap-2 text-xs overflow-x-auto pb-1" role="group">
         <button 
           onClick={() => setStatusFilter('all')} 
-          className={`px-3 py-1 rounded-full border ${statusFilter === 'all' ? 'bg-[#4B3621] text-white' : 'bg-white'}`}
+          aria-pressed={statusFilter === 'all'}
+          className={`min-h-10 px-3 rounded-full border whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2 ${statusFilter === 'all' ? 'bg-[#4B3621] text-white' : 'bg-white hover:bg-[#FAF7F2]'}`}
         >
           {t('common.all')} ({formatNumber(statusCounts.all || 0)})
         </button>
@@ -128,7 +129,8 @@ export function AdminOrders(){
           <button 
             key={status}
             onClick={() => setStatusFilter(status)} 
-            className={`px-3 py-1 rounded-full border ${statusFilter === status ? 'bg-[#4B3621] text-white' : 'bg-white'}`}
+            aria-pressed={statusFilter === status}
+            className={`min-h-10 px-3 rounded-full border whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C19A6B] focus-visible:ring-offset-2 ${statusFilter === status ? 'bg-[#4B3621] text-white' : 'bg-white hover:bg-[#FAF7F2]'}`}
           >
             {statusLabel(status)} ({formatNumber(statusCounts[status] || 0)})
           </button>
@@ -140,7 +142,7 @@ export function AdminOrders(){
       ) : view === 'table' ? (
         <div className="bg-white border border-[#E7DFD3] rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[720px] text-sm">
               <thead className="bg-[#FAF7F2] text-xs text-[#8A8078]">
                 <tr>
                   <th className="p-3 text-start">{t('admin.thOrder')}</th>
